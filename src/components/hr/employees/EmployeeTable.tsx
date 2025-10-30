@@ -61,7 +61,7 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
             <TableHead>Employee ID</TableHead>
             <TableHead>Full Name</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Department</TableHead>
+            <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -73,7 +73,10 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
               <TableCell className="font-medium">{employee.full_name}</TableCell>
               <TableCell>{employee.email}</TableCell>
               <TableCell>
-                {employee.department?.name || '-'}
+                {employee.user_roles && employee.user_roles.length > 0
+                  ? employee.user_roles.map(ur => ur.role).join(', ')
+                  : '-'
+                }
               </TableCell>
               <TableCell>
                 <Badge 
