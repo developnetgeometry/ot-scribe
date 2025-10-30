@@ -14,7 +14,421 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      departments: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      ot_approval_thresholds: {
+        Row: {
+          alert_recipients: string[] | null
+          applies_to_department_ids: string[] | null
+          applies_to_role_ids: string[] | null
+          auto_block_enabled: boolean | null
+          created_at: string | null
+          created_by: string | null
+          daily_limit_hours: number | null
+          id: string
+          is_active: boolean | null
+          max_claimable_amount: number | null
+          monthly_limit_hours: number | null
+          threshold_name: string
+          updated_at: string | null
+          weekly_limit_hours: number | null
+        }
+        Insert: {
+          alert_recipients?: string[] | null
+          applies_to_department_ids?: string[] | null
+          applies_to_role_ids?: string[] | null
+          auto_block_enabled?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          daily_limit_hours?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_claimable_amount?: number | null
+          monthly_limit_hours?: number | null
+          threshold_name: string
+          updated_at?: string | null
+          weekly_limit_hours?: number | null
+        }
+        Update: {
+          alert_recipients?: string[] | null
+          applies_to_department_ids?: string[] | null
+          applies_to_role_ids?: string[] | null
+          auto_block_enabled?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          daily_limit_hours?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_claimable_amount?: number | null
+          monthly_limit_hours?: number | null
+          threshold_name?: string
+          updated_at?: string | null
+          weekly_limit_hours?: number | null
+        }
+        Relationships: []
+      }
+      ot_eligibility_rules: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          department_ids: string[] | null
+          employment_types: string[] | null
+          id: string
+          is_active: boolean | null
+          max_salary: number | null
+          min_salary: number | null
+          role_ids: string[] | null
+          rule_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          department_ids?: string[] | null
+          employment_types?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          max_salary?: number | null
+          min_salary?: number | null
+          role_ids?: string[] | null
+          rule_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          department_ids?: string[] | null
+          employment_types?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          max_salary?: number | null
+          min_salary?: number | null
+          role_ids?: string[] | null
+          rule_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      ot_rate_formulas: {
+        Row: {
+          base_formula: string
+          conditional_logic: Json | null
+          created_at: string | null
+          created_by: string | null
+          day_type: Database["public"]["Enums"]["day_type"]
+          effective_from: string
+          effective_to: string | null
+          employee_category: string
+          formula_name: string
+          id: string
+          is_active: boolean | null
+          multiplier: number
+          updated_at: string | null
+        }
+        Insert: {
+          base_formula: string
+          conditional_logic?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          day_type: Database["public"]["Enums"]["day_type"]
+          effective_from: string
+          effective_to?: string | null
+          employee_category?: string
+          formula_name: string
+          id?: string
+          is_active?: boolean | null
+          multiplier: number
+          updated_at?: string | null
+        }
+        Update: {
+          base_formula?: string
+          conditional_logic?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          day_type?: Database["public"]["Enums"]["day_type"]
+          effective_from?: string
+          effective_to?: string | null
+          employee_category?: string
+          formula_name?: string
+          id?: string
+          is_active?: boolean | null
+          multiplier?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      ot_requests: {
+        Row: {
+          attachment_url: string | null
+          bod_remarks: string | null
+          bod_reviewed_at: string | null
+          created_at: string | null
+          day_type: Database["public"]["Enums"]["day_type"]
+          eligibility_rule_id: string | null
+          employee_id: string
+          end_time: string
+          formula_id: string | null
+          hr_approved_at: string | null
+          hr_id: string | null
+          hr_remarks: string | null
+          hrp: number | null
+          id: string
+          orp: number | null
+          ot_amount: number | null
+          ot_date: string
+          reason: string
+          start_time: string
+          status: Database["public"]["Enums"]["ot_status"] | null
+          supervisor_id: string | null
+          supervisor_remarks: string | null
+          supervisor_verified_at: string | null
+          threshold_violations: Json | null
+          total_hours: number
+          updated_at: string | null
+        }
+        Insert: {
+          attachment_url?: string | null
+          bod_remarks?: string | null
+          bod_reviewed_at?: string | null
+          created_at?: string | null
+          day_type: Database["public"]["Enums"]["day_type"]
+          eligibility_rule_id?: string | null
+          employee_id: string
+          end_time: string
+          formula_id?: string | null
+          hr_approved_at?: string | null
+          hr_id?: string | null
+          hr_remarks?: string | null
+          hrp?: number | null
+          id?: string
+          orp?: number | null
+          ot_amount?: number | null
+          ot_date: string
+          reason: string
+          start_time: string
+          status?: Database["public"]["Enums"]["ot_status"] | null
+          supervisor_id?: string | null
+          supervisor_remarks?: string | null
+          supervisor_verified_at?: string | null
+          threshold_violations?: Json | null
+          total_hours: number
+          updated_at?: string | null
+        }
+        Update: {
+          attachment_url?: string | null
+          bod_remarks?: string | null
+          bod_reviewed_at?: string | null
+          created_at?: string | null
+          day_type?: Database["public"]["Enums"]["day_type"]
+          eligibility_rule_id?: string | null
+          employee_id?: string
+          end_time?: string
+          formula_id?: string | null
+          hr_approved_at?: string | null
+          hr_id?: string | null
+          hr_remarks?: string | null
+          hrp?: number | null
+          id?: string
+          orp?: number | null
+          ot_amount?: number | null
+          ot_date?: string
+          reason?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["ot_status"] | null
+          supervisor_id?: string | null
+          supervisor_remarks?: string | null
+          supervisor_verified_at?: string | null
+          threshold_violations?: Json | null
+          total_hours?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ot_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ot_requests_hr_id_fkey"
+            columns: ["hr_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ot_requests_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ot_settings: {
+        Row: {
+          id: string
+          max_daily_hours: number | null
+          rounding_rule: string | null
+          salary_threshold: number | null
+          submission_limit_days: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          max_daily_hours?: number | null
+          rounding_rule?: string | null
+          salary_threshold?: number | null
+          submission_limit_days?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          max_daily_hours?: number | null
+          rounding_rule?: string | null
+          salary_threshold?: number | null
+          submission_limit_days?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          basic_salary: number
+          created_at: string | null
+          department_id: string | null
+          designation: string | null
+          email: string
+          employee_id: string
+          employment_type: string | null
+          full_name: string
+          id: string
+          joining_date: string | null
+          position: string | null
+          state: string | null
+          status: string | null
+          supervisor_id: string | null
+          updated_at: string | null
+          work_location: string | null
+        }
+        Insert: {
+          basic_salary: number
+          created_at?: string | null
+          department_id?: string | null
+          designation?: string | null
+          email: string
+          employee_id: string
+          employment_type?: string | null
+          full_name: string
+          id: string
+          joining_date?: string | null
+          position?: string | null
+          state?: string | null
+          status?: string | null
+          supervisor_id?: string | null
+          updated_at?: string | null
+          work_location?: string | null
+        }
+        Update: {
+          basic_salary?: number
+          created_at?: string | null
+          department_id?: string | null
+          designation?: string | null
+          email?: string
+          employee_id?: string
+          employment_type?: string | null
+          full_name?: string
+          id?: string
+          joining_date?: string | null
+          position?: string | null
+          state?: string | null
+          status?: string | null
+          supervisor_id?: string | null
+          updated_at?: string | null
+          work_location?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_holidays: {
+        Row: {
+          created_at: string | null
+          holiday_date: string
+          holiday_name: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          holiday_date: string
+          holiday_name: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          holiday_date?: string
+          holiday_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +437,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "employee" | "supervisor" | "hr" | "bod" | "admin"
+      day_type: "weekday" | "saturday" | "sunday" | "public_holiday"
+      ot_status:
+        | "pending_verification"
+        | "verified"
+        | "approved"
+        | "reviewed"
+        | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +571,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["employee", "supervisor", "hr", "bod", "admin"],
+      day_type: ["weekday", "saturday", "sunday", "public_holiday"],
+      ot_status: [
+        "pending_verification",
+        "verified",
+        "approved",
+        "reviewed",
+        "rejected",
+      ],
+    },
   },
 } as const
