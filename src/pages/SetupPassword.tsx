@@ -73,6 +73,9 @@ export default function SetupPassword() {
 
       if (profileError) throw profileError;
 
+      // Wait for database update to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       toast.success('Password successfully set. Please log in with your new password.');
       
       // Sign out the user

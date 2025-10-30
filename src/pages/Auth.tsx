@@ -70,14 +70,16 @@ export default function Auth() {
     
     if (session?.user) {
       // Fetch user profile with status
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('full_name, status')
         .eq('id', session.user.id)
         .single();
 
+      console.log('Profile status after login:', profile?.status);
+
       // Check if password needs to be set up
-      if (profile?.status === 'pending_setup') {
+      if (!profileError && profile?.status === 'pending_setup') {
         toast.info('Please set up your password to continue');
         navigate('/setup-password');
         setLoading(false);
