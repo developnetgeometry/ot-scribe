@@ -16,9 +16,39 @@ export default function Auth() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard', { replace: true });
-    }
+    const redirectUser = async () => {
+      if (user) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+
+        const role = roleData?.role;
+
+        switch(role) {
+          case 'admin':
+            navigate('/admin/dashboard', { replace: true });
+            break;
+          case 'hr':
+            navigate('/hr/dashboard', { replace: true });
+            break;
+          case 'supervisor':
+            navigate('/supervisor/dashboard', { replace: true });
+            break;
+          case 'bod':
+            navigate('/bod/dashboard', { replace: true });
+            break;
+          case 'employee':
+            navigate('/employee/dashboard', { replace: true });
+            break;
+          default:
+            navigate('/dashboard', { replace: true });
+        }
+      }
+    };
+
+    redirectUser();
   }, [user, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -29,8 +59,54 @@ export default function Auth() {
 
     if (error) {
       toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch user session to get user ID
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.user) {
+      // Fetch user profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', session.user.id)
+        .single();
+
+      // Fetch user role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const role = roleData?.role;
+      const fullName = profile?.full_name || 'User';
+
+      toast.success(`Welcome back, ${fullName}!`);
+
+      // Redirect based on role
+      switch(role) {
+        case 'admin':
+          navigate('/admin/dashboard');
+          break;
+        case 'hr':
+          navigate('/hr/dashboard');
+          break;
+        case 'supervisor':
+          navigate('/supervisor/dashboard');
+          break;
+        case 'bod':
+          navigate('/bod/dashboard');
+          break;
+        case 'employee':
+          navigate('/employee/dashboard');
+          break;
+        default:
+          navigate('/dashboard');
+      }
     } else {
-      toast.success('Signed in successfully!');
       navigate('/dashboard');
     }
 

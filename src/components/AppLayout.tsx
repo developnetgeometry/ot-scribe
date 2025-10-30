@@ -51,14 +51,27 @@ function AppSidebar() {
     isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "hover:bg-sidebar-accent/50";
 
   const menuItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['employee', 'supervisor', 'hr', 'bod', 'admin'] },
+    // Role-specific dashboards
+    { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
+    { path: '/hr/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['hr'] },
+    { path: '/supervisor/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['supervisor'] },
+    { path: '/employee/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['employee'] },
+    { path: '/bod/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['bod'] },
+    
+    // Employee actions
     { path: '/ot/submit', label: 'Submit OT', icon: PlusCircle, roles: ['employee'] },
     { path: '/ot/history', label: 'OT History', icon: History, roles: ['employee'] },
+    
+    // Supervisor actions
     { path: '/supervisor/verify', label: 'Verify OT', icon: CheckCircle, roles: ['supervisor'] },
+    
+    // HR actions
     { path: '/hr/approve', label: 'Approve OT', icon: CheckCircle, roles: ['hr'] },
     { path: '/hr/employees', label: 'Employees', icon: Users, roles: ['hr'] },
     { path: '/hr/settings', label: 'HR Settings', icon: Settings, roles: ['hr'] },
     { path: '/hr/ot-reports', label: 'OT Reports', icon: FileText, roles: ['hr'] },
+    
+    // BOD actions
     { path: '/bod/review', label: 'BOD Review', icon: Eye, roles: ['bod'] },
   ];
 

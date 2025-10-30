@@ -11,10 +11,16 @@ import Dashboard from "./pages/Dashboard";
 import SubmitOT from "./pages/SubmitOT";
 import OTHistory from "./pages/OTHistory";
 import NotFound from "./pages/NotFound";
+import Unauthorized from "./pages/Unauthorized";
 import ApproveOT from "./pages/hr/ApproveOT";
 import Employees from "./pages/hr/Employees";
 import Settings from "./pages/hr/Settings";
 import OTReports from "./pages/hr/OTReports";
+import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
+import HRDashboard from "./pages/hr/HRDashboard";
+import SupervisorDashboard from "./pages/supervisor/SupervisorDashboard";
+import BODDashboard from "./pages/bod/BODDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -29,13 +35,28 @@ const App = () => (
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/set-password" element={<SetPassword />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            
+            {/* Role-specific dashboards */}
+            <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/hr/dashboard" element={<ProtectedRoute requiredRole="hr"><HRDashboard /></ProtectedRoute>} />
+            <Route path="/supervisor/dashboard" element={<ProtectedRoute requiredRole="supervisor"><SupervisorDashboard /></ProtectedRoute>} />
+            <Route path="/employee/dashboard" element={<ProtectedRoute requiredRole="employee"><EmployeeDashboard /></ProtectedRoute>} />
+            <Route path="/bod/dashboard" element={<ProtectedRoute requiredRole="bod"><BODDashboard /></ProtectedRoute>} />
+            
+            {/* Fallback dashboard */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            
+            {/* Employee routes */}
             <Route path="/ot/submit" element={<ProtectedRoute requiredRole="employee"><SubmitOT /></ProtectedRoute>} />
             <Route path="/ot/history" element={<ProtectedRoute requiredRole="employee"><OTHistory /></ProtectedRoute>} />
+            
+            {/* HR routes */}
             <Route path="/hr/approve" element={<ProtectedRoute requiredRole="hr"><ApproveOT /></ProtectedRoute>} />
             <Route path="/hr/employees" element={<ProtectedRoute requiredRole="hr"><Employees /></ProtectedRoute>} />
             <Route path="/hr/settings" element={<ProtectedRoute requiredRole="hr"><Settings /></ProtectedRoute>} />
             <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole="hr"><OTReports /></ProtectedRoute>} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

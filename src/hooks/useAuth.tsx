@@ -11,6 +11,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
+  getRoleDashboard: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -85,8 +86,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hasRole = (role: AppRole) => roles.includes(role);
 
+  const getRoleDashboard = (): string => {
+    if (hasRole('admin')) return '/admin/dashboard';
+    if (hasRole('hr')) return '/hr/dashboard';
+    if (hasRole('supervisor')) return '/supervisor/dashboard';
+    if (hasRole('bod')) return '/bod/dashboard';
+    if (hasRole('employee')) return '/employee/dashboard';
+    return '/dashboard';
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, roles, loading, signIn, signOut, hasRole }}>
+    <AuthContext.Provider value={{ user, session, roles, loading, signIn, signOut, hasRole, getRoleDashboard }}>
       {children}
     </AuthContext.Provider>
   );
