@@ -7,28 +7,27 @@ import { useOTApproval } from '@/hooks/useOTApproval';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
-export default function ApproveOT() {
-  const [statusFilter, setStatusFilter] = useState<'verified' | 'pending_verification' | 'approved' | 'rejected' | 'all'>('verified');
+export default function VerifyOT() {
+  const [statusFilter, setStatusFilter] = useState<'pending_verification' | 'verified' | 'rejected' | 'all'>('pending_verification');
   const [searchQuery, setSearchQuery] = useState('');
   
-  const { requests, isLoading } = useOTApproval({ role: 'hr', status: statusFilter });
+  const { requests, isLoading } = useOTApproval({ role: 'supervisor', status: statusFilter });
 
   const filteredRequests = requests?.filter(request => {
     if (!searchQuery) return true;
     const profile = (request as any).profiles;
     const employeeName = profile?.full_name?.toLowerCase() || '';
     const employeeId = profile?.employee_id?.toLowerCase() || '';
-    const department = (profile?.departments as any)?.name?.toLowerCase() || '';
     const query = searchQuery.toLowerCase();
-    return employeeName.includes(query) || employeeId.includes(query) || department.includes(query);
+    return employeeName.includes(query) || employeeId.includes(query);
   }) || [];
 
   return (
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">OT Approvals</h1>
-          <p className="text-muted-foreground">Review and approve overtime requests</p>
+          <h1 className="text-3xl font-bold">Verify OT Requests</h1>
+          <p className="text-muted-foreground">Review and verify overtime requests from your team</p>
         </div>
 
         <Card className="p-6">
@@ -36,7 +35,7 @@ export default function ApproveOT() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by employee, department..."
+                placeholder="Search by employee name or ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -45,8 +44,8 @@ export default function ApproveOT() {
 
             <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
               <TabsList>
-                <TabsTrigger value="verified">Pending Approval</TabsTrigger>
-                <TabsTrigger value="approved">Approved</TabsTrigger>
+                <TabsTrigger value="pending_verification">Pending Verification</TabsTrigger>
+                <TabsTrigger value="verified">Verified</TabsTrigger>
                 <TabsTrigger value="rejected">Rejected</TabsTrigger>
                 <TabsTrigger value="all">All</TabsTrigger>
               </TabsList>
@@ -55,7 +54,7 @@ export default function ApproveOT() {
                 <OTApprovalTable 
                   requests={filteredRequests} 
                   isLoading={isLoading}
-                  role="hr"
+                  role="supervisor"
                 />
               </TabsContent>
             </Tabs>

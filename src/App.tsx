@@ -21,7 +21,9 @@ import OTReports from "./pages/hr/OTReports";
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import HRDashboard from "./pages/hr/HRDashboard";
 import SupervisorDashboard from "./pages/supervisor/SupervisorDashboard";
+import VerifyOT from "./pages/supervisor/VerifyOT";
 import BODDashboard from "./pages/bod/BODDashboard";
+import ReviewOT from "./pages/bod/ReviewOT";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const queryClient = new QueryClient();
@@ -55,11 +57,17 @@ const App = () => (
             <Route path="/ot/submit" element={<ProtectedRoute requiredRole="employee"><SubmitOT /></ProtectedRoute>} />
             <Route path="/ot/history" element={<ProtectedRoute requiredRole="employee"><OTHistory /></ProtectedRoute>} />
             
+            {/* Supervisor routes */}
+            <Route path="/supervisor/verify" element={<ProtectedRoute requiredRole="supervisor"><VerifyOT /></ProtectedRoute>} />
+            
             {/* HR routes */}
             <Route path="/hr/approve" element={<ProtectedRoute requiredRole="hr"><ApproveOT /></ProtectedRoute>} />
             <Route path="/hr/employees" element={<ProtectedRoute requiredRole="hr"><Employees /></ProtectedRoute>} />
             <Route path="/hr/settings" element={<ProtectedRoute requiredRole="hr"><Settings /></ProtectedRoute>} />
             <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole="hr"><OTReports /></ProtectedRoute>} />
+            
+            {/* BOD routes */}
+            <Route path="/bod/review" element={<ProtectedRoute requiredRole="bod"><ReviewOT /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

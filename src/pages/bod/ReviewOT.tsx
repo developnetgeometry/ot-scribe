@@ -5,13 +5,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OTApprovalTable } from '@/components/approvals/OTApprovalTable';
 import { useOTApproval } from '@/hooks/useOTApproval';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, DollarSign, Clock, AlertTriangle, FileCheck } from 'lucide-react';
+import { DashboardCard } from '@/components/DashboardCard';
+import { formatCurrency, formatHours } from '@/lib/otCalculations';
 
-export default function ApproveOT() {
-  const [statusFilter, setStatusFilter] = useState<'verified' | 'pending_verification' | 'approved' | 'rejected' | 'all'>('verified');
+export default function ReviewOT() {
+  const [statusFilter, setStatusFilter] = useState<'approved' | 'reviewed' | 'rejected' | 'all'>('approved');
   const [searchQuery, setSearchQuery] = useState('');
   
-  const { requests, isLoading } = useOTApproval({ role: 'hr', status: statusFilter });
+  const { requests, isLoading } = useOTApproval({ role: 'bod', status: statusFilter });
 
   const filteredRequests = requests?.filter(request => {
     if (!searchQuery) return true;
@@ -23,12 +25,43 @@ export default function ApproveOT() {
     return employeeName.includes(query) || employeeId.includes(query) || department.includes(query);
   }) || [];
 
+  // Calculate summary stats
+  const pendingReview = requests?.filter(r => r.status === 'approved').length || 0;
+  const totalHours = requests?.reduce((sum, r) => sum + (r.total_hours || 0), 0) || 0;
+  const totalCost = requests?.reduce((sum, r) => sum + (r.ot_amount || 0), 0) || 0;
+  const withViolations = requests?.filter(r => 
+    r.threshold_violations && Object.keys(r.threshold_violations).length > 0
+  ).length || 0;
+
   return (
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">OT Approvals</h1>
-          <p className="text-muted-foreground">Review and approve overtime requests</p>
+          <h1 className="text-3xl font-bold">BOD Review</h1>
+          <p className="text-muted-foreground">Final review and approval of HR-approved OT requests</p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <DashboardCard
+            title="Pending Review"
+            value={pendingReview}
+            icon={FileCheck}
+          />
+          <DashboardCard
+            title="Total OT Hours"
+            value={formatHours(totalHours)}
+            icon={Clock}
+          />
+          <DashboardCard
+            title="Total OT Cost"
+            value={formatCurrency(totalCost)}
+            icon={DollarSign}
+          />
+          <DashboardCard
+            title="With Violations"
+            value={withViolations}
+            icon={AlertTriangle}
+          />
         </div>
 
         <Card className="p-6">
@@ -45,8 +78,8 @@ export default function ApproveOT() {
 
             <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
               <TabsList>
-                <TabsTrigger value="verified">Pending Approval</TabsTrigger>
-                <TabsTrigger value="approved">Approved</TabsTrigger>
+                <TabsTrigger value="approved">Pending Review</TabsTrigger>
+                <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
                 <TabsTrigger value="rejected">Rejected</TabsTrigger>
                 <TabsTrigger value="all">All</TabsTrigger>
               </TabsList>
@@ -55,7 +88,7 @@ export default function ApproveOT() {
                 <OTApprovalTable 
                   requests={filteredRequests} 
                   isLoading={isLoading}
-                  role="hr"
+                  role="bod"
                 />
               </TabsContent>
             </Tabs>
