@@ -2,26 +2,50 @@ import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit } from 'lucide-react';
+import { Eye, Edit, Mail } from 'lucide-react';
 import { formatCurrency } from '@/lib/otCalculations';
 import { EmployeeDetailsSheet } from './EmployeeDetailsSheet';
 import { Profile } from '@/types/otms';
+import { useResendInvite } from '@/hooks/hr/useResendInvite';
 
 interface EmployeeTableProps {
   employees: Profile[];
   isLoading: boolean;
+  searchQuery: string;
+  statusFilter: string;
 }
 
-export function EmployeeTable({ employees, isLoading }: EmployeeTableProps) {
+export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter }: EmployeeTableProps) {
   const [selectedEmployee, setSelectedEmployee] = useState<Profile | null>(null);
   const [sheetMode, setSheetMode] = useState<'view' | 'edit'>('view');
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const resendInvite = useResendInvite();
+
+  // Filter employees based on search and status
+  const filteredEmployees = employees.filter(employee => {
+    const matchesSearch = searchQuery === '' || 
+      employee.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employee.employee_id.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesStatus = statusFilter === 'all' || 
+      employee.status?.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleResendInvite = (employee: Profile) => {
+    resendInvite.mutate({
+      userId: employee.id,
+      email: employee.email
+    });
+  };
 
   if (isLoading) {
     return <div className="text-center py-8">Loading...</div>;
   }
 
-  if (employees.length === 0) {
+  if (filteredEmployees.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         No employees found
@@ -37,30 +61,30 @@ export function EmployeeTable({ employees, isLoading }: EmployeeTableProps) {
             <TableHead>Employee ID</TableHead>
             <TableHead>Full Name</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Basic Salary</TableHead>
+            <TableHead>Department</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {employees.map((employee) => (
+          {filteredEmployees.map((employee) => (
             <TableRow key={employee.id}>
               <TableCell className="font-mono text-sm">{employee.employee_id}</TableCell>
               <TableCell className="font-medium">{employee.full_name}</TableCell>
               <TableCell>{employee.email}</TableCell>
               <TableCell>
-                {employee.user_roles && employee.user_roles.length > 0 ? (
-                  <Badge variant="outline" className="capitalize">
-                    {employee.user_roles[0].role}
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">employee</Badge>
-                )}
+                {employee.department?.name || '-'}
               </TableCell>
-              <TableCell>{formatCurrency(employee.basic_salary)}</TableCell>
               <TableCell>
-                <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>
+                <Badge 
+                  className={
+                    employee.status === 'active' 
+                      ? 'bg-green-100 text-green-700 hover:bg-green-100' 
+                      : employee.status === 'pending'
+                      ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-100'
+                  }
+                >
                   {employee.status}
                 </Badge>
               </TableCell>
@@ -88,6 +112,16 @@ export function EmployeeTable({ employees, isLoading }: EmployeeTableProps) {
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
+                  {(employee.status === 'pending' || employee.status === 'inactive') && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleResendInvite(employee)}
+                      disabled={resendInvite.isPending}
+                    >
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

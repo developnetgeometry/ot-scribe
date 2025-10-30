@@ -21,16 +21,25 @@ export function useEmployees() {
 
       if (rolesError) throw rolesError;
 
-      // Merge roles into profiles
-      const profilesWithRoles = profiles?.map(profile => {
+      // Fetch departments
+      const { data: departments, error: departmentsError } = await supabase
+        .from('departments')
+        .select('id, name, code');
+
+      if (departmentsError) throw departmentsError;
+
+      // Merge roles and departments into profiles
+      const profilesWithData = profiles?.map(profile => {
         const userRoles = roles?.filter(r => r.user_id === profile.id);
+        const department = departments?.find(d => d.id === profile.department_id);
         return {
           ...profile,
-          user_roles: userRoles?.map(r => ({ role: r.role })) || []
+          user_roles: userRoles?.map(r => ({ role: r.role })) || [],
+          department: department || null
         };
       });
 
-      return profilesWithRoles as Profile[];
+      return profilesWithData as Profile[];
     },
   });
 }

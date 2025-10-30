@@ -47,6 +47,7 @@ export interface Profile {
   state: string | null;
   status: string;
   user_roles?: Array<{ role: AppRole }>;
+  department?: { id: string; name: string; code: string } | null;
   created_at: string;
   updated_at: string;
 }
