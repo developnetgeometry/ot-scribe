@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -177,6 +179,18 @@ export default function Auth() {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
+
+          <Alert className="mt-4">
+            <Info className="h-4 w-4" />
+            <AlertTitle>New Employee?</AlertTitle>
+            <AlertDescription>
+              Your temporary password is: <strong className="font-semibold">Temp@12345</strong>
+              <br />
+              <span className="text-xs text-muted-foreground">
+                You'll be required to change it on first login.
+              </span>
+            </AlertDescription>
+          </Alert>
 
           <div className="mt-6">
             <Button
