@@ -25,6 +25,11 @@ const getStatusFilter = (role: ApprovalRole, statusFilter?: string): OTStatus[] 
     return [statusFilter as OTStatus];
   }
 
+  // Handle "all" case specifically for supervisors
+  if (statusFilter === 'all' && role === 'supervisor') {
+    return ['verified', 'rejected'];
+  }
+
   switch (role) {
     case 'supervisor':
       return ['pending_verification'];
@@ -120,9 +125,14 @@ export function useOTApproval(options: UseOTApprovalOptions) {
       // Apply status filter
       const statuses = getStatusFilter(role, status);
       if (statuses.length > 0) {
-        if (status && status !== 'all' && status !== 'completed') {
+        // Use .in() for multi-status filters ('completed', 'all' for supervisor)
+        if (status === 'completed' || (status === 'all' && role === 'supervisor')) {
+          query = query.in('status', statuses);
+        } else if (status && status !== 'all') {
+          // Single status filter
           query = query.eq('status', status as OTStatus);
         } else {
+          // Fallback for other 'all' cases
           query = query.in('status', statuses);
         }
       }
