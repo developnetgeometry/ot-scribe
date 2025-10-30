@@ -38,7 +38,7 @@ export default function ReviewOT() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">BOD Review</h1>
-          <p className="text-muted-foreground">Final review and approval of HR-approved OT requests</p>
+          <p className="text-muted-foreground">Review all OT requests and focus on those with threshold violations</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -81,7 +81,7 @@ export default function ReviewOT() {
                 <TabsTrigger value="approved">Pending Review</TabsTrigger>
                 <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
                 <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="all">All Requests</TabsTrigger>
               </TabsList>
 
               <TabsContent value={statusFilter} className="mt-6">
