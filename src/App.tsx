@@ -38,7 +38,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/set-password" element={<SetPassword />} />
           <Route path="/setup-password" element={<SetupPassword />} />
-          <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+          <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
             {/* Role-specific dashboards */}
