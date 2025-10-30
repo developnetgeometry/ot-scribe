@@ -84,8 +84,8 @@ function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-3 px-4 py-4">
-          <img src={tidalLogo} alt="Tidal Group" className="h-10 w-10 object-contain" />
+        <div className="flex items-center gap-3 px-4 py-5">
+          <img src={tidalLogo} alt="Tidal Group" className="h-16 w-auto object-contain" />
           {open && (
             <span className="text-lg font-semibold text-sidebar-foreground">OTMS</span>
           )}
