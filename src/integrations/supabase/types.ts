@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      activation_tokens: {
+        Row: {
+          created_at: string
+          email_result: Json | null
+          email_sent_at: string | null
+          employee_id: string
+          expires_at: string
+          id: string
+          status: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_result?: Json | null
+          email_sent_at?: string | null
+          employee_id: string
+          expires_at?: string
+          id?: string
+          status?: string
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_result?: Json | null
+          email_sent_at?: string | null
+          employee_id?: string
+          expires_at?: string
+          id?: string
+          status?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activation_tokens_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           code: string
@@ -488,6 +532,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_expired_tokens: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "employee" | "supervisor" | "hr" | "bod" | "admin"
