@@ -45,8 +45,8 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
-  if (profileStatus === 'pending_password') {
-    return <Navigate to="/change-password" replace />;
+  if (profileStatus === 'pending_setup') {
+    return <Navigate to="/setup-password" replace />;
   }
 
   if (requiredRole) {

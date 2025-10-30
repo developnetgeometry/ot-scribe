@@ -1,185 +1,128 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function SetupPassword() {
-  const [searchParams] = useSearchParams();
-  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [validating, setValidating] = useState(true);
-  const [tokenValid, setTokenValid] = useState(false);
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const customToken = searchParams.get('custom_token');
 
   useEffect(() => {
-    const validateToken = async () => {
-      if (!customToken) {
-        toast({
-          title: 'Invalid Link',
-          description: 'This activation link is invalid or missing required parameters.',
-          variant: 'destructive',
-        });
-        setValidating(false);
+    const checkStatus = async () => {
+      if (!user) {
+        navigate('/auth');
         return;
       }
 
-      try {
-        // Validate token against activation_tokens table
-        const { data, error } = await supabase
-          .from('activation_tokens')
-          .select('id, status, expires_at')
-          .eq('token', customToken)
-          .eq('status', 'pending')
-          .single();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('id', user.id)
+        .single();
 
-        if (error || !data) {
-          toast({
-            title: 'Invalid Token',
-            description: 'This activation link is invalid or has already been used.',
-            variant: 'destructive',
-          });
-          setTokenValid(false);
-        } else if (new Date(data.expires_at) < new Date()) {
-          toast({
-            title: 'Expired Link',
-            description: 'This activation link has expired. Please request a new one from your HR.',
-            variant: 'destructive',
-          });
-          setTokenValid(false);
-        } else {
-          setTokenValid(true);
-        }
-      } catch (error) {
-        console.error('Token validation error:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to validate activation link.',
-          variant: 'destructive',
-        });
-        setTokenValid(false);
-      } finally {
-        setValidating(false);
+      if (profile?.status === 'active') {
+        toast.info('Your password is already set up');
+        navigate('/auth');
       }
     };
 
-    validateToken();
-  }, [customToken, toast]);
+    checkStatus();
+  }, [user, navigate]);
 
-  const handleSetPassword = async (e: React.FormEvent) => {
+  const handleSetupPassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password !== confirmPassword) {
-      toast({
-        title: 'Error',
-        description: 'Passwords do not match',
-        variant: 'destructive',
-      });
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
       return;
     }
 
-    if (password.length < 8) {
-      toast({
-        title: 'Error',
-        description: 'Password must be at least 8 characters long',
-        variant: 'destructive',
-      });
+    if (newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+
+    if (newPassword === 'Temp@12345') {
+      toast.error('You cannot use the temporary password as your new password');
       return;
     }
 
     setLoading(true);
 
     try {
-      // Call activate-account edge function
-      const { data, error } = await supabase.functions.invoke('activate-account', {
-        body: { token: customToken, password },
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
       });
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      if (data.success) {
-        toast({
-          title: 'Success',
-          description: 'Your account has been activated! Please sign in.',
-        });
+      // Update profile status to active
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ status: 'active' })
+        .eq('id', user!.id);
+
+      if (profileError) throw profileError;
+
+      toast.success('Password successfully set. Please log in with your new password.');
+      
+      // Sign out the user
+      await supabase.auth.signOut();
+      
+      setTimeout(() => {
         navigate('/auth');
-      } else {
-        throw new Error(data.error || 'Failed to activate account');
-      }
+      }, 1500);
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to set password',
-        variant: 'destructive',
-      });
+      toast.error(error.message || 'Failed to set password');
     } finally {
       setLoading(false);
     }
   };
 
-  if (validating) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">Validating activation link...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!tokenValid) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Invalid Activation Link</CardTitle>
-            <CardDescription>
-              This activation link is invalid, expired, or has already been used.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/auth')} className="w-full">
-              Go to Login
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Set Your Password</CardTitle>
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">Set Up Your Password</CardTitle>
           <CardDescription>
-            Welcome to OTMS! Please create a secure password for your account.
+            You are required to set your password before using the system.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSetPassword} className="space-y-4">
+          <form onSubmit={handleSetupPassword} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="email">Email (Read-only)</Label>
               <Input
-                id="password"
+                id="email"
+                type="email"
+                value={user?.email || ''}
+                disabled
+                className="bg-muted"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 required
+                disabled={loading}
                 minLength={8}
               />
               <p className="text-xs text-muted-foreground">
-                Must be at least 8 characters long
+                Minimum 8 characters
               </p>
             </div>
             <div className="space-y-2">
@@ -187,15 +130,15 @@ export default function SetupPassword() {
               <Input
                 id="confirmPassword"
                 type="password"
+                placeholder="Re-enter password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your password"
                 required
-                minLength={8}
+                disabled={loading}
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Setting Password...' : 'Activate Account'}
+              {loading ? 'Setting Password...' : 'Save Password'}
             </Button>
           </form>
         </CardContent>

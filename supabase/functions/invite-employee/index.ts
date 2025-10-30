@@ -71,7 +71,7 @@ serve(async (req) => {
         position,
         work_location,
         state,
-        status: 'pending_password',
+        status: 'pending_setup',
       });
 
     if (profileError) throw profileError;

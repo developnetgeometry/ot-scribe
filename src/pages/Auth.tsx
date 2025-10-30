@@ -74,10 +74,10 @@ export default function Auth() {
         .eq('id', session.user.id)
         .single();
 
-      // Check if password needs to be changed
-      if (profile?.status === 'pending_password') {
-        toast.info('Please set your new password to continue');
-        navigate('/change-password');
+      // Check if password needs to be set up
+      if (profile?.status === 'pending_setup') {
+        toast.info('Please set up your password to continue');
+        navigate('/setup-password');
         setLoading(false);
         return;
       }
