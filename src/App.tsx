@@ -8,6 +8,8 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import SetPassword from "./pages/SetPassword";
 import Dashboard from "./pages/Dashboard";
+import SubmitOT from "./pages/SubmitOT";
+import OTHistory from "./pages/OTHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +26,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/set-password" element={<SetPassword />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/ot/submit" element={<ProtectedRoute requiredRole="employee"><SubmitOT /></ProtectedRoute>} />
+            <Route path="/ot/history" element={<ProtectedRoute requiredRole="employee"><OTHistory /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

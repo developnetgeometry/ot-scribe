@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/AppLayout';
 import { DashboardCard } from '@/components/DashboardCard';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Clock, CheckCircle, AlertCircle, DollarSign } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, DollarSign, Plus, History } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Dashboard() {
   const { user, roles, hasRole } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalHours: 0,
     pending: 0,
@@ -68,6 +72,25 @@ export default function Dashboard() {
             Welcome back! Here's an overview of your OT status.
           </p>
         </div>
+
+        {isEmployee && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Submit new overtime or view your request history</CardDescription>
+            </CardHeader>
+            <CardContent className="flex gap-3">
+              <Button onClick={() => navigate('/ot/submit')}>
+                <Plus className="h-4 w-4 mr-2" />
+                Submit OT Request
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/ot/history')}>
+                <History className="h-4 w-4 mr-2" />
+                View OT History
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {loading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
