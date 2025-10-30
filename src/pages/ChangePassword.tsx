@@ -70,10 +70,13 @@ export default function ChangePassword() {
 
       if (profileError) throw profileError;
 
-      toast.success('Password updated successfully. Redirecting...');
+      toast.success('Password updated successfully! Please log in with your new password.');
+      
+      // Sign out the user to ensure clean session
+      await supabase.auth.signOut();
       
       setTimeout(() => {
-        navigate(getRoleDashboard());
+        navigate('/auth');
       }, 1500);
     } catch (error: any) {
       toast.error(error.message || 'Failed to update password');
