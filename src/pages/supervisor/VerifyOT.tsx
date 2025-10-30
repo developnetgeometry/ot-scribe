@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { OTApprovalTable } from '@/components/approvals/OTApprovalTable';
 import { useOTApproval } from '@/hooks/useOTApproval';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
 export default function VerifyOT() {
-  const [statusFilter, setStatusFilter] = useState<'pending_verification' | 'verified' | 'rejected' | 'all'>('pending_verification');
   const [searchQuery, setSearchQuery] = useState('');
   
-  const { requests, isLoading } = useOTApproval({ role: 'supervisor', status: statusFilter });
+  const { requests, isLoading } = useOTApproval({ role: 'supervisor', status: 'all' });
 
   const filteredRequests = requests?.filter(request => {
     if (!searchQuery) return true;
@@ -42,22 +41,11 @@ export default function VerifyOT() {
               />
             </div>
 
-            <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-              <TabsList>
-                <TabsTrigger value="pending_verification">Pending Verification</TabsTrigger>
-                <TabsTrigger value="verified">Verified</TabsTrigger>
-                <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                <TabsTrigger value="all">All</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value={statusFilter} className="mt-6">
-                <OTApprovalTable 
-                  requests={filteredRequests} 
-                  isLoading={isLoading}
-                  role="supervisor"
-                />
-              </TabsContent>
-            </Tabs>
+            <OTApprovalTable 
+              requests={filteredRequests} 
+              isLoading={isLoading}
+              role="supervisor"
+            />
           </div>
         </Card>
       </div>

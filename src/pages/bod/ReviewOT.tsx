@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { OTApprovalTable } from '@/components/approvals/OTApprovalTable';
 import { useOTApproval } from '@/hooks/useOTApproval';
 import { Input } from '@/components/ui/input';
@@ -10,10 +10,9 @@ import { DashboardCard } from '@/components/DashboardCard';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
 
 export default function ReviewOT() {
-  const [statusFilter, setStatusFilter] = useState<'approved' | 'reviewed' | 'rejected' | 'all'>('approved');
   const [searchQuery, setSearchQuery] = useState('');
   
-  const { requests, isLoading } = useOTApproval({ role: 'bod', status: statusFilter });
+  const { requests, isLoading } = useOTApproval({ role: 'bod', status: 'all' });
 
   const filteredRequests = requests?.filter(request => {
     if (!searchQuery) return true;
@@ -76,22 +75,11 @@ export default function ReviewOT() {
               />
             </div>
 
-            <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-              <TabsList>
-                <TabsTrigger value="approved">Pending Review</TabsTrigger>
-                <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
-                <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                <TabsTrigger value="all">All Requests</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value={statusFilter} className="mt-6">
-                <OTApprovalTable 
-                  requests={filteredRequests} 
-                  isLoading={isLoading}
-                  role="bod"
-                />
-              </TabsContent>
-            </Tabs>
+            <OTApprovalTable 
+              requests={filteredRequests} 
+              isLoading={isLoading}
+              role="bod"
+            />
           </div>
         </Card>
       </div>
