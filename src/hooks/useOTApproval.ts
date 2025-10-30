@@ -18,6 +18,10 @@ interface ApprovalAction {
 // Map roles to their respective status filters
 const getStatusFilter = (role: ApprovalRole, statusFilter?: string): OTStatus[] => {
   if (statusFilter && statusFilter !== 'all') {
+    // Handle "completed" as a special case that includes multiple statuses
+    if (statusFilter === 'completed') {
+      return ['verified', 'approved', 'reviewed'];
+    }
     return [statusFilter as OTStatus];
   }
 
@@ -116,7 +120,7 @@ export function useOTApproval(options: UseOTApprovalOptions) {
       // Apply status filter
       const statuses = getStatusFilter(role, status);
       if (statuses.length > 0) {
-        if (status && status !== 'all') {
+        if (status && status !== 'all' && status !== 'completed') {
           query = query.eq('status', status as OTStatus);
         } else {
           query = query.in('status', statuses);
