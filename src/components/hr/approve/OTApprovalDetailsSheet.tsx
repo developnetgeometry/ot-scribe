@@ -147,35 +147,49 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange }: OTApprov
               <Separator />
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="remarks">HR Remarks *</Label>
+                  <Label htmlFor="remarks">HR Remarks (Optional for approval, Required for rejection)</Label>
                   <Textarea
                     id="remarks"
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Enter your remarks..."
+                    placeholder="Add your remarks here..."
                     className="mt-1"
                     rows={3}
                   />
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col gap-3">
+                  {/* Approve Button - Prominent */}
                   <Button
                     onClick={handleApprove}
-                    disabled={!remarks.trim() || approveRequest.isPending}
-                    className="flex-1"
+                    disabled={approveRequest.isPending || rejectRequest.isPending}
+                    className="w-full"
+                    size="lg"
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Approve
                   </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleReject}
-                    disabled={!remarks.trim() || rejectRequest.isPending}
-                    className="flex-1"
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Reject
-                  </Button>
+                  
+                  <Separator />
+                  
+                  {/* Reject Button - With warning */}
+                  <div className="space-y-2">
+                    <Button
+                      variant="destructive"
+                      onClick={handleReject}
+                      disabled={approveRequest.isPending || rejectRequest.isPending || !remarks.trim()}
+                      className="w-full"
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Reject
+                    </Button>
+                    
+                    {!remarks.trim() && (
+                      <p className="text-sm text-destructive text-center">
+                        * Remarks are required to reject this request
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </>
