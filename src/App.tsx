@@ -7,6 +7,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import SetPassword from "./pages/SetPassword";
+import SetupPassword from "./pages/SetupPassword";
 import Dashboard from "./pages/Dashboard";
 import SubmitOT from "./pages/SubmitOT";
 import OTHistory from "./pages/OTHistory";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/set-password" element={<SetPassword />} />
+            <Route path="/setup-password" element={<SetupPassword />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
             {/* Role-specific dashboards */}

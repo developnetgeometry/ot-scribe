@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.invite-employee]
 verify_jwt = false
+
+[functions.send-activation-email]
+verify_jwt = false
+
+[functions.activate-account]
+verify_jwt = false

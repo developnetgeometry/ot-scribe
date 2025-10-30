@@ -32,18 +32,35 @@ serve(async (req) => {
       }
     );
 
-    // Generate password recovery link
-    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: email,
-    });
+    // Get employee name
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user_id)
+      .single();
 
-    if (error) {
-      console.error('Error generating recovery link:', error);
-      throw error;
-    }
+    // Mark old tokens as expired
+    await supabaseAdmin
+      .from('activation_tokens')
+      .update({ status: 'expired' })
+      .eq('employee_id', user_id)
+      .eq('status', 'pending');
 
-    console.log('Password recovery link generated successfully');
+    // Call send-activation-email to generate new token and send email
+    const { error: emailError } = await supabaseAdmin.functions.invoke(
+      'send-activation-email',
+      {
+        body: {
+          employee_id: user_id,
+          email: email,
+          full_name: profile?.full_name || 'Employee',
+        }
+      }
+    );
+
+    if (emailError) throw emailError;
+
+    console.log('New activation email sent successfully');
 
     return new Response(
       JSON.stringify({ success: true, message: 'Activation email sent' }),

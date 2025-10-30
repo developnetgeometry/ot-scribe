@@ -89,15 +89,24 @@ serve(async (req) => {
 
     console.log('Role assigned');
 
-    // Send password reset email
-    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: email,
-    });
+    // Call send-activation-email function to create token and trigger email
+    const { error: emailError } = await supabaseAdmin.functions.invoke(
+      'send-activation-email',
+      {
+        body: {
+          employee_id: authData.user.id,
+          email: email,
+          full_name: full_name,
+        }
+      }
+    );
 
-    if (resetError) {
-      console.error('Error sending recovery email:', resetError);
+    if (emailError) {
+      console.error('Error sending activation email:', emailError);
+      // Don't fail the whole process if email fails - user can be reinvited
     }
+
+    console.log('Activation email process initiated');
 
     return new Response(
       JSON.stringify({ 
