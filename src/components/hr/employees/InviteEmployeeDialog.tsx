@@ -15,7 +15,6 @@ const inviteSchema = z.object({
   employee_id: z.string().min(1, 'Employee ID is required'),
   basic_salary: z.number().min(1, 'Basic salary must be greater than 0'),
   employment_type: z.string().min(1, 'Employment type is required'),
-  designation: z.string().optional(),
   role: z.enum(['employee', 'supervisor', 'hr', 'bod', 'admin']),
 });
 
@@ -44,7 +43,6 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
       employee_id: data.employee_id,
       basic_salary: data.basic_salary,
       employment_type: data.employment_type,
-      designation: data.designation,
       role: data.role,
     }, {
       onSuccess: () => {
@@ -150,46 +148,30 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="designation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Designation</FormLabel>
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <Input {...field} />
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="employee">Employee</SelectItem>
-                        <SelectItem value="supervisor">Supervisor</SelectItem>
-                        <SelectItem value="hr">HR</SelectItem>
-                        <SelectItem value="bod">BOD</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      <SelectItem value="employee">Employee</SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                      <SelectItem value="hr">HR</SelectItem>
+                      <SelectItem value="bod">BOD</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

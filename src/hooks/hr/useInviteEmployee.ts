@@ -8,7 +8,6 @@ interface InviteEmployeeData {
   employee_id: string;
   basic_salary: number;
   employment_type: string;
-  designation?: string;
   role: 'employee' | 'supervisor' | 'hr' | 'bod' | 'admin';
 }
 
