@@ -84,7 +84,7 @@ export function OTApprovalTable({ requests, isLoading }: OTApprovalTableProps) {
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Button>
-                    {request.status === 'verified' && (
+                    {(request.status === 'pending_verification' || request.status === 'verified') && (
                       <>
                         <Button
                           size="sm"

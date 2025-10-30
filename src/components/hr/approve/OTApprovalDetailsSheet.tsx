@@ -142,7 +142,7 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange }: OTApprov
           )}
 
           {/* Approval Actions */}
-          {request.status === 'verified' && (
+          {(request.status === 'pending_verification' || request.status === 'verified') && (
             <>
               <Separator />
               <div className="space-y-4">
