@@ -1,26 +1,22 @@
+import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, Edit } from 'lucide-react';
 import { formatCurrency } from '@/lib/otCalculations';
-
-interface Employee {
-  id: string;
-  employee_id: string;
-  full_name: string;
-  email: string;
-  department_id: string | null;
-  basic_salary: number;
-  user_roles?: Array<{ role: string }>;
-  status: string;
-}
+import { EmployeeDetailsSheet } from './EmployeeDetailsSheet';
+import { Profile } from '@/types/otms';
 
 interface EmployeeTableProps {
-  employees: Employee[];
+  employees: Profile[];
   isLoading: boolean;
 }
 
 export function EmployeeTable({ employees, isLoading }: EmployeeTableProps) {
+  const [selectedEmployee, setSelectedEmployee] = useState<Profile | null>(null);
+  const [sheetMode, setSheetMode] = useState<'view' | 'edit'>('view');
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
   if (isLoading) {
     return <div className="text-center py-8">Loading...</div>;
   }
@@ -70,10 +66,26 @@ export function EmployeeTable({ employees, isLoading }: EmployeeTableProps) {
               </TableCell>
               <TableCell>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedEmployee(employee);
+                      setSheetMode('view');
+                      setIsSheetOpen(true);
+                    }}
+                  >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedEmployee(employee);
+                      setSheetMode('edit');
+                      setIsSheetOpen(true);
+                    }}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
                 </div>
@@ -82,6 +94,13 @@ export function EmployeeTable({ employees, isLoading }: EmployeeTableProps) {
           ))}
         </TableBody>
       </Table>
+
+      <EmployeeDetailsSheet
+        employee={selectedEmployee}
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        mode={sheetMode}
+      />
     </div>
   );
 }
