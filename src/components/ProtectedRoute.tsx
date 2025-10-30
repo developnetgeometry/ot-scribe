@@ -1,6 +1,8 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { AppRole } from '@/types/otms';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,8 +11,29 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { user, roles, loading } = useAuth();
+  const [profileStatus, setProfileStatus] = useState<string | null>(null);
+  const [checkingStatus, setCheckingStatus] = useState(true);
 
-  if (loading) {
+  useEffect(() => {
+    const checkProfileStatus = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('status')
+          .eq('id', user.id)
+          .single();
+        
+        setProfileStatus(data?.status || null);
+      }
+      setCheckingStatus(false);
+    };
+
+    if (!loading) {
+      checkProfileStatus();
+    }
+  }, [user, loading]);
+
+  if (loading || checkingStatus) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -20,6 +43,10 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (profileStatus === 'pending_password') {
+    return <Navigate to="/change-password" replace />;
   }
 
   if (requiredRole) {

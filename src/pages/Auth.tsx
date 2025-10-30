@@ -67,12 +67,20 @@ export default function Auth() {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session?.user) {
-      // Fetch user profile
+      // Fetch user profile with status
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, status')
         .eq('id', session.user.id)
         .single();
+
+      // Check if password needs to be changed
+      if (profile?.status === 'pending_password') {
+        toast.info('Please set your new password to continue');
+        navigate('/change-password');
+        setLoading(false);
+        return;
+      }
 
       // Fetch user role
       const { data: roleData } = await supabase

@@ -40,10 +40,11 @@ serve(async (req) => {
       }
     );
 
-    // Create auth user with auto-generated password
+    // Create auth user with temporary default password
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       email_confirm: true,
+      password: 'Temp@12345',
       user_metadata: {
         full_name,
         employee_id,
@@ -70,7 +71,7 @@ serve(async (req) => {
         position,
         work_location,
         state,
-        status: 'pending',
+        status: 'pending_password',
       });
 
     if (profileError) throw profileError;
@@ -89,29 +90,10 @@ serve(async (req) => {
 
     console.log('Role assigned');
 
-    // Call send-activation-email function to create token and trigger email
-    const { error: emailError } = await supabaseAdmin.functions.invoke(
-      'send-activation-email',
-      {
-        body: {
-          employee_id: authData.user.id,
-          email: email,
-          full_name: full_name,
-        }
-      }
-    );
-
-    if (emailError) {
-      console.error('Error sending activation email:', emailError);
-      // Don't fail the whole process if email fails - user can be reinvited
-    }
-
-    console.log('Activation email process initiated');
-
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Employee invited successfully. They will receive an email to set their password.',
+        message: 'Employee added. Temporary password: Temp@12345. User must change password on first login.',
         user_id: authData.user.id,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
