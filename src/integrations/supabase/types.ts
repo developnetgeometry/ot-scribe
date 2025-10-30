@@ -434,7 +434,60 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_ot_amount: {
+        Args: {
+          basic_salary: number
+          day_type: Database["public"]["Enums"]["day_type"]
+          total_hours: number
+        }
+        Returns: {
+          hrp: number
+          orp: number
+          ot_amount: number
+        }[]
+      }
+      check_ot_eligibility: {
+        Args: { _employee_id: string; _ot_date: string }
+        Returns: {
+          is_eligible: boolean
+          reason: string
+          rule_id: string
+          rule_name: string
+        }[]
+      }
+      check_threshold_violations: {
+        Args: {
+          _employee_id: string
+          _requested_date: string
+          _requested_hours: number
+        }
+        Returns: Json
+      }
+      determine_day_type: {
+        Args: { ot_date: string }
+        Returns: Database["public"]["Enums"]["day_type"]
+      }
+      get_active_formula: {
+        Args: {
+          _day_type: Database["public"]["Enums"]["day_type"]
+          _employee_category: string
+          _ot_date: string
+        }
+        Returns: {
+          base_formula: string
+          conditional_logic: Json
+          formula_id: string
+          formula_name: string
+          multiplier: number
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "employee" | "supervisor" | "hr" | "bod" | "admin"
