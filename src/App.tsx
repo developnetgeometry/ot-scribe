@@ -11,6 +11,10 @@ import Dashboard from "./pages/Dashboard";
 import SubmitOT from "./pages/SubmitOT";
 import OTHistory from "./pages/OTHistory";
 import NotFound from "./pages/NotFound";
+import ApproveOT from "./pages/hr/ApproveOT";
+import Employees from "./pages/hr/Employees";
+import Settings from "./pages/hr/Settings";
+import OTReports from "./pages/hr/OTReports";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +32,10 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/ot/submit" element={<ProtectedRoute requiredRole="employee"><SubmitOT /></ProtectedRoute>} />
             <Route path="/ot/history" element={<ProtectedRoute requiredRole="employee"><OTHistory /></ProtectedRoute>} />
+            <Route path="/hr/approve" element={<ProtectedRoute requiredRole="hr"><ApproveOT /></ProtectedRoute>} />
+            <Route path="/hr/employees" element={<ProtectedRoute requiredRole="hr"><Employees /></ProtectedRoute>} />
+            <Route path="/hr/settings" element={<ProtectedRoute requiredRole="hr"><Settings /></ProtectedRoute>} />
+            <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole="hr"><OTReports /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
