@@ -11,7 +11,7 @@ interface Employee {
   email: string;
   department_id: string | null;
   basic_salary: number;
-  designation: string | null;
+  user_roles?: Array<{ role: string }>;
   status: string;
 }
 
@@ -41,7 +41,7 @@ export function EmployeeTable({ employees, isLoading }: EmployeeTableProps) {
             <TableHead>Employee ID</TableHead>
             <TableHead>Full Name</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Designation</TableHead>
+            <TableHead>Role</TableHead>
             <TableHead>Basic Salary</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
@@ -53,7 +53,15 @@ export function EmployeeTable({ employees, isLoading }: EmployeeTableProps) {
               <TableCell className="font-mono text-sm">{employee.employee_id}</TableCell>
               <TableCell className="font-medium">{employee.full_name}</TableCell>
               <TableCell>{employee.email}</TableCell>
-              <TableCell>{employee.designation || '-'}</TableCell>
+              <TableCell>
+                {employee.user_roles && employee.user_roles.length > 0 ? (
+                  <Badge variant="outline" className="capitalize">
+                    {employee.user_roles[0].role}
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">employee</Badge>
+                )}
+              </TableCell>
               <TableCell>{formatCurrency(employee.basic_salary)}</TableCell>
               <TableCell>
                 <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>

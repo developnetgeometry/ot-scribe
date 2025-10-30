@@ -46,6 +46,7 @@ export interface Profile {
   work_location: string | null;
   state: string | null;
   status: string;
+  user_roles?: Array<{ role: AppRole }>;
   created_at: string;
   updated_at: string;
 }

@@ -6,13 +6,31 @@ export function useEmployees() {
   return useQuery({
     queryKey: ['hr-employees'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as Profile[];
+      if (profilesError) throw profilesError;
+
+      // Fetch user roles
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) throw rolesError;
+
+      // Merge roles into profiles
+      const profilesWithRoles = profiles?.map(profile => {
+        const userRoles = roles?.filter(r => r.user_id === profile.id);
+        return {
+          ...profile,
+          user_roles: userRoles?.map(r => ({ role: r.role })) || []
+        };
+      });
+
+      return profilesWithRoles as Profile[];
     },
   });
 }
