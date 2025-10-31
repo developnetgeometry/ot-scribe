@@ -25,8 +25,12 @@ export function StateHolidayGenerator({ year, onGenerate }: StateHolidayGenerato
       { year, stateCode },
       {
         onSuccess: (data) => {
+          if (data.length === 0) {
+            toast.warning('No holidays found for this state/year');
+            return;
+          }
           onGenerate(data);
-          toast.success('State holidays added');
+          toast.success(`Generated ${data.length} state holiday${data.length > 1 ? 's' : ''}`);
         },
       }
     );

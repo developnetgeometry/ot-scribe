@@ -51,6 +51,8 @@ export default function NewHolidayCalendar() {
       temp_id: `temp-${Date.now()}-${Math.random()}`,
     }));
 
+    const beforeCount = items.length;
+    
     // Merge and remove duplicates
     const merged = [...items, ...newItems];
     const unique = merged.filter((item, index, self) =>
@@ -62,6 +64,13 @@ export default function NewHolidayCalendar() {
     );
     
     setItems(unique);
+    
+    const addedCount = unique.length - beforeCount;
+    if (addedCount === 0) {
+      toast.info('No new holidays to add (all already exist)');
+    } else {
+      toast.success(`Added ${addedCount} new holiday${addedCount > 1 ? 's' : ''}`);
+    }
   };
 
   const handleRemoveItem = (index: number) => {
