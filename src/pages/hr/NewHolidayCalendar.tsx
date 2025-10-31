@@ -22,6 +22,7 @@ export default function NewHolidayCalendar() {
   const [dateFrom, setDateFrom] = useState(`${currentYear}-01-01`);
   const [dateTo, setDateTo] = useState(`${currentYear}-12-31`);
   const [items, setItems] = useState<HolidayItem[]>([]);
+  const [weeklyOffDays, setWeeklyOffDays] = useState<number[]>([0]);
 
   const { mutate: createCalendar, isPending } = useCreateHolidayCalendar();
 
@@ -42,6 +43,7 @@ export default function NewHolidayCalendar() {
     );
     
     setItems(unique);
+    setWeeklyOffDays([0]); // Reset to default after generation
     toast.success(`Added ${dates.length} weekly offs`);
   };
 
@@ -189,6 +191,8 @@ export default function NewHolidayCalendar() {
               <WeeklyOffSelector
                 dateFrom={dateFrom}
                 dateTo={dateTo}
+                selectedDays={weeklyOffDays}
+                onSelectionChange={setWeeklyOffDays}
                 onGenerate={handleWeeklyOffsGenerate}
               />
             </AccordionContent>
