@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Eye, Edit, Mail, Trash2 } from 'lucide-react';
+import { Eye, Edit, Mail, Trash2, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '@/lib/otCalculations';
 import { EmployeeDetailsSheet } from './EmployeeDetailsSheet';
 import { Profile } from '@/types/otms';
@@ -91,6 +91,8 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
             <TableHead>Employee ID</TableHead>
             <TableHead>Full Name</TableHead>
             <TableHead>Email</TableHead>
+            <TableHead>Department</TableHead>
+            <TableHead>Position</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>OT Eligible</TableHead>
@@ -103,6 +105,26 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
               <TableCell className="font-mono text-sm">{employee.employee_id}</TableCell>
               <TableCell className="font-medium">{employee.full_name}</TableCell>
               <TableCell>{employee.email}</TableCell>
+              <TableCell>
+                {employee.department?.name ? (
+                  <span>{employee.department.name}</span>
+                ) : (
+                  <div className="flex items-center gap-1 text-amber-600">
+                    <AlertTriangle className="h-3 w-3" />
+                    <span className="text-sm">Not assigned</span>
+                  </div>
+                )}
+              </TableCell>
+              <TableCell>
+                {employee.position ? (
+                  <span>{employee.position}</span>
+                ) : (
+                  <div className="flex items-center gap-1 text-amber-600">
+                    <AlertTriangle className="h-3 w-3" />
+                    <span className="text-sm">Not assigned</span>
+                  </div>
+                )}
+              </TableCell>
               <TableCell>
                 {employee.user_roles && employee.user_roles.length > 0
                   ? employee.user_roles.map(ur => ur.role).join(', ')
