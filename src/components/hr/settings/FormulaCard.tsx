@@ -1,9 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Edit, Trash2 } from 'lucide-react';
-import { useUpdateRateFormula } from '@/hooks/hr/useUpdateRateFormula';
+import { Edit, Trash2, Copy, Calculator } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface RateFormula {
@@ -22,55 +20,69 @@ interface FormulaCardProps {
   formula: RateFormula;
   onEdit: (formula: RateFormula) => void;
   onDelete: (formula: RateFormula) => void;
+  onDuplicate: (formula: RateFormula) => void;
 }
 
-const dayTypeStyles: Record<string, { bg: string; text: string }> = {
-  weekday: { bg: 'bg-blue-100', text: 'text-blue-800' },
-  saturday: { bg: 'bg-purple-100', text: 'text-purple-800' },
-  sunday: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-  public_holiday: { bg: 'bg-red-100', text: 'text-red-800' },
-};
-
-export function FormulaCard({ formula, onEdit, onDelete }: FormulaCardProps) {
-  const updateFormula = useUpdateRateFormula();
-
-  const handleToggle = (checked: boolean) => {
-    updateFormula.mutate({
-      id: formula.id,
-      is_active: checked,
-    });
+export function FormulaCard({ formula, onEdit, onDelete, onDuplicate }: FormulaCardProps) {
+  const formatDayType = (dayType: string) => {
+    return dayType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  const dayTypeStyle = dayTypeStyles[formula.day_type] || { bg: 'bg-gray-100', text: 'text-gray-800' };
+  const buildFormulaExpression = () => {
+    return `(${formula.base_formula}) × ${formula.multiplier} × Hours`;
+  };
 
   return (
-    <Card className="p-6 flex justify-between items-center">
-      <div className="space-y-1">
-        <h4 className="text-base font-semibold text-foreground">{formula.formula_name}</h4>
-        <div className="flex items-center gap-2">
-          <Badge className={`${dayTypeStyle.bg} ${dayTypeStyle.text}`} variant="outline">
-            {formula.day_type.replace('_', ' ').toUpperCase()}
-          </Badge>
-          <span className="text-sm text-muted-foreground">
-            Multiplier: {formula.multiplier}x
-          </span>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Formula: {formula.base_formula}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Effective: {format(new Date(formula.effective_from), 'MMM dd, yyyy')}
-          {formula.effective_to && ` - ${format(new Date(formula.effective_to), 'MMM dd, yyyy')}`}
-        </p>
-      </div>
-      <div className="flex items-center gap-2">
-        <Badge variant={formula.is_active ? 'default' : 'secondary'}>
+    <Card className="p-6 space-y-4">
+      {/* Header Row */}
+      <div className="flex justify-between items-center">
+        <h4 className="text-base font-semibold text-foreground">
+          {formula.formula_name}
+        </h4>
+        <Badge 
+          variant={formula.is_active ? 'default' : 'secondary'}
+          className={formula.is_active ? 'bg-[#E0E7FF] text-[#1E40AF]' : ''}
+        >
           {formula.is_active ? 'Active' : 'Inactive'}
         </Badge>
+      </div>
+
+      {/* Day Type & Category */}
+      <p className="text-sm text-muted-foreground">
+        {formatDayType(formula.day_type)} | {formula.employee_category}
+      </p>
+
+      {/* Formula Expression Box */}
+      <div className="bg-[#F3F4F6] p-4 rounded-lg flex items-center gap-3">
+        <Calculator className="h-5 w-5 text-[#5F26B4] flex-shrink-0" />
+        <code className="text-sm font-mono text-foreground">
+          {buildFormulaExpression()}
+        </code>
+      </div>
+
+      {/* Effective Date */}
+      <div className="flex justify-between items-center text-sm">
+        <span className="text-muted-foreground">Effective From:</span>
+        <span className="font-semibold text-foreground">
+          {format(new Date(formula.effective_from), 'dd MMM yyyy')}
+        </span>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDuplicate(formula)}
+          title="Duplicate Formula"
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onEdit(formula)}
+          title="Edit Formula"
         >
           <Edit className="h-4 w-4" />
         </Button>
@@ -78,14 +90,10 @@ export function FormulaCard({ formula, onEdit, onDelete }: FormulaCardProps) {
           variant="ghost"
           size="icon"
           onClick={() => onDelete(formula)}
+          title="Delete Formula"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
-        <Switch
-          checked={formula.is_active}
-          onCheckedChange={handleToggle}
-          disabled={updateFormula.isPending}
-        />
       </div>
     </Card>
   );
