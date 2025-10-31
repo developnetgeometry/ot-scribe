@@ -46,18 +46,38 @@ export function useUpdateHolidayCalendar() {
         if (deleteError) throw deleteError;
       }
 
-      // Upsert items
-      if (items.length > 0) {
-        const itemsWithCalendarId = items.map(item => ({
+      // Separate new items from existing items
+      const existingItems = items.filter(item => item.id);
+      const newItems = items.filter(item => !item.id);
+
+      // Update existing items
+      if (existingItems.length > 0) {
+        const existingItemsWithCalendarId = existingItems.map(item => ({
           ...item,
           calendar_id: id,
         }));
 
-        const { error: itemsError } = await supabase
+        const { error: updateError } = await supabase
           .from('holiday_calendar_items')
-          .upsert(itemsWithCalendarId);
+          .upsert(existingItemsWithCalendarId);
 
-        if (itemsError) throw itemsError;
+        if (updateError) throw updateError;
+      }
+
+      // Insert new items
+      if (newItems.length > 0) {
+        const newItemsWithCalendarId = newItems.map(item => ({
+          holiday_date: item.holiday_date,
+          description: item.description,
+          state_code: item.state_code,
+          calendar_id: id,
+        }));
+
+        const { error: insertError } = await supabase
+          .from('holiday_calendar_items')
+          .insert(newItemsWithCalendarId);
+
+        if (insertError) throw insertError;
       }
 
       return { id };
