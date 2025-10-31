@@ -46,7 +46,6 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
             <TableHead>Day Type</TableHead>
             <TableHead className="text-right">Hours</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
             <TableHead className="text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -81,9 +80,6 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
               </TableCell>
               <TableCell>
                 <StatusBadge status={request.status} />
-              </TableCell>
-              <TableCell className="text-right font-semibold">
-                {formatCurrency(request.ot_amount)}
               </TableCell>
               <TableCell className="text-center">
                 <Button

@@ -28,13 +28,12 @@ export default function OTHistory() {
   const handleExportCSV = () => {
     if (!requests.length) return;
 
-    const headers = ['Date', 'Day Type', 'Hours', 'Status', 'Amount', 'Reason'];
+    const headers = ['Date', 'Day Type', 'Hours', 'Status', 'Reason'];
     const rows = requests.map(r => [
       r.ot_date,
       r.day_type,
       r.total_hours,
       r.status,
-      r.ot_amount || 0,
       r.reason.replace(/,/g, ';'),
     ]);
 
