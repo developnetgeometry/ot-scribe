@@ -42,6 +42,7 @@ export function useBODReportData(selectedMonth?: Date) {
         `)
         .gte('ot_date', startDate)
         .lte('ot_date', endDate)
+        .in('status', ['approved', 'reviewed'])
         .order('ot_date', { ascending: false });
 
       if (error) throw error;
