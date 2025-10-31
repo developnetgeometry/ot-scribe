@@ -113,10 +113,30 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error inviting employee:', error);
+    
+    let errorMessage = 'Unknown error occurred';
+    
+    // Check for duplicate email (auth error)
+    if (error?.message?.includes('already registered')) {
+      errorMessage = 'This email address is already registered';
+    }
+    // Check for duplicate employee_id (unique constraint violation)
+    else if (error?.code === '23505' && error?.message?.includes('employee_id')) {
+      errorMessage = 'Employee No already exists. Please use a unique Employee No.';
+    }
+    // Check for other database constraints
+    else if (error?.code === '23505') {
+      errorMessage = 'A record with this information already exists';
+    }
+    // Use the error message if available
+    else if (error instanceof Error && error.message) {
+      errorMessage = error.message;
+    }
+    
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: errorMessage }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     );
   }

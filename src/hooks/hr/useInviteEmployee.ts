@@ -44,10 +44,19 @@ export function useInviteEmployee() {
         duration: 10000,
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      console.error('Failed to invite employee:', error);
+      
+      let errorMessage = 'Failed to add employee';
+      
+      // Handle edge function errors
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Error',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     },
