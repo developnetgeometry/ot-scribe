@@ -61,6 +61,9 @@ function AppSidebar() {
     { path: '/employee/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['employee'] },
     { path: '/bod/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['bod'] },
     
+    // Shared - Calendar (all users)
+    { path: '/calendar', label: 'Calendar', icon: Calendar, roles: ['admin', 'hr', 'supervisor', 'employee', 'bod'] },
+    
     // Employee actions
     { path: '/ot/submit', label: 'Submit OT', icon: PlusCircle, roles: ['employee'] },
     { path: '/ot/history', label: 'OT History', icon: History, roles: ['employee'] },

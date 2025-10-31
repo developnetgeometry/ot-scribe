@@ -21,6 +21,7 @@ import OTReports from "./pages/hr/OTReports";
 import HolidayCalendars from "./pages/hr/HolidayCalendars";
 import NewHolidayCalendar from "./pages/hr/NewHolidayCalendar";
 import EditHolidayCalendar from "./pages/hr/EditHolidayCalendar";
+import Calendar from "./pages/Calendar";
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import HRDashboard from "./pages/hr/HRDashboard";
 import SupervisorDashboard from "./pages/supervisor/SupervisorDashboard";
@@ -55,6 +56,9 @@ const App = () => (
             
             {/* Fallback dashboard */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            
+            {/* Shared routes - all authenticated users */}
+            <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             
             {/* Employee routes */}
             <Route path="/ot/submit" element={<ProtectedRoute requiredRole="employee"><SubmitOT /></ProtectedRoute>} />
