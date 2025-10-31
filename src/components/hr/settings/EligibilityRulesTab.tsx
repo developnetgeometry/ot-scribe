@@ -1,12 +1,32 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { EligibilityRulesTable } from './EligibilityRulesTable';
 import { useEligibilityRules } from '@/hooks/hr/useEligibilityRules';
+import { useDeleteEligibilityRule } from '@/hooks/hr/useDeleteEligibilityRule';
+import { EligibilityRuleCard } from './EligibilityRuleCard';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export function EligibilityRulesTab() {
   const { data: rules, isLoading } = useEligibilityRules();
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const deleteRule = useDeleteEligibilityRule();
+  const [ruleToDelete, setRuleToDelete] = useState<any>(null);
+
+  const handleDelete = () => {
+    if (ruleToDelete) {
+      deleteRule.mutate(ruleToDelete.id);
+      setRuleToDelete(null);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -17,13 +37,48 @@ export function EligibilityRulesTab() {
             Define who is eligible for overtime based on salary, department, and role
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button className="bg-[#5F26B4] hover:bg-[#5F26B4]/90">
           <Plus className="h-4 w-4 mr-2" />
           Add Rule
         </Button>
       </div>
 
-      <EligibilityRulesTable rules={rules || []} isLoading={isLoading} />
+      <div className="space-y-4">
+        {isLoading ? (
+          <>
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </>
+        ) : rules && rules.length > 0 ? (
+          rules.map((rule) => (
+            <EligibilityRuleCard
+              key={rule.id}
+              rule={rule}
+              onEdit={() => {}}
+              onDelete={setRuleToDelete}
+            />
+          ))
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No eligibility rules found. Click "Add Rule" to create one.
+          </div>
+        )}
+      </div>
+
+      <AlertDialog open={!!ruleToDelete} onOpenChange={() => setRuleToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Eligibility Rule</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{ruleToDelete?.rule_name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
