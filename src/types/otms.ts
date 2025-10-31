@@ -51,6 +51,7 @@ export interface Profile {
   work_location: string | null;
   state: string | null;
   status: string;
+  is_ot_eligible: boolean;
   user_roles?: Array<{ role: AppRole }>;
   department?: { id: string; name: string; code: string } | null;
   created_at: string;

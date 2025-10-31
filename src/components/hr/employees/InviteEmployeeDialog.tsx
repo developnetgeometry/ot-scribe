@@ -28,6 +28,7 @@ const inviteSchema = z.object({
   work_location: z.string().trim().min(1, 'Work location is required').max(100),
   supervisor_id: z.string().uuid().optional().or(z.literal('')),
   role: z.enum(['employee', 'supervisor', 'hr', 'bod', 'admin']),
+  is_ot_eligible: z.boolean().default(true),
 });
 
 type InviteFormData = z.infer<typeof inviteSchema>;
@@ -48,6 +49,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
       role: 'employee',
       employment_type: 'Permanent',
       supervisor_id: '',
+      is_ot_eligible: true,
     },
   });
 
@@ -69,6 +71,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
       work_location: data.work_location,
       supervisor_id: data.supervisor_id || null,
       role: data.role,
+      is_ot_eligible: data.is_ot_eligible,
     }, {
       onSuccess: () => {
         form.reset();
@@ -378,6 +381,30 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
                     </SelectContent>
                   </Select>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Row 10: OT Eligible */}
+            <FormField
+              control={form.control}
+              name="is_ot_eligible"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={field.onChange}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>OT Eligible</FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      Allow this employee to submit overtime requests
+                    </p>
+                  </div>
                 </FormItem>
               )}
             />

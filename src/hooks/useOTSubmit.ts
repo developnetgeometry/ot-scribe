@@ -21,14 +21,19 @@ export function useOTSubmit() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Get employee profile to get supervisor_id
+      // Get employee profile to get supervisor_id and check OT eligibility
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('supervisor_id')
+        .select('supervisor_id, is_ot_eligible')
         .eq('id', user.id)
         .single();
 
       if (profileError) throw profileError;
+
+      // Check if employee is eligible for OT
+      if (!profile.is_ot_eligible) {
+        throw new Error('You are not eligible to submit OT requests. Please contact HR.');
+      }
 
       const { data: otRequest, error } = await supabase
         .from('ot_requests')

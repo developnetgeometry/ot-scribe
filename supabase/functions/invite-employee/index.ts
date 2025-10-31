@@ -30,7 +30,8 @@ serve(async (req) => {
       supervisor_id,
       role = 'employee',
       designation,
-      state
+      state,
+      is_ot_eligible = true
     } = await req.json();
 
     console.log('Inviting employee:', { email, full_name, employee_id, role });
@@ -83,6 +84,7 @@ serve(async (req) => {
         supervisor_id,
         designation,
         state,
+        is_ot_eligible,
         status: 'pending_setup',
       });
 

@@ -452,6 +452,31 @@ export function EmployeeDetailsSheet({
                 </Badge>
               )}
             </div>
+
+            {/* Row 10: OT Eligible (Full Width) */}
+            <div className="grid gap-2 col-span-2">
+              <Label htmlFor="is_ot_eligible">OT Eligible</Label>
+              {isEditing ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="is_ot_eligible"
+                    checked={formData.is_ot_eligible ?? true}
+                    onChange={(e) =>
+                      setFormData({ ...formData, is_ot_eligible: e.target.checked })
+                    }
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    Allow employee to submit overtime requests
+                  </span>
+                </div>
+              ) : (
+                <Badge variant={employee.is_ot_eligible ? 'default' : 'secondary'} className="w-fit">
+                  {employee.is_ot_eligible ? 'Yes' : 'No'}
+                </Badge>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-2 justify-end">

@@ -21,6 +21,7 @@ interface UpdateEmployeeData {
   work_location?: string | null;
   state?: string | null;
   status?: string;
+  is_ot_eligible?: boolean;
   role?: AppRole;
 }
 

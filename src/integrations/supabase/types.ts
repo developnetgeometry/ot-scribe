@@ -455,6 +455,7 @@ export type Database = {
           ic_no: string | null
           id: string
           income_tax_no: string | null
+          is_ot_eligible: boolean
           joining_date: string | null
           phone_no: string | null
           position: string | null
@@ -478,6 +479,7 @@ export type Database = {
           ic_no?: string | null
           id: string
           income_tax_no?: string | null
+          is_ot_eligible?: boolean
           joining_date?: string | null
           phone_no?: string | null
           position?: string | null
@@ -501,6 +503,7 @@ export type Database = {
           ic_no?: string | null
           id?: string
           income_tax_no?: string | null
+          is_ot_eligible?: boolean
           joining_date?: string | null
           phone_no?: string | null
           position?: string | null
