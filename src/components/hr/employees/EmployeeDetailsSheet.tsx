@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Profile, AppRole } from '@/types/otms';
 import { useUpdateEmployee } from '@/hooks/hr/useUpdateEmployee';
 import { useDepartments } from '@/hooks/hr/useDepartments';
+import { useEmployees } from '@/hooks/hr/useEmployees';
 import { formatCurrency } from '@/lib/otCalculations';
 
 interface EmployeeDetailsSheetProps {
@@ -30,7 +31,7 @@ interface EmployeeDetailsSheetProps {
 }
 
 const roles: AppRole[] = ['employee', 'supervisor', 'hr', 'bod', 'admin'];
-const employmentTypes = ['Full-time', 'Part-time', 'Contract', 'Temporary'];
+const employmentTypes = ['Permanent', 'Contract', 'Internship'];
 const statuses = ['active', 'inactive'];
 
 export function EmployeeDetailsSheet({
@@ -45,6 +46,7 @@ export function EmployeeDetailsSheet({
 
   const updateEmployee = useUpdateEmployee();
   const { data: departments } = useDepartments();
+  const { data: employees = [] } = useEmployees();
 
   useEffect(() => {
     setMode(initialMode);
@@ -87,7 +89,7 @@ export function EmployeeDetailsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto sm:max-w-xl">
+      <SheetContent className="overflow-y-auto sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle>Employee Details</SheetTitle>
           <SheetDescription>
@@ -96,9 +98,10 @@ export function EmployeeDetailsSheet({
         </SheetHeader>
 
         <div className="space-y-6 py-6">
-          <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            {/* Row 1: Employee No + Full Name */}
             <div className="grid gap-2">
-              <Label>Employee ID</Label>
+              <Label>Employee No</Label>
               <div className="font-mono text-sm">{employee.employee_id}</div>
             </div>
 
@@ -111,10 +114,28 @@ export function EmployeeDetailsSheet({
                   onChange={(e) =>
                     setFormData({ ...formData, full_name: e.target.value })
                   }
+                  placeholder="Enter Full Name"
                   required
                 />
               ) : (
                 <div className="text-sm">{employee.full_name}</div>
+              )}
+            </div>
+
+            {/* Row 2: IC/Passport No + Email */}
+            <div className="grid gap-2">
+              <Label htmlFor="ic_no">IC/Passport No</Label>
+              {isEditing ? (
+                <Input
+                  id="ic_no"
+                  value={formData.ic_no || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, ic_no: e.target.value })
+                  }
+                  placeholder="e.g. 900101-10-1234"
+                />
+              ) : (
+                <div className="text-sm">{employee.ic_no || '-'}</div>
               )}
             </div>
 
@@ -128,6 +149,7 @@ export function EmployeeDetailsSheet({
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
+                  placeholder="Enter Email"
                   required
                 />
               ) : (
@@ -135,6 +157,248 @@ export function EmployeeDetailsSheet({
               )}
             </div>
 
+            {/* Row 3: Phone No + Position */}
+            <div className="grid gap-2">
+              <Label htmlFor="phone_no">Phone No</Label>
+              {isEditing ? (
+                <Input
+                  id="phone_no"
+                  value={formData.phone_no || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone_no: e.target.value })
+                  }
+                  placeholder="e.g. 012-3456789"
+                />
+              ) : (
+                <div className="text-sm">{employee.phone_no || '-'}</div>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="position">Position</Label>
+              {isEditing ? (
+                <Input
+                  id="position"
+                  value={formData.position || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, position: e.target.value })
+                  }
+                  placeholder="e.g. Technician / Engineer"
+                />
+              ) : (
+                <div className="text-sm">{employee.position || '-'}</div>
+              )}
+            </div>
+
+            {/* Row 4: Department + Basic Salary */}
+            <div className="grid gap-2">
+              <Label htmlFor="department">Department</Label>
+              {isEditing ? (
+                <Select
+                  value={formData.department_id || undefined}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, department_id: value })
+                  }
+                >
+                  <SelectTrigger id="department">
+                    <SelectValue placeholder="Select Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments?.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-sm">
+                  {departments?.find((d) => d.id === employee.department_id)?.name || '-'}
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="basic_salary">Basic Salary (RM)</Label>
+              {isEditing ? (
+                <Input
+                  id="basic_salary"
+                  type="number"
+                  step="0.01"
+                  value={formData.basic_salary || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      basic_salary: parseFloat(e.target.value),
+                    })
+                  }
+                  placeholder="e.g. 3000"
+                  required
+                />
+              ) : (
+                <div className="text-sm">{formatCurrency(employee.basic_salary)}</div>
+              )}
+            </div>
+
+            {/* Row 5: EPF No + SOCSO No */}
+            <div className="grid gap-2">
+              <Label htmlFor="epf_no">EPF No</Label>
+              {isEditing ? (
+                <Input
+                  id="epf_no"
+                  value={formData.epf_no || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, epf_no: e.target.value })
+                  }
+                  placeholder="Enter EPF No"
+                />
+              ) : (
+                <div className="text-sm">{employee.epf_no || '-'}</div>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="socso_no">SOCSO No</Label>
+              {isEditing ? (
+                <Input
+                  id="socso_no"
+                  value={formData.socso_no || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, socso_no: e.target.value })
+                  }
+                  placeholder="Enter SOCSO No"
+                />
+              ) : (
+                <div className="text-sm">{employee.socso_no || '-'}</div>
+              )}
+            </div>
+
+            {/* Row 6: Income Tax No + Employment Type */}
+            <div className="grid gap-2">
+              <Label htmlFor="income_tax_no">Income Tax No</Label>
+              {isEditing ? (
+                <Input
+                  id="income_tax_no"
+                  value={formData.income_tax_no || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, income_tax_no: e.target.value })
+                  }
+                  placeholder="Enter Income Tax No"
+                />
+              ) : (
+                <div className="text-sm">{employee.income_tax_no || '-'}</div>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="employment_type">Employment Type</Label>
+              {isEditing ? (
+                <Select
+                  value={formData.employment_type || undefined}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, employment_type: value })
+                  }
+                >
+                  <SelectTrigger id="employment_type">
+                    <SelectValue placeholder="Select Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employmentTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-sm">{employee.employment_type || '-'}</div>
+              )}
+            </div>
+
+            {/* Row 7: Joining Date + Work Location */}
+            <div className="grid gap-2">
+              <Label htmlFor="joining_date">Joining Date</Label>
+              {isEditing ? (
+                <Input
+                  id="joining_date"
+                  type="date"
+                  value={formData.joining_date || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, joining_date: e.target.value })
+                  }
+                />
+              ) : (
+                <div className="text-sm">
+                  {employee.joining_date
+                    ? new Date(employee.joining_date).toLocaleDateString()
+                    : '-'}
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="work_location">Work Location</Label>
+              {isEditing ? (
+                <Input
+                  id="work_location"
+                  value={formData.work_location || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, work_location: e.target.value })
+                  }
+                  placeholder="e.g. HQ, Site A"
+                />
+              ) : (
+                <div className="text-sm">{employee.work_location || '-'}</div>
+              )}
+            </div>
+
+            {/* Row 8: State + Reporting To */}
+            <div className="grid gap-2">
+              <Label htmlFor="state">State</Label>
+              {isEditing ? (
+                <Input
+                  id="state"
+                  value={formData.state || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, state: e.target.value })
+                  }
+                  placeholder="e.g. Selangor"
+                />
+              ) : (
+                <div className="text-sm">{employee.state || '-'}</div>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="supervisor_id">Reporting To</Label>
+              {isEditing ? (
+                <Select
+                  value={formData.supervisor_id || undefined}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, supervisor_id: value })
+                  }
+                >
+                  <SelectTrigger id="supervisor_id">
+                    <SelectValue placeholder="Select Supervisor (Optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employees
+                      .filter(emp => emp.user_roles?.some(r => ['supervisor', 'hr', 'admin'].includes(r.role)))
+                      .map((emp) => (
+                        <SelectItem key={emp.id} value={emp.id}>
+                          {emp.full_name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-sm">
+                  {employees.find((e) => e.id === employee.supervisor_id)?.full_name || '-'}
+                </div>
+              )}
+            </div>
+
+            {/* Row 9: Role + Status */}
             <div className="grid gap-2">
               <Label htmlFor="role">Role</Label>
               {isEditing ? (
@@ -156,158 +420,6 @@ export function EmployeeDetailsSheet({
                     ? employee.user_roles[0].role
                     : 'employee'}
                 </Badge>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="department">Department</Label>
-              {isEditing ? (
-                <Select
-                  value={formData.department_id || ''}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, department_id: value })
-                  }
-                >
-                  <SelectTrigger id="department">
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments?.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-sm">
-                  {departments?.find((d) => d.id === employee.department_id)?.name || '-'}
-                </div>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="basic_salary">Basic Salary</Label>
-              {isEditing ? (
-                <Input
-                  id="basic_salary"
-                  type="number"
-                  value={formData.basic_salary || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      basic_salary: parseFloat(e.target.value),
-                    })
-                  }
-                  required
-                />
-              ) : (
-                <div className="text-sm">{formatCurrency(employee.basic_salary)}</div>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="employment_type">Employment Type</Label>
-              {isEditing ? (
-                <Select
-                  value={formData.employment_type || ''}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, employment_type: value })
-                  }
-                >
-                  <SelectTrigger id="employment_type">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employmentTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-sm">{employee.employment_type || '-'}</div>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="designation">Designation</Label>
-              {isEditing ? (
-                <Input
-                  id="designation"
-                  value={formData.designation || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, designation: e.target.value })
-                  }
-                />
-              ) : (
-                <div className="text-sm">{employee.designation || '-'}</div>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="position">Position</Label>
-              {isEditing ? (
-                <Input
-                  id="position"
-                  value={formData.position || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, position: e.target.value })
-                  }
-                />
-              ) : (
-                <div className="text-sm">{employee.position || '-'}</div>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="work_location">Work Location</Label>
-              {isEditing ? (
-                <Input
-                  id="work_location"
-                  value={formData.work_location || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, work_location: e.target.value })
-                  }
-                />
-              ) : (
-                <div className="text-sm">{employee.work_location || '-'}</div>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="state">State</Label>
-              {isEditing ? (
-                <Input
-                  id="state"
-                  value={formData.state || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, state: e.target.value })
-                  }
-                />
-              ) : (
-                <div className="text-sm">{employee.state || '-'}</div>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="joining_date">Joining Date</Label>
-              {isEditing ? (
-                <Input
-                  id="joining_date"
-                  type="date"
-                  value={formData.joining_date || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, joining_date: e.target.value })
-                  }
-                />
-              ) : (
-                <div className="text-sm">
-                  {employee.joining_date
-                    ? new Date(employee.joining_date).toLocaleDateString()
-                    : '-'}
-                </div>
               )}
             </div>
 

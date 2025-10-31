@@ -7,10 +7,14 @@ interface UpdateEmployeeData {
   id: string;
   full_name?: string;
   email?: string;
+  ic_no?: string | null;
+  phone_no?: string | null;
   department_id?: string | null;
   basic_salary?: number;
+  epf_no?: string | null;
+  socso_no?: string | null;
+  income_tax_no?: string | null;
   employment_type?: string | null;
-  designation?: string | null;
   position?: string | null;
   supervisor_id?: string | null;
   joining_date?: string | null;
