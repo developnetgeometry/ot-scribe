@@ -98,24 +98,26 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OT
             </div>
           </div>
 
-          {/* Calculation Details */}
-          <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
-            <h4 className="font-semibold text-sm">Calculation</h4>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">ORP</p>
-                <p className="font-medium">{formatCurrency(request.orp || 0)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">HRP</p>
-                <p className="font-medium">{formatCurrency(request.hrp || 0)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">OT Amount</p>
-                <p className="font-medium text-lg">{formatCurrency(request.ot_amount || 0)}</p>
+          {/* Calculation Details - Only visible to HR and BOD */}
+          {(role === 'hr' || role === 'bod') && (
+            <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
+              <h4 className="font-semibold text-sm">Calculation</h4>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">ORP</p>
+                  <p className="font-medium">{formatCurrency(request.orp || 0)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">HRP</p>
+                  <p className="font-medium">{formatCurrency(request.hrp || 0)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">OT Amount</p>
+                  <p className="font-medium text-lg">{formatCurrency(request.ot_amount || 0)}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Threshold Violations */}
           {hasThresholdViolations && (
