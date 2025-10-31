@@ -25,9 +25,17 @@ const getStatusFilter = (role: ApprovalRole, statusFilter?: string): OTStatus[] 
     return [statusFilter as OTStatus];
   }
 
-  // Handle "all" case specifically for supervisors
-  if (statusFilter === 'all' && role === 'supervisor') {
-    return ['verified', 'rejected'];
+  // Handle "all" case specifically for each role
+  if (statusFilter === 'all') {
+    if (role === 'supervisor') {
+      return ['verified', 'rejected'];
+    }
+    if (role === 'hr') {
+      return ['pending_verification', 'verified', 'rejected'];
+    }
+    if (role === 'bod') {
+      return ['approved', 'reviewed', 'rejected'];
+    }
   }
 
   switch (role) {
