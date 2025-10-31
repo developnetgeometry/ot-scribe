@@ -43,7 +43,7 @@ export function HolidayItemsTable({ items, onRemove }: HolidayItemsTableProps) {
             <TableRow key={item.id || item.temp_id || index}>
               <TableCell>{index + 1}</TableCell>
               <TableCell>
-                {format(new Date(item.holiday_date + 'T00:00:00'), 'dd MMM yyyy')}
+                {format(new Date(item.holiday_date + 'T00:00:00'), 'dd MMM yyyy (EEEE)')}
               </TableCell>
               <TableCell>{item.description}</TableCell>
               <TableCell>
