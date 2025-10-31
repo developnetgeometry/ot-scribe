@@ -41,9 +41,18 @@ export function WeeklyOffSelector({ dateFrom, dateTo, onGenerate }: WeeklyOffSel
 
     // For each selected day
     selectedDays.forEach(targetDay => {
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        if (d.getDay() === targetDay) {
-          allDates.push(d.toISOString().split('T')[0]);
+      const startTime = start.getTime();
+      const endTime = end.getTime();
+      const oneDay = 24 * 60 * 60 * 1000;
+
+      for (let time = startTime; time <= endTime; time += oneDay) {
+        const currentDate = new Date(time);
+        if (currentDate.getDay() === targetDay) {
+          // Use local date string format to avoid timezone conversion
+          const year = currentDate.getFullYear();
+          const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+          const day = String(currentDate.getDate()).padStart(2, '0');
+          allDates.push(`${year}-${month}-${day}`);
         }
       }
     });
