@@ -11,6 +11,3 @@ verify_jwt = false
 
 [functions.activate-account]
 verify_jwt = false
-
-[functions.generate-ot-payslip]
-verify_jwt = true

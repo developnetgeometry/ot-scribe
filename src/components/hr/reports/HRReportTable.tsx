@@ -5,6 +5,7 @@ import { formatCurrency, formatHours } from '@/lib/otCalculations';
 import { ArrowUpDown, ArrowUp, ArrowDown, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { generatePayslipPDF } from '@/lib/payslipPdfGenerator';
 
 interface EmployeeOTSummary {
   employee_id: string;
@@ -35,27 +36,69 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
     setDownloadingIds(prev => new Set(prev).add(employeeId));
 
     try {
-      const month = selectedMonth.getMonth() + 1;
       const year = selectedMonth.getFullYear();
-
-      const { data, error } = await supabase.functions.invoke('generate-ot-payslip', {
-        body: { employeeId, month, year }
-      });
-
-      if (error) throw error;
-
-      // Convert response to blob and download
-      const blob = new Blob([data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
+      const monthNum = selectedMonth.getMonth() + 1;
       
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      a.download = `OT_Payslip_${employeeNo}_${monthNames[month - 1]}_${year}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      // Calculate date range
+      const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+      const lastDay = new Date(year, monthNum, 0).getDate();
+      const endDate = `${year}-${String(monthNum).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+      // Fetch employee profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          employee_id,
+          full_name,
+          ic_no,
+          epf_no,
+          socso_no,
+          income_tax_no,
+          department_id,
+          position_id,
+          departments!profiles_department_id_fkey(name),
+          positions!profiles_position_id_fkey(title)
+        `)
+        .eq('id', employeeId)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Fetch OT requests for the month
+      const { data: otRequests, error: otError } = await supabase
+        .from('ot_requests')
+        .select('ot_amount')
+        .eq('employee_id', employeeId)
+        .gte('ot_date', startDate)
+        .lte('ot_date', endDate)
+        .in('status', ['approved', 'reviewed']);
+
+      if (otError) throw otError;
+
+      const totalOTAmount = otRequests?.reduce((sum, r) => sum + (r.ot_amount || 0), 0) || 0;
+
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+
+      // Generate PDF
+      generatePayslipPDF({
+        employee: {
+          employee_no: profile.employee_id,
+          full_name: profile.full_name,
+          ic_no: profile.ic_no,
+          epf_no: profile.epf_no,
+          socso_no: profile.socso_no,
+          income_tax_no: profile.income_tax_no,
+          department: profile.departments?.name || 'Not Assigned',
+          position: profile.positions?.title || 'Not Assigned',
+        },
+        period: {
+          month: monthNames[monthNum - 1],
+          year: year,
+        },
+        totalOTAmount,
+      });
 
       toast({
         title: 'Success',
