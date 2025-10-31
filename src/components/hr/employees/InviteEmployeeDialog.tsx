@@ -56,7 +56,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Invite New Employee</DialogTitle>
+          <DialogTitle>Add Employee</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -178,7 +178,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? 'Inviting...' : 'Invite Employee'}
+                {isPending ? 'Adding...' : 'Add Employee'}
               </Button>
             </div>
           </form>

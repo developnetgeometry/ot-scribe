@@ -27,7 +27,7 @@ export function useInviteEmployee() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hr-employees'] });
       toast({
-        title: '✅ Employee Invited Successfully!',
+        title: '✅ Employee Added Successfully!',
         description: 'Temporary Password: Temp@12345 — Please share this password with the new employee. They must change it on first login.',
         duration: 10000,
       });
