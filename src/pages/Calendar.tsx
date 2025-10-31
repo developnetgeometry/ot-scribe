@@ -10,11 +10,13 @@ import { CalendarLegend } from "@/components/calendar/CalendarLegend";
 import { HolidayDetailsSection } from "@/components/calendar/HolidayDetailsSection";
 import { useHolidayCalendarView } from "@/hooks/useHolidayCalendarView";
 import { useAuth } from "@/hooks/useAuth";
+import { useActiveHolidayCalendar } from "@/hooks/hr/useActiveHolidayCalendar";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const { data: holidays, isLoading, error } = useHolidayCalendarView();
+  const { data: activeCalendar, isLoading: isCalendarLoading } = useActiveHolidayCalendar();
   const { hasRole } = useAuth();
 
   const holidayDates = holidays?.map(h => parseISO(h.holiday_date)) || [];
@@ -40,9 +42,9 @@ export default function Calendar() {
             <h1 className="text-3xl font-bold">Calendar</h1>
             <p className="text-muted-foreground">View public holidays based on HR's configured calendar.</p>
           </div>
-          {(hasRole('hr') || hasRole('admin')) && (
-            <Button asChild>
-              <Link to="/hr/calendar">
+          {(hasRole('hr') || hasRole('admin')) && activeCalendar && (
+            <Button asChild disabled={isCalendarLoading}>
+              <Link to={`/hr/calendar/${activeCalendar.id}/edit`}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Calendar
               </Link>
