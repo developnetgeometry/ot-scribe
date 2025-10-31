@@ -62,6 +62,19 @@ export default function EditHolidayCalendar() {
     toast.success(`Added ${dates.length} weekly offs`);
   };
 
+  const handleRemoveWeeklyOffs = (dates: string[]) => {
+    const removeSet = new Set(dates);
+    const before = items.length;
+    const next = items.filter(i => !(i.description === 'Weekly Off' && removeSet.has(i.holiday_date)));
+    setItems(next);
+    const removed = before - next.length;
+    if (removed > 0) {
+      toast.success(`Removed ${removed} weekly off${removed !== 1 ? 's' : ''}`);
+    } else {
+      toast.info('No matching weekly offs found to remove');
+    }
+  };
+
   const handleStateHolidaysGenerate = (holidays: Array<{ holiday_date: string; description: string; state_code: string }>) => {
     const newItems = holidays.map(h => ({
       ...h,
@@ -217,13 +230,14 @@ export default function EditHolidayCalendar() {
               <span className="text-lg font-semibold">Add Weekly Holidays</span>
             </AccordionTrigger>
             <AccordionContent className="pt-4">
-              <WeeklyOffSelector
-                dateFrom={dateFrom}
-                dateTo={dateTo}
-                selectedDays={weeklyOffDays}
-                onSelectionChange={setWeeklyOffDays}
-                onGenerate={handleWeeklyOffsGenerate}
-              />
+                <WeeklyOffSelector
+                  dateFrom={dateFrom}
+                  dateTo={dateTo}
+                  selectedDays={weeklyOffDays}
+                  onSelectionChange={setWeeklyOffDays}
+                  onGenerate={handleWeeklyOffsGenerate}
+                  onRemove={handleRemoveWeeklyOffs}
+                />
             </AccordionContent>
           </AccordionItem>
 

@@ -15,8 +15,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const { data: holidays, isLoading, error } = useHolidayCalendarView();
   const { data: activeCalendar, isLoading: isCalendarLoading } = useActiveHolidayCalendar();
+  const { data: holidays, isLoading, error } = useHolidayCalendarView(activeCalendar?.id);
   const { hasRole } = useAuth();
 
   const holidayDates = holidays?.map(h => parseISO(h.holiday_date)) || [];

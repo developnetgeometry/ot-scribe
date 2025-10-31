@@ -19,9 +19,10 @@ interface WeeklyOffSelectorProps {
   selectedDays: number[];
   onSelectionChange: (days: number[]) => void;
   onGenerate: (dates: string[]) => void;
+  onRemove?: (dates: string[]) => void;
 }
 
-export function WeeklyOffSelector({ dateFrom, dateTo, selectedDays, onSelectionChange, onGenerate }: WeeklyOffSelectorProps) {
+export function WeeklyOffSelector({ dateFrom, dateTo, selectedDays, onSelectionChange, onGenerate, onRemove }: WeeklyOffSelectorProps) {
   const toggleDay = (dayValue: number) => {
     onSelectionChange(
       selectedDays.includes(dayValue)
@@ -30,62 +31,52 @@ export function WeeklyOffSelector({ dateFrom, dateTo, selectedDays, onSelectionC
     );
   };
 
+  // DST-proof date generation helper
+  const generateDatesForDays = (dateFrom: string, dateTo: string, selectedDays: number[]): string[] => {
+    const start = new Date(dateFrom);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(dateTo);
+    end.setHours(0, 0, 0, 0);
+    
+    const result: string[] = [];
+    
+    for (const targetDay of selectedDays) {
+      const first = new Date(start);
+      const diff = (targetDay - first.getDay() + 7) % 7;
+      first.setDate(first.getDate() + diff);
+      
+      for (const d = new Date(first); d <= end; d.setDate(d.getDate() + 7)) {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        result.push(`${year}-${month}-${day}`);
+      }
+    }
+    
+    return result.sort();
+  };
+
   const calculateDateCount = () => {
     if (!dateFrom || !dateTo || selectedDays.length === 0) {
       return 0;
     }
-
-    const start = new Date(dateFrom + 'T00:00:00');
-    const end = new Date(dateTo + 'T00:00:00');
-    let count = 0;
-
-    selectedDays.forEach(targetDay => {
-      const startTime = start.getTime();
-      const endTime = end.getTime();
-      const oneDay = 24 * 60 * 60 * 1000;
-
-      for (let time = startTime; time <= endTime; time += oneDay) {
-        const currentDate = new Date(time);
-        if (currentDate.getDay() === targetDay) {
-          count++;
-        }
-      }
-    });
-
-    return count;
+    return generateDatesForDays(dateFrom, dateTo, selectedDays).length;
   };
 
   const handleGenerate = () => {
     if (!dateFrom || !dateTo || selectedDays.length === 0) {
       return;
     }
-
-    const start = new Date(dateFrom + 'T00:00:00');
-    const end = new Date(dateTo + 'T00:00:00');
-    const allDates: string[] = [];
-
-    // For each selected day
-    selectedDays.forEach(targetDay => {
-      const startTime = start.getTime();
-      const endTime = end.getTime();
-      const oneDay = 24 * 60 * 60 * 1000;
-
-      for (let time = startTime; time <= endTime; time += oneDay) {
-        const currentDate = new Date(time);
-        if (currentDate.getDay() === targetDay) {
-          // Use local date string format to avoid timezone conversion
-          const year = currentDate.getFullYear();
-          const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-          const day = String(currentDate.getDate()).padStart(2, '0');
-          allDates.push(`${year}-${month}-${day}`);
-        }
-      }
-    });
-
-    // Sort dates chronologically
-    allDates.sort();
-    
+    const allDates = generateDatesForDays(dateFrom, dateTo, selectedDays);
     onGenerate(allDates);
+  };
+
+  const handleRemove = () => {
+    if (!dateFrom || !dateTo || selectedDays.length === 0 || !onRemove) {
+      return;
+    }
+    const allDates = generateDatesForDays(dateFrom, dateTo, selectedDays);
+    onRemove(allDates);
   };
 
   const handleClearSelection = () => {
@@ -139,6 +130,16 @@ export function WeeklyOffSelector({ dateFrom, dateTo, selectedDays, onSelectionC
         >
           Add {totalDates > 0 ? `${totalDates}` : ''} Weekly Off{totalDates !== 1 ? 's' : ''} to Holidays
         </Button>
+        {onRemove && (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleRemove}
+            disabled={!dateFrom || !dateTo || selectedDays.length === 0}
+          >
+            Remove
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"
