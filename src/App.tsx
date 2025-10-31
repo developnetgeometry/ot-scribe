@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 import ApproveOT from "./pages/hr/ApproveOT";
 import Employees from "./pages/hr/Employees";
+import Departments from "./pages/hr/Departments";
 import Settings from "./pages/hr/Settings";
 import OTReports from "./pages/hr/OTReports";
 import HolidayCalendars from "./pages/hr/HolidayCalendars";
@@ -70,6 +71,7 @@ const App = () => (
             {/* HR routes */}
             <Route path="/hr/approve" element={<ProtectedRoute requiredRole="hr"><ApproveOT /></ProtectedRoute>} />
             <Route path="/hr/employees" element={<ProtectedRoute requiredRole="hr"><Employees /></ProtectedRoute>} />
+            <Route path="/hr/departments" element={<ProtectedRoute requiredRole="hr"><Departments /></ProtectedRoute>} />
             <Route path="/hr/calendar" element={<ProtectedRoute requiredRole="hr"><HolidayCalendars /></ProtectedRoute>} />
             <Route path="/hr/calendar/new" element={<ProtectedRoute requiredRole="hr"><NewHolidayCalendar /></ProtectedRoute>} />
             <Route path="/hr/calendar/:id/edit" element={<ProtectedRoute requiredRole="hr"><EditHolidayCalendar /></ProtectedRoute>} />
