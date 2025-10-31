@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
 import { DashboardCard } from '@/components/DashboardCard';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle, Users, FileText, Clock, Calendar } from 'lucide-react';
+import { CheckCircle, Users, FileText, Clock } from 'lucide-react';
 
 export default function HRDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalEmployees: 0,
     pendingApprovals: 0,
@@ -84,24 +81,6 @@ export default function HRDashboard() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={() => navigate('/hr/approve')} className="gap-2">
-            <CheckCircle className="h-4 w-4" />
-            Approve OT Requests
-          </Button>
-          <Button onClick={() => navigate('/hr/employees')} variant="outline" className="gap-2">
-            <Users className="h-4 w-4" />
-            Manage Employees
-          </Button>
-          <Button onClick={() => navigate('/hr/calendar')} variant="outline" className="gap-2">
-            <Calendar className="h-4 w-4" />
-            View Calendar
-          </Button>
-          <Button onClick={() => navigate('/hr/ot-reports')} variant="outline" className="gap-2">
-            <FileText className="h-4 w-4" />
-            View Reports
-          </Button>
-        </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {loading ? (
