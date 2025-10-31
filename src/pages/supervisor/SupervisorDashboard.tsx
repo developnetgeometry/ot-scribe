@@ -5,10 +5,10 @@ import { AppLayout } from '@/components/AppLayout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Clock, ClipboardList, CheckSquare } from 'lucide-react';
 import { SupervisorDashboardCard } from '@/components/supervisor/SupervisorDashboardCard';
-import { HeroBanner } from '@/components/supervisor/HeroBanner';
 import { SupervisorOTTrendChart } from '@/components/supervisor/SupervisorOTTrendChart';
-import { RecentTeamOTTable } from '@/components/supervisor/RecentTeamOTTable';
-import { InsightBanner } from '@/components/supervisor/InsightBanner';
+import { OTVerificationBreakdownChart } from '@/components/supervisor/OTVerificationBreakdownChart';
+import { SupervisorQuickActions } from '@/components/supervisor/SupervisorQuickActions';
+import { FooterNote } from '@/components/supervisor/FooterNote';
 
 export default function SupervisorDashboard() {
   const { user } = useAuth();
@@ -20,7 +20,6 @@ export default function SupervisorDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState('');
-  const [avgOTPerMember, setAvgOTPerMember] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -65,23 +64,27 @@ export default function SupervisorDashboard() {
     const pendingVerifications = otRequests?.filter(req => req.status === 'pending_verification').length || 0;
     const verifiedRequests = otRequests?.filter(req => req.status === 'verified' || req.status === 'approved' || req.status === 'reviewed').length || 0;
 
-    const avgOT = teamCount && teamCount > 0 ? teamOTHours / teamCount : 0;
-
     setStats({
       teamOTHours,
       pendingVerifications,
       verifiedRequests,
       teamMembersCount: teamCount || 0,
     });
-    setAvgOTPerMember(avgOT);
     setLoading(false);
   };
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        <HeroBanner name={fullName} />
+      <div className="space-y-8">
+        {/* Header Section */}
+        <div>
+          <h1 className="text-3xl font-bold">Supervisor Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            Welcome back, {fullName || 'Supervisor'}! Here's your team's OT performance overview for this month.
+          </p>
+        </div>
 
+        {/* KPI Cards Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {loading ? (
             <>
@@ -95,7 +98,7 @@ export default function SupervisorDashboard() {
               <SupervisorDashboardCard
                 title="Team Members"
                 value={stats.teamMembersCount}
-                subtitle="Direct reports"
+                subtitle="Active employees under your team"
                 icon={Users}
                 variant="blue"
               />
@@ -109,14 +112,14 @@ export default function SupervisorDashboard() {
               <SupervisorDashboardCard
                 title="Verified Requests"
                 value={stats.verifiedRequests}
-                subtitle="This month"
+                subtitle="Approved this month"
                 icon={CheckSquare}
                 variant="green"
               />
               <SupervisorDashboardCard
-                title="Team OT Hours"
+                title="Total Team OT Hours"
                 value={stats.teamOTHours.toFixed(1)}
-                subtitle="Total this month"
+                subtitle="This month"
                 icon={Clock}
                 variant="yellow"
               />
@@ -124,14 +127,23 @@ export default function SupervisorDashboard() {
           )}
         </div>
 
-        <SupervisorOTTrendChart />
+        {/* Overview Charts Section */}
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Overview Charts</h2>
+          <p className="text-muted-foreground text-sm mb-4">
+            Visualize your team's overtime activities and verification trends.
+          </p>
+          <div className="grid gap-6 md:grid-cols-2">
+            <SupervisorOTTrendChart />
+            <OTVerificationBreakdownChart />
+          </div>
+        </div>
 
-        <RecentTeamOTTable />
+        {/* Quick Actions Section */}
+        <SupervisorQuickActions />
 
-        <InsightBanner 
-          avgOTPerMember={avgOTPerMember}
-          teamMembersCount={stats.teamMembersCount}
-        />
+        {/* Footer Note */}
+        <FooterNote />
       </div>
     </AppLayout>
   );
