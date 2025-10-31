@@ -6,7 +6,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { DashboardCard } from '@/components/DashboardCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle, Users, FileText, DollarSign, Clock } from 'lucide-react';
+import { CheckCircle, Users, FileText, DollarSign, Clock, Calendar } from 'lucide-react';
 
 export default function HRDashboard() {
   const { user } = useAuth();
@@ -95,6 +95,10 @@ export default function HRDashboard() {
           <Button onClick={() => navigate('/hr/employees')} variant="outline" className="gap-2">
             <Users className="h-4 w-4" />
             Manage Employees
+          </Button>
+          <Button onClick={() => navigate('/hr/calendar')} variant="outline" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            View Calendar
           </Button>
           <Button onClick={() => navigate('/hr/ot-reports')} variant="outline" className="gap-2">
             <FileText className="h-4 w-4" />

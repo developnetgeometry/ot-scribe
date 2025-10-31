@@ -35,7 +35,8 @@ import {
   FileText,
   Eye,
   User,
-  LogOut
+  LogOut,
+  Calendar
 } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -70,8 +71,9 @@ function AppSidebar() {
     // HR actions
     { path: '/hr/approve', label: 'Approve OT', icon: CheckCircle, roles: ['hr'] },
     { path: '/hr/employees', label: 'Employees', icon: Users, roles: ['hr'] },
-    { path: '/hr/settings', label: 'HR Settings', icon: Settings, roles: ['hr'] },
+    { path: '/hr/calendar', label: 'Calendar', icon: Calendar, roles: ['hr'] },
     { path: '/hr/ot-reports', label: 'OT Reports', icon: FileText, roles: ['hr'] },
+    { path: '/hr/settings', label: 'HR Settings', icon: Settings, roles: ['hr'] },
     
     // BOD actions
     { path: '/bod/review', label: 'BOD Review', icon: Eye, roles: ['bod'] },
