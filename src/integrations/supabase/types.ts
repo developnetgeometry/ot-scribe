@@ -79,6 +79,77 @@ export type Database = {
         }
         Relationships: []
       }
+      holiday_calendar_items: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          description: string
+          holiday_date: string
+          id: string
+          state_code: string | null
+        }
+        Insert: {
+          calendar_id: string
+          created_at?: string
+          description: string
+          holiday_date: string
+          id?: string
+          state_code?: string | null
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          description?: string
+          holiday_date?: string
+          id?: string
+          state_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holiday_calendar_items_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_calendars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      holiday_calendars: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date_from: string
+          date_to: string
+          id: string
+          name: string
+          state_code: string | null
+          total_holidays: number | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date_from: string
+          date_to: string
+          id?: string
+          name: string
+          state_code?: string | null
+          total_holidays?: number | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date_from?: string
+          date_to?: string
+          id?: string
+          name?: string
+          state_code?: string | null
+          total_holidays?: number | null
+          year?: number
+        }
+        Relationships: []
+      }
       ot_approval_thresholds: {
         Row: {
           alert_recipients: string[] | null
@@ -331,6 +402,7 @@ export type Database = {
       }
       ot_settings: {
         Row: {
+          active_calendar_id: string | null
           id: string
           max_daily_hours: number | null
           rounding_rule: string | null
@@ -340,6 +412,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          active_calendar_id?: string | null
           id?: string
           max_daily_hours?: number | null
           rounding_rule?: string | null
@@ -349,6 +422,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          active_calendar_id?: string | null
           id?: string
           max_daily_hours?: number | null
           rounding_rule?: string | null
@@ -357,7 +431,15 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ot_settings_active_calendar_id_fkey"
+            columns: ["active_calendar_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_calendars"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -510,6 +592,14 @@ export type Database = {
       determine_day_type: {
         Args: { ot_date: string }
         Returns: Database["public"]["Enums"]["day_type"]
+      }
+      generate_state_holidays: {
+        Args: { in_state_code?: string; in_year: number }
+        Returns: {
+          description: string
+          holiday_date: string
+          state_code: string
+        }[]
       }
       get_active_formula: {
         Args: {

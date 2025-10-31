@@ -18,7 +18,9 @@ import ApproveOT from "./pages/hr/ApproveOT";
 import Employees from "./pages/hr/Employees";
 import Settings from "./pages/hr/Settings";
 import OTReports from "./pages/hr/OTReports";
-import CalendarManagement from "./pages/hr/CalendarManagement";
+import HolidayCalendars from "./pages/hr/HolidayCalendars";
+import NewHolidayCalendar from "./pages/hr/NewHolidayCalendar";
+import EditHolidayCalendar from "./pages/hr/EditHolidayCalendar";
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import HRDashboard from "./pages/hr/HRDashboard";
 import SupervisorDashboard from "./pages/supervisor/SupervisorDashboard";
@@ -64,7 +66,9 @@ const App = () => (
             {/* HR routes */}
             <Route path="/hr/approve" element={<ProtectedRoute requiredRole="hr"><ApproveOT /></ProtectedRoute>} />
             <Route path="/hr/employees" element={<ProtectedRoute requiredRole="hr"><Employees /></ProtectedRoute>} />
-            <Route path="/hr/calendar" element={<ProtectedRoute requiredRole="hr"><CalendarManagement /></ProtectedRoute>} />
+            <Route path="/hr/calendar" element={<ProtectedRoute requiredRole="hr"><HolidayCalendars /></ProtectedRoute>} />
+            <Route path="/hr/calendar/new" element={<ProtectedRoute requiredRole="hr"><NewHolidayCalendar /></ProtectedRoute>} />
+            <Route path="/hr/calendar/:id/edit" element={<ProtectedRoute requiredRole="hr"><EditHolidayCalendar /></ProtectedRoute>} />
             <Route path="/hr/settings" element={<ProtectedRoute requiredRole="hr"><Settings /></ProtectedRoute>} />
             <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole="hr"><OTReports /></ProtectedRoute>} />
             
