@@ -186,7 +186,8 @@ export function useOTApproval(options: UseOTApprovalOptions) {
       if (role === 'supervisor') {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          query = query.eq('supervisor_id', user.id);
+          // Match requests where either the request has supervisor_id OR the employee's profile has supervisor_id
+          query = query.or(`supervisor_id.eq.${user.id},profiles.supervisor_id.eq.${user.id}`);
         }
       }
 
