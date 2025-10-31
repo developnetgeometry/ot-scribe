@@ -6,15 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Search, DollarSign, Clock, AlertTriangle, FileCheck, Download, FileText } from 'lucide-react';
 import { EnhancedDashboardCard } from '@/components/hr/EnhancedDashboardCard';
 import { BODReportTable } from '@/components/bod/BODReportTable';
+import { MonthPicker } from '@/components/bod/MonthPicker';
 import { useBODReportData } from '@/hooks/useBODReportData';
 import { exportToCSV, exportToPDF } from '@/lib/exportUtils';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
 import { toast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 export default function ReviewOT() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   
-  const { data, isLoading } = useBODReportData();
+  const { data, isLoading } = useBODReportData(selectedMonth);
 
   const aggregatedData = data?.aggregated || [];
   const stats = data?.stats || {
@@ -62,8 +65,8 @@ export default function ReviewOT() {
       monthly_total: formatCurrency(row.monthly_total)
     }));
 
-    const currentDate = new Date().toISOString().split('T')[0];
-    exportToCSV(formattedData, `BOD_OT_Report_${currentDate}`, headers);
+    const monthStr = format(selectedMonth, 'MMM_yyyy');
+    exportToCSV(formattedData, `BOD_OT_Report_${monthStr}`, headers);
     
     toast({
       title: 'Report exported',
@@ -123,6 +126,10 @@ export default function ReviewOT() {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <h2 className="text-lg font-semibold">Monthly OT Summary Report</h2>
+              <MonthPicker 
+                selectedMonth={selectedMonth}
+                onMonthChange={setSelectedMonth}
+              />
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
