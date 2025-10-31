@@ -14,10 +14,11 @@ export interface HolidayItem {
 
 interface HolidayItemsTableProps {
   items: HolidayItem[];
-  onRemove: (index: number) => void;
+  onRemove?: (index: number) => void;
+  readOnly?: boolean;
 }
 
-export function HolidayItemsTable({ items, onRemove }: HolidayItemsTableProps) {
+export function HolidayItemsTable({ items, onRemove, readOnly = false }: HolidayItemsTableProps) {
   if (items.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground border rounded-lg">
@@ -36,7 +37,7 @@ export function HolidayItemsTable({ items, onRemove }: HolidayItemsTableProps) {
             <TableHead>Day</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>State</TableHead>
-            <TableHead className="w-20"></TableHead>
+            {!readOnly && <TableHead className="w-20"></TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -55,15 +56,17 @@ export function HolidayItemsTable({ items, onRemove }: HolidayItemsTableProps) {
                   <Badge variant="secondary">{item.state_code}</Badge>
                 )}
               </TableCell>
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onRemove(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
+              {!readOnly && (
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onRemove?.(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

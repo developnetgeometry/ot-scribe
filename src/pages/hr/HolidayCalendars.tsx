@@ -1,33 +1,17 @@
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useHolidayCalendars } from '@/hooks/hr/useHolidayCalendars';
-import { useDeleteHolidayCalendar } from '@/hooks/hr/useDeleteHolidayCalendar';
+import { useActiveHolidayCalendar } from '@/hooks/hr/useActiveHolidayCalendar';
 import { Link } from 'react-router-dom';
-import { CalendarIcon, Edit, Plus, Trash2 } from 'lucide-react';
+import { CalendarIcon, Edit, Plus } from 'lucide-react';
 import { format } from 'date-fns';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { HolidayItemsTable } from '@/components/hr/calendar/HolidayItemsTable';
 
 export default function HolidayCalendars() {
-  const { data: calendars, isLoading, error } = useHolidayCalendars();
-  const { mutate: deleteCalendar } = useDeleteHolidayCalendar();
-
-  const handleDelete = (id: string) => {
-    deleteCalendar(id);
-  };
+  const { data: calendar, isLoading, error } = useActiveHolidayCalendar();
 
   return (
     <AppLayout>
@@ -36,36 +20,37 @@ export default function HolidayCalendars() {
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <CalendarIcon className="h-8 w-8" />
-              Holiday Calendars
+              Holiday Calendar
             </h1>
             <p className="text-muted-foreground mt-1">
-              Create and manage holiday calendars used by OT day-type detection
+              Manage holidays used for OT day-type detection
             </p>
           </div>
-          <Button asChild>
-            <Link to="/hr/calendar/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New Holiday Calendar
-            </Link>
-          </Button>
+          {calendar && (
+            <Button asChild>
+              <Link to={`/hr/calendar/${calendar.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Calendar
+              </Link>
+            </Button>
+          )}
         </div>
 
         {isLoading ? (
           <div className="space-y-3">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-64 w-full" />
           </div>
         ) : error ? (
           <Alert variant="destructive">
             <AlertDescription>
-              Failed to load holiday calendars. Please try again.
+              Failed to load holiday calendar. Please try again.
             </AlertDescription>
           </Alert>
-        ) : calendars?.length === 0 ? (
+        ) : !calendar ? (
           <div className="text-center py-12 border rounded-lg">
             <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-lg font-medium mb-2">No holiday calendars yet</p>
+            <p className="text-lg font-medium mb-2">No holiday calendar yet</p>
             <p className="text-muted-foreground mb-4">
               Create your first holiday calendar to get started
             </p>
@@ -77,68 +62,50 @@ export default function HolidayCalendars() {
             </Button>
           </div>
         ) : (
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>State</TableHead>
-                  <TableHead>Year</TableHead>
-                  <TableHead>Total Holidays</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="w-32">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {calendars?.map((calendar) => (
-                  <TableRow key={calendar.id}>
-                    <TableCell className="font-medium">{calendar.name}</TableCell>
-                    <TableCell>
+          <div className="space-y-6">
+            {/* Calendar Details Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{calendar.name}</CardTitle>
+                <CardDescription>
+                  Holiday calendar for {calendar.year}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Year</p>
+                    <p className="text-2xl font-bold">{calendar.year}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">State</p>
+                    <p className="text-lg font-medium">
                       {calendar.state_code ? (
                         <Badge variant="secondary">{calendar.state_code}</Badge>
                       ) : (
                         <span className="text-muted-foreground">All States</span>
                       )}
-                    </TableCell>
-                    <TableCell>{calendar.year}</TableCell>
-                    <TableCell>{calendar.total_holidays}</TableCell>
-                    <TableCell>
-                      {format(new Date(calendar.created_at), 'dd MMM yyyy')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link to={`/hr/calendar/${calendar.id}/edit`}>
-                            <Edit className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Holiday Calendar?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete "{calendar.name}" and all its holidays. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(calendar.id)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Period</p>
+                    <p className="text-lg font-medium">
+                      {format(new Date(calendar.date_from), 'dd MMM')} - {format(new Date(calendar.date_to), 'dd MMM yyyy')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Holidays</p>
+                    <p className="text-2xl font-bold">{calendar.total_holidays}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Holidays Table */}
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Holidays</h2>
+              <HolidayItemsTable items={calendar.items} readOnly />
+            </div>
           </div>
         )}
       </div>
