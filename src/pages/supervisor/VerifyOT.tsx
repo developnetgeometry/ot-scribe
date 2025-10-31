@@ -9,7 +9,7 @@ import { Search } from 'lucide-react';
 
 export default function VerifyOT() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('pending_verification');
   
   const { requests, isLoading } = useOTApproval({ role: 'supervisor', status: statusFilter });
 
