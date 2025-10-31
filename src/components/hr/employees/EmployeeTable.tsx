@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Eye, Edit, Mail, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/otCalculations';
 import { EmployeeDetailsSheet } from './EmployeeDetailsSheet';
 import { Profile } from '@/types/otms';
 import { useResendInvite } from '@/hooks/hr/useResendInvite';
 import { useDeleteEmployee } from '@/hooks/hr/useDeleteEmployee';
+import { useUpdateEmployee } from '@/hooks/hr/useUpdateEmployee';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +35,7 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
   const [employeeToDelete, setEmployeeToDelete] = useState<Profile | null>(null);
   const resendInvite = useResendInvite();
   const deleteEmployee = useDeleteEmployee();
+  const updateEmployee = useUpdateEmployee();
 
   // Filter employees based on search and status
   const filteredEmployees = employees.filter(employee => {
@@ -61,6 +64,13 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
     }
   };
 
+  const handleToggleOTEligibility = (employee: Profile, checked: boolean) => {
+    updateEmployee.mutate({
+      id: employee.id,
+      is_ot_eligible: checked,
+    });
+  };
+
   if (isLoading) {
     return <div className="text-center py-8">Loading...</div>;
   }
@@ -83,6 +93,7 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>OT Eligible</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -110,6 +121,13 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
                 >
                   {employee.status}
                 </Badge>
+              </TableCell>
+              <TableCell>
+                <Switch
+                  checked={employee.is_ot_eligible ?? true}
+                  onCheckedChange={(checked) => handleToggleOTEligibility(employee, checked)}
+                  disabled={updateEmployee.isPending}
+                />
               </TableCell>
               <TableCell>
                 <div className="flex gap-2">
