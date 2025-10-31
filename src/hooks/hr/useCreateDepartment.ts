@@ -12,6 +12,8 @@ export function useCreateDepartment() {
 
   return useMutation({
     mutationFn: async (data: CreateDepartmentData) => {
+      console.log('Creating department with data:', data);
+      
       const { data: department, error } = await supabase
         .from('departments')
         .insert({
@@ -21,7 +23,10 @@ export function useCreateDepartment() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Department creation error:', error);
+        throw error;
+      }
       return department;
     },
     onSuccess: () => {
@@ -29,8 +34,16 @@ export function useCreateDepartment() {
       toast.success('Department created successfully');
     },
     onError: (error: any) => {
+      console.error('Department creation failed:', error);
+      
       if (error.code === '23505') {
         toast.error('Department code or name already exists');
+      } else if (error.code === '42501') {
+        toast.error('Insufficient permissions to create department');
+      } else if (error.code === '23514') {
+        toast.error('Department data does not meet requirements');
+      } else if (error.message) {
+        toast.error(`Failed to create department: ${error.message}`);
       } else {
         toast.error('Failed to create department');
       }
