@@ -168,6 +168,7 @@ export default function OTReports() {
             <HRReportTable 
               data={filteredData}
               isLoading={isLoading}
+              selectedMonth={selectedMonth}
             />
           </div>
         </Card>

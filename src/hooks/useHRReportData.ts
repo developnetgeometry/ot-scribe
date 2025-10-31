@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 
 interface EmployeeOTSummary {
+  employee_id: string;
   employee_no: string;
   employee_name: string;
   department: string;
@@ -71,6 +72,7 @@ function aggregateByEmployee(requests: any[]): EmployeeOTSummary[] {
     
     if (!grouped.has(empId)) {
       grouped.set(empId, {
+        employee_id: empId,
         employee_no: profile?.employee_id || empId,
         employee_name: profile?.full_name || 'Unknown',
         department: profile?.departments?.name || 'N/A',

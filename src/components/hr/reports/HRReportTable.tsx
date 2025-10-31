@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, FileText } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface EmployeeOTSummary {
+  employee_id: string;
   employee_no: string;
   employee_name: string;
   department: string;
@@ -16,14 +20,62 @@ interface EmployeeOTSummary {
 interface HRReportTableProps {
   data: EmployeeOTSummary[];
   isLoading: boolean;
+  selectedMonth: Date;
 }
 
 type SortColumn = keyof EmployeeOTSummary;
 type SortDirection = 'asc' | 'desc';
 
-export function HRReportTable({ data, isLoading }: HRReportTableProps) {
+export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>('employee_no');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
+
+  const handleDownloadPayslip = async (employeeId: string, employeeNo: string) => {
+    setDownloadingIds(prev => new Set(prev).add(employeeId));
+
+    try {
+      const month = selectedMonth.getMonth() + 1;
+      const year = selectedMonth.getFullYear();
+
+      const { data, error } = await supabase.functions.invoke('generate-ot-payslip', {
+        body: { employeeId, month, year }
+      });
+
+      if (error) throw error;
+
+      // Convert response to blob and download
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      a.download = `OT_Payslip_${employeeNo}_${monthNames[month - 1]}_${year}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Success',
+        description: 'Payslip downloaded successfully',
+      });
+    } catch (error: any) {
+      console.error('Error downloading payslip:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate payslip',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloadingIds(prev => {
+        const next = new Set(prev);
+        next.delete(employeeId);
+        return next;
+      });
+    }
+  };
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -112,6 +164,7 @@ export function HRReportTable({ data, isLoading }: HRReportTableProps) {
             </TableHead>
             <TableHead className="text-right font-semibold">Amount (RM)</TableHead>
             <TableHead className="text-right font-semibold">Monthly Total (RM)</TableHead>
+            <TableHead className="text-right font-semibold">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -132,12 +185,23 @@ export function HRReportTable({ data, isLoading }: HRReportTableProps) {
               <TableCell className="text-right font-semibold">
                 {formatCurrency(row.monthly_total)}
               </TableCell>
+              <TableCell className="text-right">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleDownloadPayslip(row.employee_id, row.employee_no)}
+                  disabled={downloadingIds.has(row.employee_id)}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  {downloadingIds.has(row.employee_id) ? 'Generating...' : 'Payslip'}
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow className="bg-muted/50">
-            <TableCell colSpan={4} className="font-semibold">
+            <TableCell colSpan={5} className="font-semibold">
               Total (All Employees)
             </TableCell>
             <TableCell className="font-bold text-primary">
@@ -149,6 +213,7 @@ export function HRReportTable({ data, isLoading }: HRReportTableProps) {
             <TableCell className="text-right font-bold text-primary">
               {formatCurrency(totalCost)}
             </TableCell>
+            <TableCell></TableCell>
           </TableRow>
         </TableFooter>
       </Table>
