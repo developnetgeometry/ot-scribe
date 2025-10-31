@@ -16,8 +16,8 @@ interface ApprovalAction {
 }
 
 // Helper function to group OT requests by employee and date
-function groupOTRequestsByEmployee(requests: OTRequest[]): GroupedOTRequest[] {
-  const grouped = new Map<string, GroupedOTRequest>();
+function groupOTRequestsByEmployee(requests: any[]): GroupedOTRequest[] {
+  const grouped = new Map<string, any>();
   
   requests.forEach(request => {
     const key = `${request.employee_id}_${request.ot_date}`;
@@ -25,12 +25,13 @@ function groupOTRequestsByEmployee(requests: OTRequest[]): GroupedOTRequest[] {
     if (!grouped.has(key)) {
       grouped.set(key, {
         ...request,
+        profiles: request.profiles, // Explicitly preserve profiles
         sessions: [],
         total_hours: 0,
         request_ids: [],
         start_time: '',
         end_time: '',
-      } as any);
+      });
     }
     
     const group = grouped.get(key)!;
