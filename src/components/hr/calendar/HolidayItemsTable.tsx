@@ -33,6 +33,7 @@ export function HolidayItemsTable({ items, onRemove }: HolidayItemsTableProps) {
           <TableRow>
             <TableHead className="w-16">No.</TableHead>
             <TableHead>Date</TableHead>
+            <TableHead>Day</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>State</TableHead>
             <TableHead className="w-20"></TableHead>
@@ -43,7 +44,10 @@ export function HolidayItemsTable({ items, onRemove }: HolidayItemsTableProps) {
             <TableRow key={item.id || item.temp_id || index}>
               <TableCell>{index + 1}</TableCell>
               <TableCell>
-                {format(new Date(item.holiday_date + 'T00:00:00'), 'dd MMM yyyy (EEEE)')}
+                {format(new Date(item.holiday_date + 'T00:00:00'), 'dd MMM yyyy')}
+              </TableCell>
+              <TableCell>
+                {format(new Date(item.holiday_date + 'T00:00:00'), 'EEEE')}
               </TableCell>
               <TableCell>{item.description}</TableCell>
               <TableCell>
