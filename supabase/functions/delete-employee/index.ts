@@ -89,6 +89,16 @@ Deno.serve(async (req) => {
 
     if (deleteError) {
       console.error('Delete error:', deleteError)
+      
+      // If user is already deleted, treat as success
+      if (deleteError.message?.includes('User not found') || deleteError.status === 404) {
+        console.log('User already deleted, treating as success')
+        return new Response(
+          JSON.stringify({ message: 'Employee already deleted' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      
       throw deleteError
     }
 
