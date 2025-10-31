@@ -1,21 +1,9 @@
+import { useMemo } from 'react';
 import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
-import { enUS } from 'date-fns/locale';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { enUS } from 'date-fns/locale/en-US';
 import { CalendarEvent } from '@/hooks/hr/useCalendarData';
 import { cn } from '@/lib/utils';
-
-const locales = {
-  'en-US': enUS,
-};
-
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  locales,
-});
 
 interface CalendarViewProps {
   events: CalendarEvent[];
@@ -34,6 +22,18 @@ export function CalendarView({
   view,
   onViewChange,
 }: CalendarViewProps) {
+  const localizer = useMemo(
+    () =>
+      dateFnsLocalizer({
+        format,
+        parse,
+        startOfWeek,
+        getDay,
+        locales: { 'en-US': enUS },
+      }),
+    []
+  );
+
   const eventStyleGetter = (event: CalendarEvent) => {
     let backgroundColor = '';
     let borderColor = '';
