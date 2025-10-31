@@ -1,21 +1,23 @@
 import { useState } from 'react';
+import { Plus, Grid3x3, List, Search } from 'lucide-react';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Plus, Search, LayoutGrid, List } from 'lucide-react';
-import { useDepartments } from '@/hooks/hr/useDepartments';
+import { useDepartments, DepartmentWithCount } from '@/hooks/hr/useDepartments';
 import { DepartmentCard } from '@/components/hr/departments/DepartmentCard';
 import { DepartmentTable } from '@/components/hr/departments/DepartmentTable';
 import { DepartmentDialog } from '@/components/hr/departments/DepartmentDialog';
 import { DepartmentStats } from '@/components/hr/departments/DepartmentStats';
+import { DepartmentDetailsSheet } from '@/components/hr/departments/DepartmentDetailsSheet';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Departments() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const [showDetailsSheet, setShowDetailsSheet] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState<DepartmentWithCount | null>(null);
 
   const { data: departments, isLoading } = useDepartments();
 
@@ -32,14 +34,19 @@ export default function Departments() {
     return count > (max?.count || 0) ? { name: dept.name, count } : max;
   }, null as { name: string; count: number } | null);
 
-  const handleEdit = (department: any) => {
+  const handleEdit = (department: DepartmentWithCount) => {
     setSelectedDepartment(department);
-    setDialogOpen(true);
+    setShowDialog(true);
   };
 
   const handleCreate = () => {
     setSelectedDepartment(null);
-    setDialogOpen(true);
+    setShowDialog(true);
+  };
+
+  const handleViewDetails = (department: DepartmentWithCount) => {
+    setSelectedDepartment(department);
+    setShowDetailsSheet(true);
   };
 
   return (
@@ -91,7 +98,7 @@ export default function Departments() {
                 size="icon"
                 onClick={() => setViewMode('grid')}
               >
-                <LayoutGrid className="h-4 w-4" />
+                <Grid3x3 className="h-4 w-4" />
               </Button>
               <Button
                 variant={viewMode === 'table' ? 'default' : 'outline'}
@@ -111,26 +118,39 @@ export default function Departments() {
               <Skeleton key={i} className="h-32" />
             ))}
           </div>
-        ) : viewMode === 'grid' ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredDepartments?.map((dept) => (
-              <DepartmentCard key={dept.id} department={dept} onEdit={handleEdit} />
-            ))}
-            {filteredDepartments?.length === 0 && (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
-                No departments found
-              </div>
-            )}
-          </div>
         ) : (
-          <DepartmentTable departments={filteredDepartments || []} onEdit={handleEdit} />
+          <>
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredDepartments?.map((department) => (
+                  <DepartmentCard
+                    key={department.id}
+                    department={department}
+                    onEdit={handleEdit}
+                    onViewDetails={handleViewDetails}
+                  />
+                ))}
+              </div>
+            ) : (
+              <DepartmentTable
+                departments={filteredDepartments || []}
+                onEdit={handleEdit}
+              />
+            )}
+          </>
         )}
       </div>
 
       <DepartmentDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={showDialog}
+        onOpenChange={setShowDialog}
         department={selectedDepartment}
+      />
+
+      <DepartmentDetailsSheet
+        department={selectedDepartment}
+        open={showDetailsSheet}
+        onOpenChange={setShowDetailsSheet}
       />
     </AppLayout>
   );

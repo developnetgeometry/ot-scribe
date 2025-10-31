@@ -1,7 +1,8 @@
+import { useState } from 'react';
+import { Building2, Users, Edit, Trash2, Eye, Briefcase } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Users } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,20 +13,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useState } from 'react';
+import { DepartmentWithCount } from '@/hooks/hr/useDepartments';
 import { useDeleteDepartment } from '@/hooks/hr/useDeleteDepartment';
 
 interface DepartmentCardProps {
-  department: {
-    id: string;
-    code: string;
-    name: string;
-    employee_count?: number;
-  };
-  onEdit: (department: any) => void;
+  department: DepartmentWithCount;
+  onEdit: (department: DepartmentWithCount) => void;
+  onViewDetails: (department: DepartmentWithCount) => void;
 }
 
-export function DepartmentCard({ department, onEdit }: DepartmentCardProps) {
+export function DepartmentCard({ department, onEdit, onViewDetails }: DepartmentCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const deleteDepartment = useDeleteDepartment();
 
@@ -36,39 +33,66 @@ export function DepartmentCard({ department, onEdit }: DepartmentCardProps) {
 
   return (
     <>
-      <Card className="hover:shadow-md transition-shadow">
-        <CardContent className="p-6">
-          <div className="flex justify-between items-start">
-            <div className="space-y-2 flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-semibold">{department.name}</h3>
-                <Badge variant="secondary" className="font-mono text-xs">
+      <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => onViewDetails(department)}>
+        <CardContent className="pt-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Building2 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">{department.name}</h3>
+                <Badge variant="secondary" className="mt-1 font-mono">
                   {department.code}
                 </Badge>
               </div>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Users className="h-3.5 w-3.5" />
-                <span>{department.employee_count || 0} employees</span>
-              </div>
             </div>
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onEdit(department)}
-                className="h-8 w-8"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowDeleteDialog(true)}
-                className="h-8 w-8 text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+          </div>
+
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>{department.employee_count} employee{department.employee_count !== 1 ? 's' : ''}</span>
             </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Briefcase className="h-4 w-4" />
+              <span>{department.position_count} position{department.position_count !== 1 ? 's' : ''}</span>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewDetails(department);
+              }}
+              className="flex-1"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              View
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(department);
+              }}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteDialog(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>

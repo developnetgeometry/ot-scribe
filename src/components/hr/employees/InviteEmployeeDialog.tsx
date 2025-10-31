@@ -61,6 +61,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
       ic_no: data.ic_no || null,
       phone_no: data.phone_no || null,
       position: data.position,
+      position_id: null, // For now, keep as null - we'll update when we integrate position dropdown
       department_id: data.department_id,
       basic_salary: data.basic_salary,
       epf_no: data.epf_no || null,

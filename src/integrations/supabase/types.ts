@@ -441,6 +441,47 @@ export type Database = {
           },
         ]
       }
+      positions: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          department_id: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          department_id: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          department_id?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "positions_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           basic_salary: number
@@ -459,6 +500,7 @@ export type Database = {
           joining_date: string | null
           phone_no: string | null
           position: string | null
+          position_id: string | null
           socso_no: string | null
           state: string | null
           status: string | null
@@ -483,6 +525,7 @@ export type Database = {
           joining_date?: string | null
           phone_no?: string | null
           position?: string | null
+          position_id?: string | null
           socso_no?: string | null
           state?: string | null
           status?: string | null
@@ -507,6 +550,7 @@ export type Database = {
           joining_date?: string | null
           phone_no?: string | null
           position?: string | null
+          position_id?: string | null
           socso_no?: string | null
           state?: string | null
           status?: string | null
@@ -520,6 +564,13 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
             referencedColumns: ["id"]
           },
           {

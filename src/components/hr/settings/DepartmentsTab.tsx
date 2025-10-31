@@ -64,7 +64,12 @@ export function DepartmentsTab() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredDepartments?.map((dept) => (
-            <DepartmentCard key={dept.id} department={dept} onEdit={handleEdit} />
+            <DepartmentCard 
+              key={dept.id} 
+              department={dept} 
+              onEdit={handleEdit}
+              onViewDetails={() => {}} // No-op in settings tab, users can go to main Departments page
+            />
           ))}
           {filteredDepartments?.length === 0 && (
             <div className="col-span-full text-center py-8 text-muted-foreground">

@@ -31,6 +31,18 @@ export interface OTRequest {
   updated_at: string;
 }
 
+export interface Position {
+  id: string;
+  department_id: string;
+  title: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  employee_count?: number;
+}
+
 export interface Profile {
   id: string;
   employee_id: string;
@@ -46,6 +58,7 @@ export interface Profile {
   employment_type: string | null;
   designation: string | null;
   position: string | null;
+  position_id: string | null;
   supervisor_id: string | null;
   joining_date: string | null;
   work_location: string | null;
@@ -54,6 +67,7 @@ export interface Profile {
   is_ot_eligible: boolean;
   user_roles?: Array<{ role: AppRole }>;
   department?: { id: string; name: string; code: string } | null;
+  position_obj?: Position | null;
   created_at: string;
   updated_at: string;
 }
