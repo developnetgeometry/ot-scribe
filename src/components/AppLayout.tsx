@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { NotificationBell } from '@/components/NotificationBell';
 import { 
   LayoutDashboard, 
   PlusCircle, 
@@ -80,6 +81,7 @@ function AppSidebar() {
     { path: '/hr/settings', label: 'HR Settings', icon: Settings, roles: ['hr'] },
     
     // BOD actions
+    { path: '/bod/approve', label: 'Approve OT', icon: CheckCircle, roles: ['bod'] },
     { path: '/bod/review', label: 'BOD Review', icon: Eye, roles: ['bod'] },
   ];
 
@@ -137,6 +139,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <header className="h-16 border-b bg-card flex items-center justify-between px-6">
             <SidebarTrigger />
             <div className="flex items-center gap-4">
+              <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-2">

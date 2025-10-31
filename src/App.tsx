@@ -29,6 +29,7 @@ import SupervisorDashboard from "./pages/supervisor/SupervisorDashboard";
 import VerifyOT from "./pages/supervisor/VerifyOT";
 import BODDashboard from "./pages/bod/BODDashboard";
 import ReviewOT from "./pages/bod/ReviewOT";
+import BODApproveOT from "./pages/bod/ApproveOT";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const App = () => (
             <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole="hr"><OTReports /></ProtectedRoute>} />
             
             {/* BOD routes */}
+            <Route path="/bod/approve" element={<ProtectedRoute requiredRole="bod"><BODApproveOT /></ProtectedRoute>} />
             <Route path="/bod/review" element={<ProtectedRoute requiredRole="bod"><ReviewOT /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />

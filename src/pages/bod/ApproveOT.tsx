@@ -9,14 +9,14 @@ import { Search } from 'lucide-react';
 
 export default function ApproveOT() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('verified');
+  const [activeTab, setActiveTab] = useState('approved');
   
   const { 
     requests, 
     isLoading, 
     approveRequest: approveRequestMutation, 
     rejectRequest: rejectRequestMutation, 
-  } = useOTApproval({ role: 'hr', status: activeTab });
+  } = useOTApproval({ role: 'bod', status: activeTab });
 
   const filteredRequests = requests?.filter(request => {
     if (!searchQuery) return true;
@@ -40,14 +40,14 @@ export default function ApproveOT() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">OT Requests</h1>
-          <p className="text-muted-foreground">View and monitor overtime requests across all statuses</p>
+          <h1 className="text-3xl font-bold">BOD Approval</h1>
+          <p className="text-muted-foreground">Review and approve overtime requests as Board of Directors</p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="verified">
+        <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="approved">
           <TabsList>
-            <TabsTrigger value="verified">Pending HR Approval</TabsTrigger>
-            <TabsTrigger value="approved">Approved</TabsTrigger>
+            <TabsTrigger value="approved">Pending BOD Review</TabsTrigger>
+            <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
             <TabsTrigger value="all">All</TabsTrigger>
           </TabsList>
@@ -68,7 +68,7 @@ export default function ApproveOT() {
                 <OTApprovalTable 
                   requests={filteredRequests} 
                   isLoading={isLoading}
-                  role="hr"
+                  role="bod"
                   approveRequest={handleApprove}
                   rejectRequest={handleReject}
                 />
