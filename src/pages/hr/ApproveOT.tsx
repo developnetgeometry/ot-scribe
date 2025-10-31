@@ -27,8 +27,8 @@ export default function ApproveOT() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">OT Approvals</h1>
-          <p className="text-muted-foreground">Review and approve overtime requests</p>
+          <h1 className="text-3xl font-bold">OT Requests</h1>
+          <p className="text-muted-foreground">View and monitor overtime requests across all statuses</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="pending_verification">

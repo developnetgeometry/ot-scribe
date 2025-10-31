@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Eye, CheckCircle, XCircle } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -75,28 +75,14 @@ export function OTApprovalTable({ requests, isLoading }: OTApprovalTableProps) {
                   <StatusBadge status={request.status} />
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedRequest(request)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    {(request.status === 'pending_verification' || request.status === 'verified') && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={() => setSelectedRequest(request)}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Approve
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedRequest(request)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    View Details
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

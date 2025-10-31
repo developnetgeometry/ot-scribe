@@ -1,15 +1,10 @@
-import { useState } from 'react';
 import { format } from 'date-fns';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { OTRequest } from '@/types/otms';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
 import { StatusBadge } from '@/components/StatusBadge';
-import { useOTApprovalAction } from '@/hooks/hr/useOTApprovals';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircle, XCircle } from 'lucide-react';
 
 interface OTApprovalDetailsSheetProps {
   request: OTRequest | null;
@@ -18,21 +13,7 @@ interface OTApprovalDetailsSheetProps {
 }
 
 export function OTApprovalDetailsSheet({ request, open, onOpenChange }: OTApprovalDetailsSheetProps) {
-  const [remarks, setRemarks] = useState('');
-  const { approveRequest, rejectRequest } = useOTApprovalAction();
-
   if (!request) return null;
-
-  const handleApprove = async () => {
-    await approveRequest.mutateAsync({ requestId: request.id, remarks: '' });
-    onOpenChange(false);
-  };
-
-  const handleReject = async () => {
-    await rejectRequest.mutateAsync({ requestId: request.id, remarks });
-    onOpenChange(false);
-    setRemarks('');
-  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -140,57 +121,6 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange }: OTApprov
             </>
           )}
 
-          {/* Approval Actions */}
-          {(request.status === 'pending_verification' || request.status === 'verified') && (
-            <>
-              <Separator />
-              <div className="space-y-4">
-                {/* Approve Button - Prominent, No remarks needed */}
-                <Button
-                  onClick={handleApprove}
-                  disabled={approveRequest.isPending || rejectRequest.isPending}
-                  className="w-full"
-                  size="lg"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Approve
-                </Button>
-                
-                <Separator />
-                
-                {/* Reject Section - Remarks required */}
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="remarks">Rejection Remarks (Required)</Label>
-                    <Textarea
-                      id="remarks"
-                      value={remarks}
-                      onChange={(e) => setRemarks(e.target.value)}
-                      placeholder="Enter reason for rejection..."
-                      className="mt-1"
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <Button
-                    variant="destructive"
-                    onClick={handleReject}
-                    disabled={approveRequest.isPending || rejectRequest.isPending || !remarks.trim()}
-                    className="w-full"
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Reject
-                  </Button>
-                  
-                  {!remarks.trim() && (
-                    <p className="text-sm text-destructive text-center">
-                      * Remarks are required to reject this request
-                    </p>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
         </div>
       </SheetContent>
     </Sheet>
