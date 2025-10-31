@@ -29,7 +29,7 @@ export default function EditHolidayCalendar() {
   const [dateTo, setDateTo] = useState('');
   const [items, setItems] = useState<HolidayItem[]>([]);
   const [originalItems, setOriginalItems] = useState<HolidayItem[]>([]);
-  const [weeklyOffDays, setWeeklyOffDays] = useState<number[]>([0]);
+  const [weeklyOffDays, setWeeklyOffDays] = useState<number[]>([]);
 
   useEffect(() => {
     if (calendar) {
@@ -58,7 +58,6 @@ export default function EditHolidayCalendar() {
     );
     
     setItems(unique);
-    setWeeklyOffDays([0]); // Reset to default after generation
     toast.success(`Added ${dates.length} weekly offs`);
   };
 
