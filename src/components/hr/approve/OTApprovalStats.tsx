@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, CheckCircle, XCircle, DollarSign } from 'lucide-react';
+import { Clock, CheckCircle, XCircle } from 'lucide-react';
 import { OTRequest } from '@/types/otms';
-import { formatCurrency } from '@/lib/otCalculations';
 
 interface OTApprovalStatsProps {
   requests: OTRequest[];
@@ -15,11 +14,6 @@ export function OTApprovalStats({ requests }: OTApprovalStatsProps) {
       new Date(r.hr_approved_at).getMonth() === new Date().getMonth();
     return isApproved && isThisMonth;
   }).length;
-  
-  const totalApprovedAmount = requests
-    .filter(r => r.status === 'approved' && r.hr_approved_at &&
-      new Date(r.hr_approved_at).getMonth() === new Date().getMonth())
-    .reduce((sum, r) => sum + (r.ot_amount || 0), 0);
 
   const stats = [
     {
@@ -37,13 +31,6 @@ export function OTApprovalStats({ requests }: OTApprovalStatsProps) {
       bgColor: 'bg-green-500/10',
     },
     {
-      title: 'Amount Approved (MTD)',
-      value: formatCurrency(totalApprovedAmount),
-      icon: DollarSign,
-      color: 'text-blue-600 dark:text-blue-400',
-      bgColor: 'bg-blue-500/10',
-    },
-    {
       title: 'Rejected This Month',
       value: requests.filter(r => r.status === 'rejected' && r.hr_approved_at &&
         new Date(r.hr_approved_at).getMonth() === new Date().getMonth()).length,
@@ -54,7 +41,7 @@ export function OTApprovalStats({ requests }: OTApprovalStatsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (

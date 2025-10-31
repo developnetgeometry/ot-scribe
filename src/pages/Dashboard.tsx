@@ -6,7 +6,7 @@ import { DashboardCard } from '@/components/DashboardCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Clock, CheckCircle, AlertCircle, DollarSign, Plus, History } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, Plus, History } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Dashboard() {
@@ -15,8 +15,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     totalHours: 0,
     pending: 0,
-    approved: 0,
-    totalAmount: 0
+    approved: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +35,7 @@ export default function Dashboard() {
 
       const query = supabase
         .from('ot_requests')
-        .select('total_hours, status, ot_amount');
+        .select('total_hours, status');
 
       if (isEmployee) {
         query.eq('employee_id', user.id);
@@ -51,9 +50,8 @@ export default function Dashboard() {
       const totalHours = data?.reduce((sum, req) => sum + (req.total_hours || 0), 0) || 0;
       const pending = data?.filter(req => req.status === 'pending_verification').length || 0;
       const approved = data?.filter(req => req.status === 'approved' || req.status === 'reviewed').length || 0;
-      const totalAmount = data?.reduce((sum, req) => sum + (req.ot_amount || 0), 0) || 0;
 
-      setStats({ totalHours, pending, approved, totalAmount });
+      setStats({ totalHours, pending, approved });
     } catch (error: any) {
       toast.error(error.message || 'Failed to load dashboard stats');
     } finally {
@@ -93,13 +91,13 @@ export default function Dashboard() {
         )}
 
         {loading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
               <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
             ))}
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <DashboardCard
               icon={Clock}
               title="Total OT Hours"
@@ -118,14 +116,6 @@ export default function Dashboard() {
               value={stats.approved}
               subtitle="This month"
             />
-            {!isEmployee && (
-              <DashboardCard
-                icon={DollarSign}
-                title="Total OT Amount"
-                value={`RM ${stats.totalAmount.toFixed(2)}`}
-                subtitle="Current month"
-              />
-            )}
           </div>
         )}
       </div>

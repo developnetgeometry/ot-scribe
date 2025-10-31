@@ -6,7 +6,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { DashboardCard } from '@/components/DashboardCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle, Users, FileText, DollarSign, Clock, Calendar } from 'lucide-react';
+import { CheckCircle, Users, FileText, Clock, Calendar } from 'lucide-react';
 
 export default function HRDashboard() {
   const { user } = useAuth();
@@ -15,7 +15,6 @@ export default function HRDashboard() {
     totalEmployees: 0,
     pendingApprovals: 0,
     approvedThisMonth: 0,
-    totalOTAmount: 0,
     totalOTHours: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -53,7 +52,7 @@ export default function HRDashboard() {
     // Fetch OT requests
     const { data: otRequests } = await supabase
       .from('ot_requests')
-      .select('total_hours, status, ot_amount')
+      .select('total_hours, status')
       .gte('created_at', startOfMonth.toISOString());
 
     const pendingApprovals = otRequests?.filter(req => 
@@ -64,14 +63,12 @@ export default function HRDashboard() {
       req.status === 'approved' || req.status === 'reviewed'
     ).length || 0;
 
-    const totalOTAmount = otRequests?.reduce((sum, req) => sum + (req.ot_amount || 0), 0) || 0;
     const totalOTHours = otRequests?.reduce((sum, req) => sum + (req.total_hours || 0), 0) || 0;
 
     setStats({
       totalEmployees: employeeCount || 0,
       pendingApprovals,
       approvedThisMonth,
-      totalOTAmount,
       totalOTHours,
     });
     setLoading(false);
@@ -139,12 +136,6 @@ export default function HRDashboard() {
                 value={stats.totalOTHours.toFixed(1)}
                 subtitle="This month"
                 icon={Clock}
-              />
-              <DashboardCard
-                title="Total OT Amount"
-                value={`RM ${stats.totalOTAmount.toFixed(2)}`}
-                subtitle="This month"
-                icon={DollarSign}
               />
             </>
           )}

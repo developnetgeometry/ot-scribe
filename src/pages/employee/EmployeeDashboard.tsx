@@ -6,7 +6,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { DashboardCard } from '@/components/DashboardCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, History, Clock, CheckCircle, DollarSign } from 'lucide-react';
+import { PlusCircle, History, Clock, CheckCircle } from 'lucide-react';
 
 export default function EmployeeDashboard() {
   const { user } = useAuth();
@@ -15,7 +15,6 @@ export default function EmployeeDashboard() {
     totalHours: 0,
     pendingRequests: 0,
     approvedRequests: 0,
-    totalAmount: 0,
   });
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState('');
@@ -47,7 +46,7 @@ export default function EmployeeDashboard() {
 
     const { data, error } = await supabase
       .from('ot_requests')
-      .select('total_hours, status, ot_amount')
+      .select('total_hours, status')
       .eq('employee_id', user.id)
       .gte('created_at', startOfMonth.toISOString());
 
@@ -60,9 +59,8 @@ export default function EmployeeDashboard() {
     const totalHours = data?.reduce((sum, req) => sum + (req.total_hours || 0), 0) || 0;
     const pendingRequests = data?.filter(req => req.status === 'pending_verification').length || 0;
     const approvedRequests = data?.filter(req => req.status === 'approved' || req.status === 'reviewed').length || 0;
-    const totalAmount = data?.reduce((sum, req) => sum + (req.ot_amount || 0), 0) || 0;
 
-    setStats({ totalHours, pendingRequests, approvedRequests, totalAmount });
+    setStats({ totalHours, pendingRequests, approvedRequests });
     setLoading(false);
   };
 
@@ -87,10 +85,9 @@ export default function EmployeeDashboard() {
           </Button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
             <>
-              <Skeleton className="h-32" />
               <Skeleton className="h-32" />
               <Skeleton className="h-32" />
               <Skeleton className="h-32" />
@@ -114,12 +111,6 @@ export default function EmployeeDashboard() {
                 value={stats.approvedRequests}
                 subtitle="This month"
                 icon={CheckCircle}
-              />
-              <DashboardCard
-                title="Total OT Amount"
-                value={`RM ${stats.totalAmount.toFixed(2)}`}
-                subtitle="This month"
-                icon={DollarSign}
               />
             </>
           )}
