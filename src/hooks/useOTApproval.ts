@@ -186,8 +186,19 @@ export function useOTApproval(options: UseOTApprovalOptions) {
       if (role === 'supervisor') {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          // Filter by supervisor_id in profiles table
-          query = query.eq('profiles.supervisor_id', user.id);
+          // First, get employee IDs that this supervisor manages
+          const { data: employees } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('supervisor_id', user.id);
+          
+          if (employees && employees.length > 0) {
+            const employeeIds = employees.map(e => e.id);
+            query = query.in('employee_id', employeeIds);
+          } else {
+            // No employees found, return empty result
+            query = query.eq('employee_id', '00000000-0000-0000-0000-000000000000');
+          }
         }
       }
 
