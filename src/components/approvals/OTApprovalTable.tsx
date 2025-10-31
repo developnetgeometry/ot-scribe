@@ -4,21 +4,26 @@ import { CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
-import { OTRequest } from '@/types/otms';
-import { formatCurrency, formatHours } from '@/lib/otCalculations';
+import { GroupedOTRequest } from '@/types/otms';
+import { formatTime12Hour, formatHours } from '@/lib/otCalculations';
 import { OTApprovalDetailsSheet } from './OTApprovalDetailsSheet';
+import { RejectOTModal } from './RejectOTModal';
 import { Badge } from '@/components/ui/badge';
+import { useOTApproval } from '@/hooks/useOTApproval';
 
 type ApprovalRole = 'supervisor' | 'hr' | 'bod';
 
 interface OTApprovalTableProps {
-  requests: OTRequest[];
+  requests: GroupedOTRequest[];
   isLoading: boolean;
   role: ApprovalRole;
 }
 
 export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTableProps) {
-  const [selectedRequest, setSelectedRequest] = useState<OTRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<GroupedOTRequest | null>(null);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [requestToReject, setRequestToReject] = useState<GroupedOTRequest | null>(null);
+  const { approveRequest, rejectRequest, isApproving, isRejecting } = useOTApproval({ role });
 
   if (isLoading) {
     return <div className="text-center py-8">Loading...</div>;
@@ -32,19 +37,28 @@ export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTablePr
     );
   }
 
-  const getDayTypeBadge = (dayType: string) => {
-    const variants: Record<string, string> = {
-      weekday: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-      saturday: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-      sunday: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
-      public_holiday: 'bg-red-500/10 text-red-600 dark:text-red-400',
-    };
-    
-    return (
-      <Badge variant="outline" className={variants[dayType]}>
-        {dayType.replace('_', ' ')}
-      </Badge>
-    );
+  const handleApprove = async (request: GroupedOTRequest) => {
+    try {
+      await approveRequest({ requestIds: request.request_ids });
+    } catch (error) {
+      console.error('Error approving request:', error);
+    }
+  };
+
+  const handleRejectClick = (request: GroupedOTRequest) => {
+    setRequestToReject(request);
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectConfirm = async (remarks: string) => {
+    if (!requestToReject) return;
+    try {
+      await rejectRequest({ requestIds: requestToReject.request_ids, remarks });
+      setRejectModalOpen(false);
+      setRequestToReject(null);
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+    }
   };
 
   const getActionButtonLabel = (role: ApprovalRole): string => {
@@ -60,7 +74,7 @@ export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTablePr
     }
   };
 
-  const canTakeAction = (request: OTRequest): boolean => {
+  const canTakeAction = (request: GroupedOTRequest): boolean => {
     switch (role) {
       case 'supervisor':
         return request.status === 'pending_verification';
@@ -79,12 +93,11 @@ export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTablePr
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Employee</TableHead>
-              <TableHead>Department</TableHead>
-              <TableHead>OT Date</TableHead>
-              <TableHead>Day Type</TableHead>
-              <TableHead>Hours</TableHead>
-              <TableHead>Amount</TableHead>
+              <TableHead>Employee Name</TableHead>
+              <TableHead>Employee ID</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Submitted OT Sessions</TableHead>
+              <TableHead>Total OT Hours</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -93,35 +106,59 @@ export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTablePr
             {requests.map((request) => {
               const profile = (request as any).profiles;
               return (
-                <TableRow key={request.id} className="cursor-pointer hover:bg-muted/50 transition-colors">
-                  <TableCell onClick={() => setSelectedRequest(request)}>
-                    <div>
-                      <div className="font-medium hover:underline">{profile?.full_name || 'Unknown'}</div>
-                      <div className="text-sm text-muted-foreground">{profile?.employee_id || request.employee_id}</div>
+                <TableRow key={request.id} className="hover:bg-muted/50 transition-colors">
+                  <TableCell>
+                    <div 
+                      className="font-semibold cursor-pointer hover:underline"
+                      onClick={() => setSelectedRequest(request)}
+                    >
+                      {profile?.full_name || 'Unknown'}
                     </div>
                   </TableCell>
-                  <TableCell onClick={() => setSelectedRequest(request)}>
-                    <div className="text-sm">{(profile?.departments as any)?.name || '-'}</div>
+                  <TableCell>
+                    <div className="text-sm text-muted-foreground">
+                      {profile?.employee_id || request.employee_id}
+                    </div>
                   </TableCell>
-                  <TableCell onClick={() => setSelectedRequest(request)}>{format(new Date(request.ot_date), 'dd MMM yyyy')}</TableCell>
-                  <TableCell onClick={() => setSelectedRequest(request)}>{getDayTypeBadge(request.day_type)}</TableCell>
-                  <TableCell onClick={() => setSelectedRequest(request)}>{formatHours(request.total_hours)} hrs</TableCell>
-                  <TableCell onClick={() => setSelectedRequest(request)}>{formatCurrency(request.ot_amount || 0)}</TableCell>
-                  <TableCell onClick={() => setSelectedRequest(request)}>
-                    <StatusBadge status={request.status} />
-                    {request.threshold_violations && Object.keys(request.threshold_violations).length > 0 && (
-                      <Badge variant="destructive" className="ml-2 text-xs">
-                        Violation
-                      </Badge>
-                    )}
+                  <TableCell>
+                    <div className="text-sm">
+                      {format(new Date(request.ot_date), 'dd MMM yyyy')}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      {request.sessions.map((session, idx) => (
+                        <div key={idx} className="text-sm">
+                          {formatTime12Hour(session.start_time)} - {formatTime12Hour(session.end_time)}
+                          <span className="text-muted-foreground ml-2">
+                            ({formatHours(session.total_hours)} hrs)
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-semibold text-primary">
+                      {formatHours(request.total_hours)} hours
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <StatusBadge status={request.status} />
+                      {request.threshold_violations && Object.keys(request.threshold_violations).length > 0 && (
+                        <Badge variant="destructive" className="text-xs">
+                          Violation
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {canTakeAction(request) && (
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          variant="default"
-                          onClick={() => setSelectedRequest(request)}
+                          onClick={() => handleApprove(request)}
+                          disabled={isApproving || isRejecting}
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           {getActionButtonLabel(role)}
@@ -129,7 +166,8 @@ export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTablePr
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => setSelectedRequest(request)}
+                          onClick={() => handleRejectClick(request)}
+                          disabled={isApproving || isRejecting}
                         >
                           <XCircle className="h-4 w-4 mr-1" />
                           Reject
@@ -149,6 +187,14 @@ export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTablePr
         open={!!selectedRequest}
         onOpenChange={(open) => !open && setSelectedRequest(null)}
         role={role}
+      />
+
+      <RejectOTModal
+        request={requestToReject}
+        open={rejectModalOpen}
+        onOpenChange={setRejectModalOpen}
+        onConfirm={handleRejectConfirm}
+        isLoading={isRejecting}
       />
     </>
   );

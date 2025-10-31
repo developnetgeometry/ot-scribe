@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { OTRequest, OTStatus, AppRole } from '@/types/otms';
+import { OTRequest, OTStatus, AppRole, GroupedOTRequest } from '@/types/otms';
 import { toast } from 'sonner';
 
 type ApprovalRole = 'supervisor' | 'hr' | 'bod';
@@ -11,8 +11,45 @@ interface UseOTApprovalOptions {
 }
 
 interface ApprovalAction {
-  requestId: string;
+  requestIds: string[];
   remarks?: string;
+}
+
+// Helper function to group OT requests by employee and date
+function groupOTRequestsByEmployee(requests: OTRequest[]): GroupedOTRequest[] {
+  const grouped = new Map<string, GroupedOTRequest>();
+  
+  requests.forEach(request => {
+    const key = `${request.employee_id}_${request.ot_date}`;
+    
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        ...request,
+        sessions: [],
+        total_hours: 0,
+        request_ids: [],
+        start_time: '',
+        end_time: '',
+      } as any);
+    }
+    
+    const group = grouped.get(key)!;
+    group.sessions.push({
+      id: request.id,
+      start_time: request.start_time,
+      end_time: request.end_time,
+      total_hours: request.total_hours,
+    });
+    group.total_hours += request.total_hours;
+    group.request_ids.push(request.id);
+    
+    // Accumulate OT amounts
+    if (request.ot_amount) {
+      group.ot_amount = (group.ot_amount || 0) + request.ot_amount;
+    }
+  });
+  
+  return Array.from(grouped.values());
 }
 
 // Map roles to their respective status filters
@@ -154,9 +191,9 @@ export function useOTApproval(options: UseOTApprovalOptions) {
     },
   });
 
-  // Approve mutation
+  // Approve mutation - now supports batch operations
   const approveMutation = useMutation({
-    mutationFn: async ({ requestId, remarks }: ApprovalAction) => {
+    mutationFn: async ({ requestIds, remarks }: ApprovalAction) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -172,10 +209,11 @@ export function useOTApproval(options: UseOTApprovalOptions) {
         updateData[idField] = user.id;
       }
 
+      // Batch update all request IDs
       const { error } = await supabase
         .from('ot_requests')
         .update(updateData)
-        .eq('id', requestId);
+        .in('id', requestIds);
 
       if (error) throw error;
     },
@@ -189,9 +227,9 @@ export function useOTApproval(options: UseOTApprovalOptions) {
     },
   });
 
-  // Reject mutation
+  // Reject mutation - now supports batch operations
   const rejectMutation = useMutation({
-    mutationFn: async ({ requestId, remarks }: ApprovalAction) => {
+    mutationFn: async ({ requestIds, remarks }: ApprovalAction) => {
       if (!remarks || remarks.trim() === '') {
         throw new Error('Remarks are required when rejecting a request');
       }
@@ -211,10 +249,11 @@ export function useOTApproval(options: UseOTApprovalOptions) {
         updateData[idField] = user.id;
       }
 
+      // Batch update all request IDs
       const { error } = await supabase
         .from('ot_requests')
         .update(updateData)
-        .eq('id', requestId);
+        .in('id', requestIds);
 
       if (error) throw error;
     },
@@ -228,7 +267,7 @@ export function useOTApproval(options: UseOTApprovalOptions) {
   });
 
   return {
-    requests: data || [],
+    requests: groupOTRequestsByEmployee(data || []),
     isLoading,
     error,
     approveRequest: approveMutation.mutateAsync,

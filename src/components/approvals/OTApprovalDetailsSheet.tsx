@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar, Clock, FileText, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Calendar, Clock, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,14 +9,15 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { StatusBadge } from '@/components/StatusBadge';
-import { OTRequest } from '@/types/otms';
-import { formatCurrency, formatHours } from '@/lib/otCalculations';
+import { GroupedOTRequest } from '@/types/otms';
+import { formatCurrency, formatHours, formatTime12Hour } from '@/lib/otCalculations';
 import { useOTApproval } from '@/hooks/useOTApproval';
+import { RejectOTModal } from './RejectOTModal';
 
 type ApprovalRole = 'supervisor' | 'hr' | 'bod';
 
 interface OTApprovalDetailsSheetProps {
-  request: OTRequest | null;
+  request: GroupedOTRequest | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   role: ApprovalRole;
@@ -24,7 +25,8 @@ interface OTApprovalDetailsSheetProps {
 
 export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OTApprovalDetailsSheetProps) {
   const [remarks, setRemarks] = useState('');
-  const { approveRequest, rejectRequest, isApproving, isRejecting } = useOTApproval({ role });
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const { approveRequest, isApproving, rejectRequest, isRejecting } = useOTApproval({ role });
 
   if (!request) return null;
 
@@ -32,7 +34,7 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OT
 
   const handleApprove = async () => {
     try {
-      await approveRequest({ requestId: request.id, remarks });
+      await approveRequest({ requestIds: request.request_ids, remarks });
       setRemarks('');
       onOpenChange(false);
     } catch (error) {
@@ -40,13 +42,14 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OT
     }
   };
 
-  const handleReject = async () => {
-    if (!remarks.trim()) {
-      return;
-    }
+  const handleRejectClick = () => {
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectConfirm = async (rejectRemarks: string) => {
     try {
-      await rejectRequest({ requestId: request.id, remarks });
-      setRemarks('');
+      await rejectRequest({ requestIds: request.request_ids, remarks: rejectRemarks });
+      setRejectModalOpen(false);
       onOpenChange(false);
     } catch (error) {
       console.error('Error rejecting request:', error);
@@ -129,11 +132,24 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OT
               </Badge>
             </div>
 
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Time:</span>
-              <span>{request.start_time} - {request.end_time}</span>
-              <span className="ml-2">({formatHours(request.total_hours)} hours)</span>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm mb-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">OT Sessions:</span>
+              </div>
+              <div className="space-y-2 ml-6">
+                {request.sessions.map((session, idx) => (
+                  <div key={idx} className="text-sm bg-muted/50 p-2 rounded">
+                    {formatTime12Hour(session.start_time)} - {formatTime12Hour(session.end_time)}
+                    <span className="ml-2 text-muted-foreground">
+                      ({formatHours(session.total_hours)} hours)
+                    </span>
+                  </div>
+                ))}
+                <div className="text-sm font-semibold pt-1 border-t border-border">
+                  Total: {formatHours(request.total_hours)} hours
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 text-sm">
@@ -279,23 +295,16 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OT
                   
                   <Separator />
                   
-                  {/* Reject Button - With warning */}
+                  {/* Reject Button */}
                   <div className="space-y-2">
                     <Button
                       variant="destructive"
-                      onClick={handleReject}
-                      disabled={isApproving || isRejecting || !remarks.trim()}
+                      onClick={handleRejectClick}
+                      disabled={isApproving || isRejecting}
                       className="w-full"
                     >
-                      <XCircle className="h-4 w-4 mr-2" />
                       {actionLabels.reject}
                     </Button>
-                    
-                    {!remarks.trim() && (
-                      <p className="text-sm text-destructive text-center">
-                        * Remarks are required to reject this request
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
@@ -303,6 +312,14 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OT
           )}
         </div>
       </SheetContent>
+
+      <RejectOTModal
+        request={request}
+        open={rejectModalOpen}
+        onOpenChange={setRejectModalOpen}
+        onConfirm={handleRejectConfirm}
+        isLoading={isRejecting}
+      />
     </Sheet>
   );
 }

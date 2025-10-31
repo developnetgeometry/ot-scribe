@@ -43,6 +43,19 @@ export interface Position {
   employee_count?: number;
 }
 
+export interface OTSession {
+  id: string;
+  start_time: string;
+  end_time: string;
+  total_hours: number;
+}
+
+export interface GroupedOTRequest extends Omit<OTRequest, 'start_time' | 'end_time' | 'total_hours'> {
+  sessions: OTSession[];
+  total_hours: number;
+  request_ids: string[];
+}
+
 export interface Profile {
   id: string;
   employee_id: string;
