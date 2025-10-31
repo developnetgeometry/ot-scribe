@@ -335,14 +335,13 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Reporting To</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || undefined}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select Supervisor" />
+                        <SelectValue placeholder="Select Supervisor (Optional)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
                       {employees
                         .filter(emp => emp.user_roles?.some(r => ['supervisor', 'hr', 'admin'].includes(r.role)))
                         .map((emp) => (
