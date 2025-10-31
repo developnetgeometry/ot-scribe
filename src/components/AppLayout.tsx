@@ -74,7 +74,6 @@ function AppSidebar() {
     // HR actions
     { path: '/hr/approve', label: 'Approve OT', icon: CheckCircle, roles: ['hr'] },
     { path: '/hr/employees', label: 'Employees', icon: Users, roles: ['hr'] },
-    { path: '/hr/calendar', label: 'Holiday Calendars', icon: Calendar, roles: ['hr'] },
     { path: '/hr/ot-reports', label: 'OT Reports', icon: FileText, roles: ['hr'] },
     { path: '/hr/settings', label: 'HR Settings', icon: Settings, roles: ['hr'] },
     
