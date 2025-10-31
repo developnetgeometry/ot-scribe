@@ -87,14 +87,18 @@ export function OTApprovalTable({
               <TableHead>Submitted OT Sessions</TableHead>
               <TableHead>Total OT Hours</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Details</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {requests.map((request) => {
               const profile = (request as any).profiles;
               return (
-                <TableRow key={request.id} className="hover:bg-muted/50 transition-colors">
+                <TableRow 
+                  key={request.id} 
+                  className="hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => setSelectedRequest(request)}
+                >
                   <TableCell>
                     <div 
                       className="font-semibold cursor-pointer hover:underline"
@@ -141,14 +145,7 @@ export function OTApprovalTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedRequest(request)}
-                      >
-                        View Details
-                      </Button>
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                       {canApproveOrReject(request) && approveRequest && rejectRequest && (
                         <>
                           <Button
