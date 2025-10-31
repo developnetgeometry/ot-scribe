@@ -3,7 +3,6 @@ import { AppLayout } from '@/components/AppLayout';
 import { CalendarView } from '@/components/hr/calendar/CalendarView';
 import { CalendarFilters } from '@/components/hr/calendar/CalendarFilters';
 import { CalendarEventSheet } from '@/components/hr/calendar/CalendarEventSheet';
-import { CalendarStats } from '@/components/hr/calendar/CalendarStats';
 import { useCalendarData, CalendarFilters as Filters, CalendarEvent } from '@/hooks/hr/useCalendarData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -63,15 +62,7 @@ export default function CalendarManagement() {
         </div>
 
         {isLoading ? (
-          <>
-            <div className="grid gap-4 md:grid-cols-4">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-            </div>
-            <Skeleton className="h-[600px]" />
-          </>
+          <Skeleton className="h-[600px]" />
         ) : error ? (
           <Alert variant="destructive">
             <AlertDescription>
@@ -79,22 +70,18 @@ export default function CalendarManagement() {
             </AlertDescription>
           </Alert>
         ) : (
-          <>
-            <CalendarStats events={events || []} />
-
-            <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-              <CalendarFilters filters={filters} onFiltersChange={setFilters} />
-              
-              <CalendarView
-                events={events || []}
-                onSelectEvent={handleEventSelect}
-                onNavigate={handleNavigate}
-                date={currentDate}
-                view={view}
-                onViewChange={setView}
-              />
-            </div>
-          </>
+          <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+            <CalendarFilters filters={filters} onFiltersChange={setFilters} />
+            
+            <CalendarView
+              events={events || []}
+              onSelectEvent={handleEventSelect}
+              onNavigate={handleNavigate}
+              date={currentDate}
+              view={view}
+              onViewChange={setView}
+            />
+          </div>
         )}
 
         <CalendarEventSheet
