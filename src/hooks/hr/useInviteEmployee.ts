@@ -6,8 +6,18 @@ interface InviteEmployeeData {
   email: string;
   full_name: string;
   employee_id: string;
+  ic_no: string | null;
+  phone_no: string | null;
+  position: string;
+  department_id: string;
   basic_salary: number;
+  epf_no: string | null;
+  socso_no: string | null;
+  income_tax_no: string | null;
   employment_type: string;
+  joining_date: string;
+  work_location: string;
+  supervisor_id: string | null;
   role: 'employee' | 'supervisor' | 'hr' | 'bod' | 'admin';
 }
 

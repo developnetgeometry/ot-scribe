@@ -450,10 +450,15 @@ export type Database = {
           email: string
           employee_id: string
           employment_type: string | null
+          epf_no: string | null
           full_name: string
+          ic_no: string | null
           id: string
+          income_tax_no: string | null
           joining_date: string | null
+          phone_no: string | null
           position: string | null
+          socso_no: string | null
           state: string | null
           status: string | null
           supervisor_id: string | null
@@ -468,10 +473,15 @@ export type Database = {
           email: string
           employee_id: string
           employment_type?: string | null
+          epf_no?: string | null
           full_name: string
+          ic_no?: string | null
           id: string
+          income_tax_no?: string | null
           joining_date?: string | null
+          phone_no?: string | null
           position?: string | null
+          socso_no?: string | null
           state?: string | null
           status?: string | null
           supervisor_id?: string | null
@@ -486,10 +496,15 @@ export type Database = {
           email?: string
           employee_id?: string
           employment_type?: string | null
+          epf_no?: string | null
           full_name?: string
+          ic_no?: string | null
           id?: string
+          income_tax_no?: string | null
           joining_date?: string | null
+          phone_no?: string | null
           position?: string | null
+          socso_no?: string | null
           state?: string | null
           status?: string | null
           supervisor_id?: string | null
