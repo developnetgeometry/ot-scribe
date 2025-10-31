@@ -32,10 +32,40 @@ export function useUpdateEmployee() {
     mutationFn: async (data: UpdateEmployeeData) => {
       const { id, role, ...profileData } = data;
 
-      // Update profile
+      // Whitelist of valid profiles table columns
+      const allowedColumns = [
+        'full_name', 'email', 'ic_no', 'phone_no', 'department_id', 
+        'basic_salary', 'epf_no', 'socso_no', 'income_tax_no', 
+        'employment_type', 'position', 'supervisor_id', 'joining_date', 
+        'work_location', 'state', 'status', 'is_ot_eligible', 
+        'designation', 'position_id'
+      ];
+
+      // Nullable fields that should convert empty strings to null
+      const nullableFields = [
+        'ic_no', 'phone_no', 'department_id', 'epf_no', 'socso_no', 
+        'income_tax_no', 'employment_type', 'position', 'supervisor_id', 
+        'joining_date', 'work_location', 'state', 'position_id'
+      ];
+
+      // Sanitize the update payload
+      const updateBody: Record<string, any> = {};
+      Object.keys(profileData).forEach(key => {
+        if (allowedColumns.includes(key)) {
+          const value = profileData[key as keyof typeof profileData];
+          // Convert empty strings to null for nullable fields
+          if (nullableFields.includes(key) && value === '') {
+            updateBody[key] = null;
+          } else if (value !== undefined) {
+            updateBody[key] = value;
+          }
+        }
+      });
+
+      // Update profile with sanitized data
       const { error: profileError } = await supabase
         .from('profiles')
-        .update(profileData)
+        .update(updateBody)
         .eq('id', id);
 
       if (profileError) throw profileError;
