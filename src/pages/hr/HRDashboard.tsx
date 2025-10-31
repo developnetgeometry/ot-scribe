@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
-import { DashboardCard } from '@/components/DashboardCard';
+import { EnhancedDashboardCard } from '@/components/hr/EnhancedDashboardCard';
+import { OTTrendChart } from '@/components/hr/charts/OTTrendChart';
+import { DepartmentOTChart } from '@/components/hr/charts/DepartmentOTChart';
+import { QuickActions } from '@/components/hr/QuickActions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCircle, Users, FileText, Clock } from 'lucide-react';
 
@@ -73,14 +76,13 @@ export default function HRDashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold">HR Dashboard</h1>
           <p className="text-muted-foreground mt-1">
             {fullName ? `Welcome back, ${fullName}!` : 'Welcome back!'} Here's your organization overview.
           </p>
         </div>
-
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {loading ? (
@@ -92,33 +94,47 @@ export default function HRDashboard() {
             </>
           ) : (
             <>
-              <DashboardCard
+              <EnhancedDashboardCard
                 title="Total Employees"
                 value={stats.totalEmployees}
                 subtitle="Active employees"
                 icon={Users}
+                variant="info"
               />
-              <DashboardCard
+              <EnhancedDashboardCard
                 title="Pending Approvals"
                 value={stats.pendingApprovals}
                 subtitle="Awaiting action"
                 icon={CheckCircle}
+                variant="warning"
               />
-              <DashboardCard
+              <EnhancedDashboardCard
                 title="Approved This Month"
                 value={stats.approvedThisMonth}
                 subtitle="OT requests approved"
                 icon={FileText}
+                variant="success"
               />
-              <DashboardCard
+              <EnhancedDashboardCard
                 title="Total OT Hours"
                 value={stats.totalOTHours.toFixed(1)}
                 subtitle="This month"
                 icon={Clock}
+                variant="primary"
               />
             </>
           )}
         </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Overview Charts</h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            <OTTrendChart />
+            <DepartmentOTChart />
+          </div>
+        </div>
+
+        <QuickActions />
       </div>
     </AppLayout>
   );
