@@ -182,7 +182,13 @@ export function useOTApproval(options: UseOTApprovalOptions) {
         }
       }
 
-      // No role-specific filters - all roles can see all requests
+      // Apply role-specific filters
+      if (role === 'supervisor') {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          query = query.eq('supervisor_id', user.id);
+        }
+      }
 
       const { data, error } = await query;
 
