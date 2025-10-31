@@ -2,19 +2,19 @@ import { Card } from "@/components/ui/card";
 
 export function CalendarLegend() {
   return (
-    <Card className="p-6">
+    <Card className="p-6 rounded-xl shadow-md bg-gradient-to-b from-white to-gray-50 border-gray-100">
       <div className="flex flex-wrap gap-8 items-center justify-center text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-[#FEE2E2] border border-gray-200" />
-          <span className="text-muted-foreground font-medium">Holiday</span>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FEE2E2] to-[#FECACA] border border-red-200 shadow-sm" />
+          <span className="text-gray-700 font-medium">Holiday</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded border-2 border-[#A78BFA]" />
-          <span className="text-muted-foreground font-medium">Today</span>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg border-2 border-[#A78BFA] shadow-sm bg-white" />
+          <span className="text-gray-700 font-medium">Today</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded border-2 border-[#C4B5FD]" />
-          <span className="text-muted-foreground font-medium">Selected</span>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg border-2 border-[#C4B5FD] shadow-sm bg-white" />
+          <span className="text-gray-700 font-medium">Selected</span>
         </div>
       </div>
     </Card>

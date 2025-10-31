@@ -30,26 +30,28 @@ export default function Calendar() {
   };
 
   const modifiersClassNames = {
-    holiday: "bg-[#FEE2E2] text-[#DC2626] font-semibold",
-    sunday: "text-[#DC2626]",
+    holiday: "bg-gradient-to-br from-[#FEE2E2] to-[#FECACA] text-[#DC2626] font-semibold border-red-200",
+    sunday: "text-[#DC2626] font-semibold",
   };
 
   return (
     <AppLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Calendar</h1>
-            <p className="text-muted-foreground">View public holidays based on HR's configured calendar.</p>
-          </div>
-          {(hasRole('hr') || hasRole('admin')) && activeCalendar && (
-            <Button asChild disabled={isCalendarLoading}>
-              <Link to={`/hr/calendar/${activeCalendar.id}/edit`}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Calendar
-              </Link>
-            </Button>
-          )}
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-[#5F26B4] to-[#8B5CF6] bg-clip-text text-transparent">
+            📅 Calendar
+          </h1>
+          <p className="text-gray-600">A modern, easy-to-navigate calendar showing HR's configured public holidays.</p>
+        </div>
+        {(hasRole('hr') || hasRole('admin')) && activeCalendar && (
+          <Button asChild disabled={isCalendarLoading} className="bg-gradient-to-r from-[#5F26B4] to-[#8B5CF6] hover:from-[#4A1D8F] hover:to-[#7C3AED] shadow-[0_2px_8px_rgba(95,38,180,0.2)] hover:shadow-[0_4px_12px_rgba(95,38,180,0.3)] transition-all duration-200">
+            <Link to={`/hr/calendar/${activeCalendar.id}/edit`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Calendar
+            </Link>
+          </Button>
+        )}
         </div>
         {isLoading ? (
           <Card className="p-6">
@@ -62,7 +64,7 @@ export default function Calendar() {
             </p>
           </Card>
         ) : (
-          <Card className="p-8">
+          <Card className="p-8 rounded-xl shadow-lg bg-gradient-to-b from-white to-gray-50 border-gray-100">
             <CalendarUI
               mode="single"
               selected={selectedDate}
