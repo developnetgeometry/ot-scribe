@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-
+import { CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import { GroupedOTRequest } from '@/types/otms';
 import { formatTime12Hour, formatHours } from '@/lib/otCalculations';
 import { OTApprovalDetailsSheet } from './OTApprovalDetailsSheet';
+import { RejectOTModal } from './RejectOTModal';
 import { Badge } from '@/components/ui/badge';
 
 type ApprovalRole = 'supervisor' | 'hr' | 'bod';
@@ -15,10 +16,51 @@ interface OTApprovalTableProps {
   requests: GroupedOTRequest[];
   isLoading: boolean;
   role: ApprovalRole;
+  approveRequest?: (requestIds: string[], remarks?: string) => Promise<void>;
+  rejectRequest?: (requestIds: string[], remarks: string) => Promise<void>;
+  isApproving?: boolean;
+  isRejecting?: boolean;
 }
 
-export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTableProps) {
+export function OTApprovalTable({ 
+  requests, 
+  isLoading, 
+  role,
+  approveRequest,
+  rejectRequest,
+  isApproving,
+  isRejecting 
+}: OTApprovalTableProps) {
   const [selectedRequest, setSelectedRequest] = useState<GroupedOTRequest | null>(null);
+  const [rejectingRequest, setRejectingRequest] = useState<GroupedOTRequest | null>(null);
+  const [approvingRequestId, setApprovingRequestId] = useState<string | null>(null);
+
+  const handleApprove = async (request: GroupedOTRequest) => {
+    if (!approveRequest) return;
+    setApprovingRequestId(request.id);
+    try {
+      await approveRequest([request.id]);
+    } finally {
+      setApprovingRequestId(null);
+    }
+  };
+
+  const handleRejectConfirm = async (remarks: string) => {
+    if (!rejectRequest || !rejectingRequest) return;
+    try {
+      await rejectRequest([rejectingRequest.id], remarks);
+      setRejectingRequest(null);
+    } catch (error) {
+      // Error is handled by the hook
+    }
+  };
+
+  const canApproveOrReject = (request: GroupedOTRequest) => {
+    if (role === 'supervisor') return request.status === 'pending_verification';
+    if (role === 'hr') return request.status === 'verified';
+    if (role === 'bod') return request.status === 'approved';
+    return false;
+  };
 
   if (isLoading) {
     return <div className="text-center py-8">Loading...</div>;
@@ -99,13 +141,38 @@ export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTablePr
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedRequest(request)}
-                    >
-                      View Details
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSelectedRequest(request)}
+                      >
+                        View Details
+                      </Button>
+                      {canApproveOrReject(request) && approveRequest && rejectRequest && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => handleApprove(request)}
+                            disabled={isApproving || approvingRequestId === request.id}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            {approvingRequestId === request.id ? 'Approving...' : 'Approve'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => setRejectingRequest(request)}
+                            disabled={isRejecting}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -119,6 +186,14 @@ export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTablePr
         open={!!selectedRequest}
         onOpenChange={(open) => !open && setSelectedRequest(null)}
         role={role}
+      />
+
+      <RejectOTModal
+        request={rejectingRequest}
+        open={!!rejectingRequest}
+        onOpenChange={(open) => !open && setRejectingRequest(null)}
+        onConfirm={handleRejectConfirm}
+        isLoading={isRejecting}
       />
     </>
   );

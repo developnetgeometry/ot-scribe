@@ -11,7 +11,23 @@ export default function VerifyOT() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('pending_verification');
   
-  const { requests, isLoading } = useOTApproval({ role: 'supervisor', status: statusFilter });
+  const { 
+    requests, 
+    isLoading, 
+    approveRequest: approveRequestMutation, 
+    rejectRequest: rejectRequestMutation,
+    isApproving,
+    isRejecting 
+  } = useOTApproval({ role: 'supervisor', status: statusFilter });
+
+  // Wrapper functions to match the expected API
+  const approveRequest = async (requestIds: string[], remarks?: string) => {
+    await approveRequestMutation({ requestIds, remarks });
+  };
+
+  const rejectRequest = async (requestIds: string[], remarks: string) => {
+    await rejectRequestMutation({ requestIds, remarks });
+  };
 
   const filteredRequests = requests?.filter(request => {
     if (!searchQuery) return true;
@@ -55,6 +71,10 @@ export default function VerifyOT() {
                   requests={filteredRequests} 
                   isLoading={isLoading}
                   role="supervisor"
+                  approveRequest={approveRequest}
+                  rejectRequest={rejectRequest}
+                  isApproving={isApproving}
+                  isRejecting={isRejecting}
                 />
               </TabsContent>
             </Tabs>
