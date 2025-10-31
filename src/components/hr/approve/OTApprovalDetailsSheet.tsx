@@ -24,9 +24,8 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange }: OTApprov
   if (!request) return null;
 
   const handleApprove = async () => {
-    await approveRequest.mutateAsync({ requestId: request.id, remarks });
+    await approveRequest.mutateAsync({ requestId: request.id, remarks: '' });
     onOpenChange(false);
-    setRemarks('');
   };
 
   const handleReject = async () => {
@@ -146,50 +145,48 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange }: OTApprov
             <>
               <Separator />
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="remarks">HR Remarks (Optional for approval, Required for rejection)</Label>
-                  <Textarea
-                    id="remarks"
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Add your remarks here..."
-                    className="mt-1"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  {/* Approve Button - Prominent */}
+                {/* Approve Button - Prominent, No remarks needed */}
+                <Button
+                  onClick={handleApprove}
+                  disabled={approveRequest.isPending || rejectRequest.isPending}
+                  className="w-full"
+                  size="lg"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Approve
+                </Button>
+                
+                <Separator />
+                
+                {/* Reject Section - Remarks required */}
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="remarks">Rejection Remarks (Required)</Label>
+                    <Textarea
+                      id="remarks"
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                      placeholder="Enter reason for rejection..."
+                      className="mt-1"
+                      rows={3}
+                    />
+                  </div>
+                  
                   <Button
-                    onClick={handleApprove}
-                    disabled={approveRequest.isPending || rejectRequest.isPending}
+                    variant="destructive"
+                    onClick={handleReject}
+                    disabled={approveRequest.isPending || rejectRequest.isPending || !remarks.trim()}
                     className="w-full"
-                    size="lg"
                   >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Approve
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Reject
                   </Button>
                   
-                  <Separator />
-                  
-                  {/* Reject Button - With warning */}
-                  <div className="space-y-2">
-                    <Button
-                      variant="destructive"
-                      onClick={handleReject}
-                      disabled={approveRequest.isPending || rejectRequest.isPending || !remarks.trim()}
-                      className="w-full"
-                    >
-                      <XCircle className="h-4 w-4 mr-2" />
-                      Reject
-                    </Button>
-                    
-                    {!remarks.trim() && (
-                      <p className="text-sm text-destructive text-center">
-                        * Remarks are required to reject this request
-                      </p>
-                    )}
-                  </div>
+                  {!remarks.trim() && (
+                    <p className="text-sm text-destructive text-center">
+                      * Remarks are required to reject this request
+                    </p>
+                  )}
                 </div>
               </div>
             </>
