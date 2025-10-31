@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Eye, CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -93,21 +93,21 @@ export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTablePr
             {requests.map((request) => {
               const profile = (request as any).profiles;
               return (
-                <TableRow key={request.id}>
-                  <TableCell>
+                <TableRow key={request.id} className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <TableCell onClick={() => setSelectedRequest(request)}>
                     <div>
-                      <div className="font-medium">{profile?.full_name || 'Unknown'}</div>
+                      <div className="font-medium hover:underline">{profile?.full_name || 'Unknown'}</div>
                       <div className="text-sm text-muted-foreground">{profile?.employee_id || request.employee_id}</div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={() => setSelectedRequest(request)}>
                     <div className="text-sm">{(profile?.departments as any)?.name || '-'}</div>
                   </TableCell>
-                  <TableCell>{format(new Date(request.ot_date), 'dd MMM yyyy')}</TableCell>
-                  <TableCell>{getDayTypeBadge(request.day_type)}</TableCell>
-                  <TableCell>{formatHours(request.total_hours)} hrs</TableCell>
-                  <TableCell>{formatCurrency(request.ot_amount || 0)}</TableCell>
-                  <TableCell>
+                  <TableCell onClick={() => setSelectedRequest(request)}>{format(new Date(request.ot_date), 'dd MMM yyyy')}</TableCell>
+                  <TableCell onClick={() => setSelectedRequest(request)}>{getDayTypeBadge(request.day_type)}</TableCell>
+                  <TableCell onClick={() => setSelectedRequest(request)}>{formatHours(request.total_hours)} hrs</TableCell>
+                  <TableCell onClick={() => setSelectedRequest(request)}>{formatCurrency(request.ot_amount || 0)}</TableCell>
+                  <TableCell onClick={() => setSelectedRequest(request)}>
                     <StatusBadge status={request.status} />
                     {request.threshold_violations && Object.keys(request.threshold_violations).length > 0 && (
                       <Badge variant="destructive" className="ml-2 text-xs">
@@ -116,16 +116,8 @@ export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTablePr
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedRequest(request)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                      {canTakeAction(request) && (
+                    {canTakeAction(request) && (
+                      <div className="flex gap-2">
                         <Button
                           size="sm"
                           variant="default"
@@ -134,8 +126,16 @@ export function OTApprovalTable({ requests, isLoading, role }: OTApprovalTablePr
                           <CheckCircle className="h-4 w-4 mr-1" />
                           {getActionButtonLabel(role)}
                         </Button>
-                      )}
-                    </div>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => setSelectedRequest(request)}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               );
