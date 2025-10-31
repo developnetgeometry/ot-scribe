@@ -5,6 +5,7 @@ import { useRateFormulas } from '@/hooks/hr/useRateFormulas';
 import { useDeleteRateFormula } from '@/hooks/hr/useDeleteRateFormula';
 import { useCreateRateFormula } from '@/hooks/hr/useCreateRateFormula';
 import { FormulaCard } from './FormulaCard';
+import { FormulaDialog } from './FormulaDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -23,6 +24,8 @@ export function FormulasTab() {
   const deleteFormula = useDeleteRateFormula();
   const createFormula = useCreateRateFormula();
   const [formulaToDelete, setFormulaToDelete] = useState<any>(null);
+  const [formulaToEdit, setFormulaToEdit] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeDayType, setActiveDayType] = useState<string>('weekday');
 
   const handleDelete = () => {
@@ -30,6 +33,16 @@ export function FormulasTab() {
       deleteFormula.mutate(formulaToDelete.id);
       setFormulaToDelete(null);
     }
+  };
+
+  const handleEdit = (formula: any) => {
+    setFormulaToEdit(formula);
+    setIsDialogOpen(true);
+  };
+
+  const handleAddNew = () => {
+    setFormulaToEdit(null);
+    setIsDialogOpen(true);
   };
 
   const handleDuplicate = (formula: any) => {
@@ -61,7 +74,7 @@ export function FormulasTab() {
             Configure calculation formulas for different day types
           </p>
         </div>
-        <Button className="bg-[#5F26B4] hover:bg-[#5F26B4]/90">
+        <Button onClick={handleAddNew} className="bg-[#5F26B4] hover:bg-[#5F26B4]/90">
           <Plus className="h-4 w-4 mr-2" />
           Add Formula
         </Button>
@@ -110,7 +123,7 @@ export function FormulasTab() {
             <FormulaCard
               key={formula.id}
               formula={formula}
-              onEdit={() => {}}
+              onEdit={handleEdit}
               onDelete={setFormulaToDelete}
               onDuplicate={handleDuplicate}
             />
@@ -122,6 +135,16 @@ export function FormulasTab() {
           </div>
         )}
       </div>
+
+      <FormulaDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        formula={formulaToEdit}
+        onSuccess={() => {
+          setIsDialogOpen(false);
+          setFormulaToEdit(null);
+        }}
+      />
 
       <AlertDialog open={!!formulaToDelete} onOpenChange={() => setFormulaToDelete(null)}>
         <AlertDialogContent>
