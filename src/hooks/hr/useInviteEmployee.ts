@@ -9,7 +9,7 @@ interface InviteEmployeeData {
   ic_no: string | null;
   phone_no: string | null;
   position: string;
-  position_id: string | null;
+  position_id: string;
   department_id: string;
   basic_salary: number;
   epf_no: string | null;

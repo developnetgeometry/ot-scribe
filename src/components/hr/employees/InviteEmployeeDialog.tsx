@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useInviteEmployee } from '@/hooks/hr/useInviteEmployee';
 import { useDepartments } from '@/hooks/hr/useDepartments';
 import { useEmployees } from '@/hooks/hr/useEmployees';
+import { usePositions } from '@/hooks/hr/usePositions';
 
 const inviteSchema = z.object({
   email: z.string().trim().email('Invalid email address'),
@@ -17,7 +18,7 @@ const inviteSchema = z.object({
   employee_id: z.string().trim().min(1, 'Employee No is required').max(50),
   ic_no: z.string().trim().max(50).optional(),
   phone_no: z.string().trim().max(20).optional(),
-  position: z.string().trim().min(1, 'Position is required').max(100),
+  position_id: z.string().uuid('Position is required'),
   department_id: z.string().uuid('Department is required'),
   basic_salary: z.number().min(1, 'Basic salary must be greater than 0'),
   epf_no: z.string().trim().max(50).optional(),
@@ -53,15 +54,29 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
     },
   });
 
+  // Watch department_id to filter positions
+  const selectedDepartmentId = form.watch('department_id');
+  const { data: positions = [], isLoading: isLoadingPositions } = usePositions(selectedDepartmentId || undefined);
+
+  // Reset position when department changes
+  const previousDepartmentId = form.watch('department_id');
+  if (previousDepartmentId !== selectedDepartmentId && form.getValues('position_id')) {
+    form.setValue('position_id', '');
+  }
+
   const onSubmit = (data: InviteFormData) => {
+    // Get position title from selected position
+    const selectedPosition = positions.find(p => p.id === data.position_id);
+    const positionTitle = selectedPosition?.title || '';
+
     inviteEmployee({
       email: data.email,
       full_name: data.full_name,
       employee_id: data.employee_id,
       ic_no: data.ic_no || null,
       phone_no: data.phone_no || null,
-      position: data.position,
-      position_id: null, // For now, keep as null - we'll update when we integrate position dropdown
+      position: positionTitle,
+      position_id: data.position_id,
       department_id: data.department_id,
       basic_salary: data.basic_salary,
       epf_no: data.epf_no || null,
@@ -170,13 +185,38 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
 
               <FormField
                 control={form.control}
-                name="position"
+                name="position_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Position *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Technician / Engineer" {...field} />
-                    </FormControl>
+                    <Select 
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={!selectedDepartmentId}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={!selectedDepartmentId ? "Select department first" : "Select position"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingPositions ? (
+                          <SelectItem value="loading" disabled>Loading positions...</SelectItem>
+                        ) : positions.length > 0 ? (
+                          positions
+                            .filter(p => p.is_active)
+                            .map((position) => (
+                              <SelectItem key={position.id} value={position.id}>
+                                {position.title}
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <SelectItem value="no-positions" disabled>
+                            No positions found for this department
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -21,6 +21,7 @@ import { Profile, AppRole } from '@/types/otms';
 import { useUpdateEmployee } from '@/hooks/hr/useUpdateEmployee';
 import { useDepartments } from '@/hooks/hr/useDepartments';
 import { useEmployees } from '@/hooks/hr/useEmployees';
+import { usePositions } from '@/hooks/hr/usePositions';
 import { formatCurrency } from '@/lib/otCalculations';
 
 interface EmployeeDetailsSheetProps {
@@ -47,6 +48,7 @@ export function EmployeeDetailsSheet({
   const updateEmployee = useUpdateEmployee();
   const { data: departments } = useDepartments();
   const { data: employees = [] } = useEmployees();
+  const { data: positions = [], isLoading: isLoadingPositions } = usePositions(formData.department_id || undefined);
 
   useEffect(() => {
     setMode(initialMode);
@@ -66,10 +68,15 @@ export function EmployeeDetailsSheet({
   if (!employee) return null;
 
   const handleSave = () => {
+    // Get position title from selected position
+    const selectedPosition = positions.find(p => p.id === formData.position_id);
+    const positionTitle = selectedPosition?.title || formData.position || '';
+
     updateEmployee.mutate(
       {
         id: employee.id,
         ...formData,
+        position: positionTitle,
         role: selectedRole,
       },
       {
@@ -177,14 +184,39 @@ export function EmployeeDetailsSheet({
             <div className="grid gap-2">
               <Label htmlFor="position">Position</Label>
               {isEditing ? (
-                <Input
-                  id="position"
-                  value={formData.position || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, position: e.target.value })
-                  }
-                  placeholder="e.g. Technician / Engineer"
-                />
+                <Select
+                  value={formData.position_id || undefined}
+                  onValueChange={(value) => {
+                    const selectedPosition = positions.find(p => p.id === value);
+                    setFormData({
+                      ...formData,
+                      position_id: value,
+                      position: selectedPosition?.title || ''
+                    });
+                  }}
+                  disabled={!formData.department_id}
+                >
+                  <SelectTrigger id="position">
+                    <SelectValue placeholder={!formData.department_id ? "Select department first" : "Select position"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {isLoadingPositions ? (
+                      <SelectItem value="loading" disabled>Loading positions...</SelectItem>
+                    ) : positions.length > 0 ? (
+                      positions
+                        .filter(p => p.is_active)
+                        .map((position) => (
+                          <SelectItem key={position.id} value={position.id}>
+                            {position.title}
+                          </SelectItem>
+                        ))
+                    ) : (
+                      <SelectItem value="no-positions" disabled>
+                        No positions found for this department
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               ) : (
                 <div className="text-sm">{employee.position || '-'}</div>
               )}
