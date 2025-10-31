@@ -1,18 +1,13 @@
-import { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar, Clock, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { StatusBadge } from '@/components/StatusBadge';
 import { GroupedOTRequest } from '@/types/otms';
 import { formatCurrency, formatHours, formatTime12Hour } from '@/lib/otCalculations';
-import { useOTApproval } from '@/hooks/useOTApproval';
-import { RejectOTModal } from './RejectOTModal';
 
 type ApprovalRole = 'supervisor' | 'hr' | 'bod';
 
@@ -24,66 +19,11 @@ interface OTApprovalDetailsSheetProps {
 }
 
 export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OTApprovalDetailsSheetProps) {
-  const [remarks, setRemarks] = useState('');
-  const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const { approveRequest, isApproving, rejectRequest, isRejecting } = useOTApproval({ role });
-
   if (!request) return null;
 
   const profile = (request as any).profiles;
 
-  const handleApprove = async () => {
-    try {
-      await approveRequest({ requestIds: request.request_ids, remarks });
-      setRemarks('');
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error approving request:', error);
-    }
-  };
-
-  const handleRejectClick = () => {
-    setRejectModalOpen(true);
-  };
-
-  const handleRejectConfirm = async (rejectRemarks: string) => {
-    try {
-      await rejectRequest({ requestIds: request.request_ids, remarks: rejectRemarks });
-      setRejectModalOpen(false);
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error rejecting request:', error);
-    }
-  };
-
-  const getActionLabel = (role: ApprovalRole): { approve: string; reject: string } => {
-    switch (role) {
-      case 'supervisor':
-        return { approve: 'Verify', reject: 'Reject Verification' };
-      case 'hr':
-        return { approve: 'Approve', reject: 'Reject Approval' };
-      case 'bod':
-        return { approve: 'Review', reject: 'Reject Review' };
-      default:
-        return { approve: 'Approve', reject: 'Reject' };
-    }
-  };
-
-  const canTakeAction = (): boolean => {
-    switch (role) {
-      case 'supervisor':
-        return request.status === 'pending_verification';
-      case 'hr':
-        return request.status === 'pending_verification' || request.status === 'verified';
-      case 'bod':
-        return request.status === 'approved';
-      default:
-        return false;
-    }
-  };
-
-  const actionLabels = getActionLabel(role);
-  const hasThresholdViolations = request.threshold_violations && 
+  const hasThresholdViolations = request.threshold_violations &&
     Object.keys(request.threshold_violations).length > 0;
 
   return (
@@ -264,62 +204,8 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OT
               </Button>
             </div>
           )}
-
-          {/* Approval Actions */}
-          {canTakeAction() && (
-            <>
-              <Separator />
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="remarks">Remarks (Optional for approval, Required for rejection)</Label>
-                  <Textarea
-                    id="remarks"
-                    placeholder="Add your remarks here..."
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  {/* Approve Button - Prominent */}
-                  <Button
-                    onClick={handleApprove}
-                    disabled={isApproving || isRejecting}
-                    className="w-full"
-                    size="lg"
-                  >
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    {actionLabels.approve}
-                  </Button>
-                  
-                  <Separator />
-                  
-                  {/* Reject Button */}
-                  <div className="space-y-2">
-                    <Button
-                      variant="destructive"
-                      onClick={handleRejectClick}
-                      disabled={isApproving || isRejecting}
-                      className="w-full"
-                    >
-                      {actionLabels.reject}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
         </div>
       </SheetContent>
-
-      <RejectOTModal
-        request={request}
-        open={rejectModalOpen}
-        onOpenChange={setRejectModalOpen}
-        onConfirm={handleRejectConfirm}
-        isLoading={isRejecting}
-      />
     </Sheet>
   );
 }
