@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
-import { DashboardCard } from '@/components/DashboardCard';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle, Users, Clock, FileText } from 'lucide-react';
+import { Users, Clock, ClipboardList, CheckSquare } from 'lucide-react';
+import { SupervisorDashboardCard } from '@/components/supervisor/SupervisorDashboardCard';
+import { HeroBanner } from '@/components/supervisor/HeroBanner';
+import { SupervisorOTTrendChart } from '@/components/supervisor/SupervisorOTTrendChart';
+import { RecentTeamOTTable } from '@/components/supervisor/RecentTeamOTTable';
+import { InsightBanner } from '@/components/supervisor/InsightBanner';
 
 export default function SupervisorDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [stats, setStats] = useState({
     teamOTHours: 0,
     pendingVerifications: 0,
@@ -19,6 +20,7 @@ export default function SupervisorDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState('');
+  const [avgOTPerMember, setAvgOTPerMember] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -63,35 +65,22 @@ export default function SupervisorDashboard() {
     const pendingVerifications = otRequests?.filter(req => req.status === 'pending_verification').length || 0;
     const verifiedRequests = otRequests?.filter(req => req.status === 'verified' || req.status === 'approved' || req.status === 'reviewed').length || 0;
 
+    const avgOT = teamCount && teamCount > 0 ? teamOTHours / teamCount : 0;
+
     setStats({
       teamOTHours,
       pendingVerifications,
       verifiedRequests,
       teamMembersCount: teamCount || 0,
     });
+    setAvgOTPerMember(avgOT);
     setLoading(false);
   };
 
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Supervisor Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            {fullName ? `Welcome back, ${fullName}!` : 'Welcome back!'} Here's your team overview for this month.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={() => navigate('/supervisor/verify')} className="gap-2">
-            <CheckCircle className="h-4 w-4" />
-            Verify OT Requests
-          </Button>
-          <Button onClick={() => navigate('/hr/ot-reports')} variant="outline" className="gap-2">
-            <FileText className="h-4 w-4" />
-            View Team Reports
-          </Button>
-        </div>
+        <HeroBanner name={fullName} />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {loading ? (
@@ -103,33 +92,46 @@ export default function SupervisorDashboard() {
             </>
           ) : (
             <>
-              <DashboardCard
+              <SupervisorDashboardCard
                 title="Team Members"
                 value={stats.teamMembersCount}
                 subtitle="Direct reports"
                 icon={Users}
+                variant="blue"
               />
-              <DashboardCard
+              <SupervisorDashboardCard
                 title="Pending Verifications"
                 value={stats.pendingVerifications}
-                subtitle="Awaiting your verification"
-                icon={CheckCircle}
+                subtitle="Awaiting your review"
+                icon={ClipboardList}
+                variant="purple"
               />
-              <DashboardCard
+              <SupervisorDashboardCard
                 title="Verified Requests"
                 value={stats.verifiedRequests}
                 subtitle="This month"
-                icon={FileText}
+                icon={CheckSquare}
+                variant="green"
               />
-              <DashboardCard
+              <SupervisorDashboardCard
                 title="Team OT Hours"
                 value={stats.teamOTHours.toFixed(1)}
-                subtitle="This month"
+                subtitle="Total this month"
                 icon={Clock}
+                variant="yellow"
               />
             </>
           )}
         </div>
+
+        <SupervisorOTTrendChart />
+
+        <RecentTeamOTTable />
+
+        <InsightBanner 
+          avgOTPerMember={avgOTPerMember}
+          teamMembersCount={stats.teamMembersCount}
+        />
       </div>
     </AppLayout>
   );
