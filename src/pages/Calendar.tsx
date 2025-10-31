@@ -23,8 +23,8 @@ export default function Calendar() {
   };
 
   const modifiersClassNames = {
-    holiday: "bg-destructive/20 text-destructive font-semibold hover:bg-destructive/30",
-    sunday: "text-destructive",
+    holiday: "bg-[#FEE2E2] text-[#DC2626] font-semibold",
+    sunday: "text-[#DC2626]",
   };
 
   return (
@@ -34,8 +34,6 @@ export default function Calendar() {
           <h1 className="text-3xl font-bold">Calendar</h1>
           <p className="text-muted-foreground">View public holidays based on HR's configured calendar.</p>
         </div>
-        <CalendarLegend />
-
         {isLoading ? (
           <Card className="p-6">
             <Skeleton className="h-80 w-full" />
@@ -47,17 +45,19 @@ export default function Calendar() {
             </p>
           </Card>
         ) : (
-          <Card className="p-6 flex justify-center">
+          <Card className="p-8">
             <CalendarUI
               mode="single"
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
               modifiers={modifiers}
               modifiersClassNames={modifiersClassNames}
-              className="rounded-md"
+              className="w-full max-w-4xl mx-auto"
             />
           </Card>
         )}
+
+        <CalendarLegend />
 
         <HolidayDetailsSection 
           selectedDate={selectedDate} 

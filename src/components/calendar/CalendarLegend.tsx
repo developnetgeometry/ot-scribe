@@ -2,19 +2,19 @@ import { Card } from "@/components/ui/card";
 
 export function CalendarLegend() {
   return (
-    <Card className="p-4">
-      <div className="flex flex-wrap gap-6 items-center text-sm">
+    <Card className="p-6">
+      <div className="flex flex-wrap gap-8 items-center justify-center text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-destructive/20 border-2 border-destructive/40" />
-          <span className="text-muted-foreground">Holiday</span>
+          <div className="w-6 h-6 rounded bg-[#FEE2E2] border border-gray-200" />
+          <span className="text-muted-foreground font-medium">Holiday</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded border-2 border-info" />
-          <span className="text-muted-foreground">Today</span>
+          <div className="w-6 h-6 rounded border-2 border-[#A78BFA]" />
+          <span className="text-muted-foreground font-medium">Today</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded border-2 border-primary/60" />
-          <span className="text-muted-foreground">Selected</span>
+          <div className="w-6 h-6 rounded border-2 border-[#C4B5FD]" />
+          <span className="text-muted-foreground font-medium">Selected</span>
         </div>
       </div>
     </Card>
