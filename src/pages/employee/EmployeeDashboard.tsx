@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
-import { DashboardCard } from '@/components/DashboardCard';
+import { EnhancedEmployeeDashboardCard } from '@/components/employee/EnhancedEmployeeDashboardCard';
+import { EmployeeOTWeeklyChart } from '@/components/employee/EmployeeOTWeeklyChart';
+import { EmployeeOTStatusChart } from '@/components/employee/EmployeeOTStatusChart';
+import { QuickTips } from '@/components/employee/QuickTips';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, History, Clock, CheckCircle } from 'lucide-react';
+import { Clock, RefreshCcw, CheckCircle2, Plus, History } from 'lucide-react';
 
 export default function EmployeeDashboard() {
   const { user } = useAuth();
@@ -57,8 +60,12 @@ export default function EmployeeDashboard() {
     }
 
     const totalHours = data?.reduce((sum, req) => sum + (req.total_hours || 0), 0) || 0;
-    const pendingRequests = data?.filter(req => req.status === 'pending_verification').length || 0;
-    const approvedRequests = data?.filter(req => req.status === 'approved' || req.status === 'reviewed').length || 0;
+    const pendingRequests = data?.filter(req => 
+      req.status === 'pending_verification'
+    ).length || 0;
+    const approvedRequests = data?.filter(req => 
+      req.status === 'approved' || req.status === 'reviewed' || req.status === 'verified'
+    ).length || 0;
 
     setStats({ totalHours, pendingRequests, approvedRequests });
     setLoading(false);
@@ -66,7 +73,7 @@ export default function EmployeeDashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 bg-muted/30 -m-6 p-6">
         <div>
           <h1 className="text-3xl font-bold">Employee Dashboard</h1>
           <p className="text-muted-foreground mt-1">
@@ -75,11 +82,27 @@ export default function EmployeeDashboard() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button onClick={() => navigate('/ot/submit')} className="gap-2">
-            <PlusCircle className="h-4 w-4" />
+          <Button 
+            onClick={() => navigate('/ot/submit')} 
+            className="gap-2 font-semibold shadow-lg hover:shadow-xl transition-shadow"
+            style={{ 
+              backgroundColor: '#5F26B4',
+              boxShadow: '0 4px 8px rgba(95, 38, 180, 0.25)'
+            }}
+          >
+            <Plus className="h-4 w-4" />
             Submit OT Request
           </Button>
-          <Button onClick={() => navigate('/ot/history')} variant="outline" className="gap-2">
+          <Button 
+            onClick={() => navigate('/ot/history')} 
+            variant="outline" 
+            className="gap-2 font-medium"
+            style={{
+              backgroundColor: '#EEF2FF',
+              color: '#5F26B4',
+              borderColor: '#E0E7FF'
+            }}
+          >
             <History className="h-4 w-4" />
             View OT History
           </Button>
@@ -88,33 +111,46 @@ export default function EmployeeDashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
             <>
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
+              <Skeleton className="h-32 rounded-2xl" />
+              <Skeleton className="h-32 rounded-2xl" />
+              <Skeleton className="h-32 rounded-2xl" />
             </>
           ) : (
             <>
-              <DashboardCard
+              <EnhancedEmployeeDashboardCard
                 title="Total OT Hours"
                 value={stats.totalHours.toFixed(1)}
                 subtitle="This month"
                 icon={Clock}
+                variant="purple"
               />
-              <DashboardCard
+              <EnhancedEmployeeDashboardCard
                 title="Pending Requests"
                 value={stats.pendingRequests}
                 subtitle="Awaiting approval"
-                icon={History}
+                icon={RefreshCcw}
+                variant="yellow"
               />
-              <DashboardCard
+              <EnhancedEmployeeDashboardCard
                 title="Approved Requests"
                 value={stats.approvedRequests}
                 subtitle="This month"
-                icon={CheckCircle}
+                icon={CheckCircle2}
+                variant="green"
               />
             </>
           )}
         </div>
+
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Monthly OT Overview</h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            <EmployeeOTWeeklyChart />
+            <EmployeeOTStatusChart />
+          </div>
+        </div>
+
+        <QuickTips />
       </div>
     </AppLayout>
   );
