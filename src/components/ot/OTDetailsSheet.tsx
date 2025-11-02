@@ -57,10 +57,6 @@ export function OTDetailsSheet({ request, open, onOpenChange }: OTDetailsSheetPr
               <p className="text-sm font-medium text-muted-foreground">Total Hours</p>
               <p className="text-base font-medium">{formatHours(request.total_hours)} hrs</p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">OT Amount</p>
-              <p className="text-base font-semibold">{formatCurrency(request.ot_amount)}</p>
-            </div>
           </div>
 
           <Separator />
@@ -84,31 +80,6 @@ export function OTDetailsSheet({ request, open, onOpenChange }: OTDetailsSheetPr
                     <ExternalLink className="h-3 w-3 ml-2" />
                   </a>
                 </Button>
-              </div>
-            </>
-          )}
-
-          {/* Calculation Breakdown */}
-          {(request.orp || request.hrp) && (
-            <>
-              <Separator />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-3">Calculation Breakdown</p>
-                <div className="space-y-2 bg-muted/50 p-3 rounded-lg">
-                  <div className="flex justify-between">
-                    <span className="text-sm">ORP (Overtime Rate Per Hour)</span>
-                    <span className="text-sm font-medium">{formatCurrency(request.orp)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">HRP (Hourly Rate Pay)</span>
-                    <span className="text-sm font-medium">{formatCurrency(request.hrp)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-sm font-semibold">Total Amount</span>
-                    <span className="text-sm font-semibold">{formatCurrency(request.ot_amount)}</span>
-                  </div>
-                </div>
               </div>
             </>
           )}
