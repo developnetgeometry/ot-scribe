@@ -36,6 +36,34 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
     setDownloadingIds(prev => new Set(prev).add(employeeId));
 
     try {
+      // Check user role - only HR and BOD can generate payslips
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+
+      if (rolesError) throw rolesError;
+
+      const isAuthorized = roles?.some(r => 
+        r.role === 'hr' || r.role === 'bod' || r.role === 'admin'
+      );
+
+      if (!isAuthorized) {
+        toast({
+          title: 'Access Denied',
+          description: 'Only HR and BOD can generate payslips.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Fetch all required data
       const year = selectedMonth.getFullYear();
       const monthNum = selectedMonth.getMonth() + 1;
       
@@ -44,7 +72,15 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
       const lastDay = new Date(year, monthNum, 0).getDate();
       const endDate = `${year}-${String(monthNum).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
-      // Fetch employee profile
+      // 1. Fetch company profile
+      const { data: company, error: companyError } = await supabase
+        .from('company_profile')
+        .select('*')
+        .single();
+
+      if (companyError) throw companyError;
+
+      // 2. Fetch employee profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select(`
@@ -52,9 +88,6 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
           employee_id,
           full_name,
           ic_no,
-          epf_no,
-          socso_no,
-          income_tax_no,
           department_id,
           position_id,
           departments!profiles_department_id_fkey(name),
@@ -65,10 +98,10 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
 
       if (profileError) throw profileError;
 
-      // Fetch OT requests for the month
+      // 3. Fetch OT requests for the month
       const { data: otRequests, error: otError } = await supabase
         .from('ot_requests')
-        .select('ot_amount')
+        .select('total_hours, ot_amount')
         .eq('employee_id', employeeId)
         .gte('ot_date', startDate)
         .lte('ot_date', endDate)
@@ -76,28 +109,37 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
 
       if (otError) throw otError;
 
-      const totalOTAmount = otRequests?.reduce((sum, r) => sum + (r.ot_amount || 0), 0) || 0;
+      const totalAmount = otRequests?.reduce((sum, r) => sum + (r.ot_amount || 0), 0) || 0;
+      const totalHours = otRequests?.reduce((sum, r) => sum + (r.total_hours || 0), 0) || 0;
 
       const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                           'July', 'August', 'September', 'October', 'November', 'December'];
 
-      // Generate PDF
+      // Generate PDF with complete data
       generatePayslipPDF({
+        company: {
+          name: company.name,
+          registration_no: company.registration_no,
+          address: company.address,
+          phone: company.phone,
+          logo_url: company.logo_url,
+        },
         employee: {
           employee_no: profile.employee_id,
           full_name: profile.full_name,
           ic_no: profile.ic_no,
-          epf_no: profile.epf_no,
-          socso_no: profile.socso_no,
-          income_tax_no: profile.income_tax_no,
           department: profile.departments?.name || 'Not Assigned',
           position: profile.positions?.title || 'Not Assigned',
         },
         period: {
-          month: monthNames[monthNum - 1],
-          year: year,
+          display: `${monthNames[monthNum - 1]} ${year}`,
+          month: monthNum,
+          year,
         },
-        totalOTAmount,
+        overtime: {
+          amount: totalAmount,
+          hours: totalHours,
+        },
       });
 
       toast({

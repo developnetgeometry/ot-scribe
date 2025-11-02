@@ -58,6 +58,39 @@ export type Database = {
           },
         ]
       }
+      company_profile: {
+        Row: {
+          address: string
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          phone: string
+          registration_no: string
+          updated_at: string | null
+        }
+        Insert: {
+          address: string
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          phone: string
+          registration_no: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          phone?: string
+          registration_no?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           code: string
