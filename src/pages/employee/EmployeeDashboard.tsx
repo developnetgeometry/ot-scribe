@@ -93,19 +93,6 @@ export default function EmployeeDashboard() {
             <Plus className="h-4 w-4" />
             Submit OT Request
           </Button>
-          <Button 
-            onClick={() => navigate('/ot/history')} 
-            variant="outline" 
-            className="gap-2 font-medium"
-            style={{
-              backgroundColor: '#EEF2FF',
-              color: '#5F26B4',
-              borderColor: '#E0E7FF'
-            }}
-          >
-            <History className="h-4 w-4" />
-            View OT History
-          </Button>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
