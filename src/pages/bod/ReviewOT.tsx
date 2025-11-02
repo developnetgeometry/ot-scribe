@@ -64,7 +64,6 @@ export default function ReviewOT() {
       { key: 'employee_name', label: 'Name' },
       { key: 'department', label: 'Department' },
       { key: 'position', label: 'Position' },
-      { key: 'status', label: 'Status' },
       { key: 'total_ot_hours', label: 'Total OT Hours' },
       { key: 'amount', label: 'Amount (RM)' },
       { key: 'monthly_total', label: 'Monthly Total (RM)' }
@@ -72,9 +71,6 @@ export default function ReviewOT() {
 
     const formattedData = filteredData.map(row => ({
       ...row,
-      status: row.status_summary === 'pending_bod_review' ? 'Pending BOD Review' :
-              row.status_summary === 'bod_approved' ? 'BOD Approved' :
-              `Mixed (${row.approved_count} pending, ${row.reviewed_count} approved)`,
       total_ot_hours: formatHours(row.total_ot_hours),
       amount: formatCurrency(row.amount),
       monthly_total: formatCurrency(row.monthly_total)

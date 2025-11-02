@@ -11,9 +11,6 @@ interface EmployeeOTSummary {
   amount: number;
   monthly_total: number;
   has_violations: boolean;
-  status_summary: 'pending_bod_review' | 'bod_approved' | 'mixed';
-  approved_count?: number;
-  reviewed_count?: number;
 }
 
 export function useBODReportData(selectedMonth?: Date) {
@@ -82,9 +79,6 @@ function aggregateByEmployee(requests: any[]): EmployeeOTSummary[] {
         amount: 0,
         monthly_total: 0,
         has_violations: false,
-        status_summary: 'pending_bod_review',
-        approved_count: 0,
-        reviewed_count: 0,
       });
     }
     
@@ -93,26 +87,8 @@ function aggregateByEmployee(requests: any[]): EmployeeOTSummary[] {
     emp.amount += req.ot_amount || 0;
     emp.monthly_total = emp.amount;
     
-    // Track status counts
-    if (req.status === 'approved') {
-      emp.approved_count = (emp.approved_count || 0) + 1;
-    } else if (req.status === 'reviewed') {
-      emp.reviewed_count = (emp.reviewed_count || 0) + 1;
-    }
-    
     if (req.threshold_violations && Object.keys(req.threshold_violations).length > 0) {
       emp.has_violations = true;
-    }
-  });
-  
-  // Determine status_summary for each employee
-  grouped.forEach(emp => {
-    if (emp.approved_count! > 0 && emp.reviewed_count! > 0) {
-      emp.status_summary = 'mixed';
-    } else if (emp.approved_count! > 0) {
-      emp.status_summary = 'pending_bod_review';
-    } else if (emp.reviewed_count! > 0) {
-      emp.status_summary = 'bod_approved';
     }
   });
   
