@@ -18,8 +18,8 @@ export function useOTApprovals(options: UseOTApprovalsOptions = {}) {
 
       if (options.status) {
         if (options.status === 'all') {
-          // Show only approved and rejected requests
-          query = query.in('status', ['approved', 'rejected'] as OTStatus[]);
+          // Show all finalized requests: approved, rejected, and reviewed
+          query = query.in('status', ['approved', 'rejected', 'reviewed'] as OTStatus[]);
         } else if (options.status === 'verified') {
           // Show both pending_verification and verified for HR approval
           query = query.in('status', ['pending_verification', 'verified'] as OTStatus[]);
