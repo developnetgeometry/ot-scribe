@@ -81,19 +81,6 @@ export default function EmployeeDashboard() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Button 
-            onClick={() => navigate('/ot/submit')} 
-            className="gap-2 font-semibold shadow-lg hover:shadow-xl transition-shadow"
-            style={{ 
-              backgroundColor: '#5F26B4',
-              boxShadow: '0 4px 8px rgba(95, 38, 180, 0.25)'
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Submit OT Request
-          </Button>
-        </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
