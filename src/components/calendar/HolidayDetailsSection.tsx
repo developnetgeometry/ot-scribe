@@ -31,15 +31,34 @@ export function HolidayDetailsSection({ selectedDate, holidays }: HolidayDetails
           </div>
         ) : (
           <div className="space-y-4">
-            {holidays.map((holiday) => (
-              <div key={holiday.id} className="flex items-start gap-4 p-4 rounded-lg bg-gradient-to-r from-red-50 to-pink-50 border border-red-100 hover:shadow-md transition-shadow duration-200">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-red-500 to-red-600 mt-1.5 flex-shrink-0 shadow-sm" />
-                <div>
-                  <p className="font-semibold text-gray-800 text-base">{holiday.description}</p>
-                  <p className="text-sm text-gray-600 mt-1">Public Holiday</p>
+            {holidays.map((holiday) => {
+              const isWeeklyOff = holiday.description.toLowerCase().includes('weekly off');
+              const isStateHoliday = holiday.state_code && holiday.state_code !== 'ALL';
+              
+              const bgColor = isWeeklyOff 
+                ? 'from-indigo-50 to-indigo-100 border-indigo-200' 
+                : isStateHoliday 
+                ? 'from-yellow-50 to-yellow-100 border-yellow-200'
+                : 'from-red-50 to-pink-50 border-red-100';
+                
+              const dotColor = isWeeklyOff
+                ? 'from-indigo-500 to-indigo-600'
+                : isStateHoliday
+                ? 'from-yellow-500 to-yellow-600'
+                : 'from-red-500 to-red-600';
+              
+              return (
+                <div key={holiday.id} className={`flex items-start gap-4 p-4 rounded-lg bg-gradient-to-r ${bgColor} border hover:shadow-md transition-shadow duration-200`}>
+                  <div className={`w-3 h-3 rounded-full bg-gradient-to-br ${dotColor} mt-1.5 flex-shrink-0 shadow-sm`} />
+                  <div>
+                    <p className="font-semibold text-gray-800 text-base">{holiday.description}</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {isWeeklyOff ? 'Weekly Holiday' : isStateHoliday ? `State Holiday (${holiday.state_code})` : 'Public Holiday'}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
