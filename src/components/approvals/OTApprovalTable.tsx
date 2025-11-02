@@ -20,6 +20,7 @@ interface OTApprovalTableProps {
   rejectRequest?: (requestIds: string[], remarks: string) => Promise<void>;
   isApproving?: boolean;
   isRejecting?: boolean;
+  showActions?: boolean;
 }
 
 export function OTApprovalTable({ 
@@ -29,7 +30,8 @@ export function OTApprovalTable({
   approveRequest,
   rejectRequest,
   isApproving,
-  isRejecting 
+  isRejecting,
+  showActions = true
 }: OTApprovalTableProps) {
   const [selectedRequest, setSelectedRequest] = useState<GroupedOTRequest | null>(null);
   const [rejectingRequest, setRejectingRequest] = useState<GroupedOTRequest | null>(null);
@@ -87,7 +89,7 @@ export function OTApprovalTable({
               <TableHead>Submitted OT Sessions</TableHead>
               <TableHead>Total OT Hours</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
+              {showActions && <TableHead>Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -144,33 +146,35 @@ export function OTApprovalTable({
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                      {canApproveOrReject(request) && approveRequest && rejectRequest && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => handleApprove(request)}
-                            disabled={isApproving || approvingRequestId === request.id}
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            {approvingRequestId === request.id ? 'Approving...' : 'Approve'}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => setRejectingRequest(request)}
-                            disabled={isRejecting}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </TableCell>
+                  {showActions && (
+                    <TableCell>
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        {canApproveOrReject(request) && approveRequest && rejectRequest && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => handleApprove(request)}
+                              disabled={isApproving || approvingRequestId === request.id}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              {approvingRequestId === request.id ? 'Approving...' : 'Approve'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => setRejectingRequest(request)}
+                              disabled={isRejecting}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               );
             })}

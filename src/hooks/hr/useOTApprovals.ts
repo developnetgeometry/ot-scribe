@@ -16,8 +16,11 @@ export function useOTApprovals(options: UseOTApprovalsOptions = {}) {
         .select('*')
         .order('ot_date', { ascending: false });
 
-      if (options.status && options.status !== 'all') {
-        if (options.status === 'verified') {
+      if (options.status) {
+        if (options.status === 'all') {
+          // Show only approved and rejected requests
+          query = query.in('status', ['approved', 'rejected'] as OTStatus[]);
+        } else if (options.status === 'verified') {
           // Show both pending_verification and verified for HR approval
           query = query.in('status', ['pending_verification', 'verified'] as OTStatus[]);
         } else {
