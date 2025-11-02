@@ -218,10 +218,11 @@ export default function ReviewOT() {
               </div>
             </div>
 
-            <BODReportTable 
-              data={filteredData}
-              isLoading={isLoading}
-            />
+          <BODReportTable 
+            data={filteredData}
+            isLoading={isLoading}
+            selectedMonth={filterDate}
+          />
           </div>
         </Card>
       </div>

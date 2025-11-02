@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, FileDown } from 'lucide-react';
+import { generatePayslipPDF } from '@/lib/payslipPdfGenerator';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 interface EmployeeOTSummary {
   employee_no: string;
@@ -16,14 +21,111 @@ interface EmployeeOTSummary {
 interface BODReportTableProps {
   data: EmployeeOTSummary[];
   isLoading: boolean;
+  selectedMonth: Date;
 }
 
 type SortColumn = keyof EmployeeOTSummary;
 type SortDirection = 'asc' | 'desc';
 
-export function BODReportTable({ data, isLoading }: BODReportTableProps) {
+export function BODReportTable({ data, isLoading, selectedMonth }: BODReportTableProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>('employee_no');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  const handleDownloadPayslip = async (employeeNo: string) => {
+    try {
+      toast({
+        title: 'Generating payslip...',
+        description: 'Please wait while we prepare the PDF.'
+      });
+
+      // Get employee data
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          employee_id,
+          full_name,
+          ic_no,
+          department_id,
+          position_id,
+          departments(name),
+          positions(title)
+        `)
+        .eq('employee_id', employeeNo)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Get company data
+      const { data: company, error: companyError } = await supabase
+        .from('company_profile')
+        .select('*')
+        .single();
+
+      if (companyError) throw companyError;
+
+      // Get OT requests for the month
+      const startDate = format(startOfMonth(selectedMonth), 'yyyy-MM-dd');
+      const endDate = format(endOfMonth(selectedMonth), 'yyyy-MM-dd');
+
+      const { data: otRequests, error: otError } = await supabase
+        .from('ot_requests')
+        .select('*')
+        .eq('employee_id', profile.id)
+        .gte('ot_date', startDate)
+        .lte('ot_date', endDate)
+        .in('status', ['approved', 'reviewed']);
+
+      if (otError) throw otError;
+
+      // Aggregate OT data
+      const totalHours = otRequests?.reduce((sum, req) => sum + (req.total_hours || 0), 0) || 0;
+      const totalAmount = otRequests?.reduce((sum, req) => sum + (req.ot_amount || 0), 0) || 0;
+
+      // Format data for PDF generator
+      const payslipData = {
+        company: {
+          name: company.name || 'Company Name',
+          registration_no: company.registration_no || 'N/A',
+          address: company.address || 'N/A',
+          phone: company.phone || 'N/A',
+          logo_url: company.logo_url || null
+        },
+        employee: {
+          employee_no: employeeNo,
+          full_name: profile.full_name,
+          ic_no: profile.ic_no || null,
+          department: profile.departments?.name || 'N/A',
+          position: profile.positions?.title || 'N/A'
+        },
+        period: {
+          display: format(selectedMonth, 'MMMM yyyy'),
+          month: selectedMonth.getMonth() + 1,
+          year: selectedMonth.getFullYear()
+        },
+        overtime: {
+          amount: totalAmount,
+          hours: totalHours
+        }
+      };
+
+      // Generate PDF
+      generatePayslipPDF(payslipData);
+
+      toast({
+        title: 'Payslip generated',
+        description: 'PDF has been downloaded successfully.'
+      });
+
+    } catch (error) {
+      console.error('Error generating payslip:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate payslip. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  };
 
 
   const handleSort = (column: SortColumn) => {
@@ -113,6 +215,7 @@ export function BODReportTable({ data, isLoading }: BODReportTableProps) {
             </TableHead>
             <TableHead className="text-right font-semibold">Amount (RM)</TableHead>
             <TableHead className="text-right font-semibold">Monthly Total (RM)</TableHead>
+            <TableHead className="text-center font-semibold">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -133,6 +236,16 @@ export function BODReportTable({ data, isLoading }: BODReportTableProps) {
               <TableCell className="text-right font-semibold">
                 {formatCurrency(row.monthly_total)}
               </TableCell>
+              <TableCell className="text-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownloadPayslip(row.employee_no)}
+                >
+                  <FileDown className="h-4 w-4 mr-1" />
+                  Payslip
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -150,6 +263,7 @@ export function BODReportTable({ data, isLoading }: BODReportTableProps) {
             <TableCell className="text-right font-bold text-primary">
               {formatCurrency(totalCost)}
             </TableCell>
+            <TableCell />
           </TableRow>
         </TableFooter>
       </Table>
