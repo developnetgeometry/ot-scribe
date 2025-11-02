@@ -71,7 +71,7 @@ export default function ApproveOT() {
                   role="hr"
                   approveRequest={handleApprove}
                   rejectRequest={handleReject}
-                  showActions={activeTab !== 'all'}
+                  showActions={activeTab === 'verified'}
                 />
               </div>
             </Card>
