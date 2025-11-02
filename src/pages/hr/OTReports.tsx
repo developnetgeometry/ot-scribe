@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, DollarSign, Clock, AlertTriangle, FileCheck, Download, FileText } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, DollarSign, Clock, AlertTriangle, FileCheck, Download, FileText, Filter } from 'lucide-react';
 import { EnhancedDashboardCard } from '@/components/hr/EnhancedDashboardCard';
 import { HRReportTable } from '@/components/hr/reports/HRReportTable';
-import { MonthPicker } from '@/components/bod/MonthPicker';
 import { useHRReportData } from '@/hooks/useHRReportData';
 import { exportToCSV, exportToPDF } from '@/lib/exportUtils';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
@@ -15,9 +15,18 @@ import { format } from 'date-fns';
 
 export default function OTReports() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   
-  const { data, isLoading } = useHRReportData(selectedMonth);
+  const currentDate = new Date();
+  const [selectedMonth, setSelectedMonth] = useState<string>((currentDate.getMonth() + 1).toString());
+  const [selectedYear, setSelectedYear] = useState<string>(currentDate.getFullYear().toString());
+  const [appliedMonth, setAppliedMonth] = useState<string>((currentDate.getMonth() + 1).toString());
+  const [appliedYear, setAppliedYear] = useState<string>(currentDate.getFullYear().toString());
+  
+  const filterDate = useMemo(() => {
+    return new Date(parseInt(appliedYear), parseInt(appliedMonth) - 1, 1);
+  }, [appliedMonth, appliedYear]);
+  
+  const { data, isLoading } = useHRReportData(filterDate);
 
   const aggregatedData = data?.aggregated || [];
   const stats = data?.stats || {
@@ -65,7 +74,7 @@ export default function OTReports() {
       monthly_total: formatCurrency(row.monthly_total)
     }));
 
-    const monthStr = format(selectedMonth, 'MMM_yyyy');
+    const monthStr = format(filterDate, 'MMM_yyyy');
     exportToCSV(formattedData, `HR_OT_Report_${monthStr}`, headers);
     
     toast({
@@ -91,8 +100,8 @@ export default function OTReports() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">HR OT Reports</h1>
-          <p className="text-muted-foreground">Review, monitor, and export overtime details for all employees. View total OT hours, cost, and performance breakdown by month.</p>
+          <h1 className="text-3xl font-bold">OT Reports</h1>
+          <p className="text-muted-foreground">Filter and export monthly overtime summaries by department and employee.</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -130,10 +139,56 @@ export default function OTReports() {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <h2 className="text-lg font-semibold">Monthly OT Summary Report</h2>
-              <MonthPicker 
-                selectedMonth={selectedMonth}
-                onMonthChange={setSelectedMonth}
-              />
+              
+              <div className="flex items-center gap-3">
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="w-[180px] border-[#E5E7EB] focus:border-[#5F26B4] focus:ring-[#5F26B4]">
+                    <SelectValue placeholder="Select Month" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50 border shadow-lg">
+                    <SelectItem value="1">January</SelectItem>
+                    <SelectItem value="2">February</SelectItem>
+                    <SelectItem value="3">March</SelectItem>
+                    <SelectItem value="4">April</SelectItem>
+                    <SelectItem value="5">May</SelectItem>
+                    <SelectItem value="6">June</SelectItem>
+                    <SelectItem value="7">July</SelectItem>
+                    <SelectItem value="8">August</SelectItem>
+                    <SelectItem value="9">September</SelectItem>
+                    <SelectItem value="10">October</SelectItem>
+                    <SelectItem value="11">November</SelectItem>
+                    <SelectItem value="12">December</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="w-[120px] border-[#E5E7EB] focus:border-[#5F26B4] focus:ring-[#5F26B4]">
+                    <SelectValue placeholder="Select Year" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50 border shadow-lg">
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const year = new Date().getFullYear() - i;
+                      return (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  onClick={() => {
+                    setAppliedMonth(selectedMonth);
+                    setAppliedYear(selectedYear);
+                  }}
+                  disabled={isLoading}
+                  className="bg-[#5F26B4] hover:bg-[#4C1D95] text-white font-semibold px-5 transition-all duration-200"
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  Apply Filter
+                </Button>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -168,7 +223,7 @@ export default function OTReports() {
             <HRReportTable 
               data={filteredData}
               isLoading={isLoading}
-              selectedMonth={selectedMonth}
+              selectedMonth={filterDate}
             />
           </div>
         </Card>
