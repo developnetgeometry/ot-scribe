@@ -21,7 +21,7 @@ export function MonthPicker({ selectedMonth, onMonthChange }: MonthPickerProps) 
           {format(selectedMonth, 'MMMM yyyy')}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="end">
+      <PopoverContent className="w-[280px] p-3 rounded-xl shadow-lg border border-[#E5E7EB] bg-white" align="end">
         <Calendar
           mode="single"
           selected={selectedMonth}
@@ -33,8 +33,12 @@ export function MonthPicker({ selectedMonth, onMonthChange }: MonthPickerProps) 
           }}
           defaultMonth={selectedMonth}
           disabled={(date) => date > new Date()}
+          compact={true}
           className="pointer-events-auto"
         />
+        <div className="text-center text-[11px] text-[#9CA3AF] pt-2 border-t border-gray-100 mt-2">
+          Select a month to view report
+        </div>
       </PopoverContent>
     </Popover>
   );
