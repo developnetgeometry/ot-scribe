@@ -9,7 +9,7 @@ import { OTCostChart } from '@/components/bod/charts/OTCostChart';
 import { QuickInsights } from '@/components/bod/QuickInsights';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle, DollarSign, Clock, TrendingUp, FileText, BarChart } from 'lucide-react';
+import { CheckCircle, DollarSign, Clock, TrendingUp } from 'lucide-react';
 
 export default function BODDashboard() {
   const { user } = useAuth();
@@ -87,23 +87,11 @@ export default function BODDashboard() {
   return (
     <AppLayout>
       <div className="space-y-8">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">BOD Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
-              {fullName ? `Welcome back, ${fullName}!` : 'Welcome back!'} Here's your executive overview.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button onClick={() => navigate('/bod/review')} className="gap-2">
-              <FileText className="h-4 w-4" />
-              Review Reports
-            </Button>
-            <Button onClick={() => navigate('/hr/ot-reports')} variant="outline" className="gap-2">
-              <BarChart className="h-4 w-4" />
-              View Analytics
-            </Button>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold">BOD Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            {fullName ? `Welcome back, ${fullName}!` : 'Welcome back!'} Here's your executive overview.
+          </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
