@@ -8,10 +8,12 @@ import { Search, DollarSign, Clock, AlertTriangle, FileCheck, Download, FileText
 import { EnhancedDashboardCard } from '@/components/hr/EnhancedDashboardCard';
 import { BODReportTable } from '@/components/bod/BODReportTable';
 import { useBODReportData } from '@/hooks/useBODReportData';
-import { exportToCSV, exportToPDF } from '@/lib/exportUtils';
+import { exportToCSV } from '@/lib/exportUtils';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { generateBODSummaryPDF, BODSummaryData } from '@/lib/bodReportPdfGenerator';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ReviewOT() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,7 +87,7 @@ export default function ReviewOT() {
     });
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (filteredData.length === 0) {
       toast({
         title: 'No data to export',
@@ -95,7 +97,64 @@ export default function ReviewOT() {
       return;
     }
 
-    exportToPDF();
+    try {
+      toast({
+        title: 'Generating PDF report...',
+        description: 'Please wait while we prepare the summary report.'
+      });
+
+      // Fetch company profile
+      const { data: company, error: companyError } = await supabase
+        .from('company_profile')
+        .select('*')
+        .single();
+
+      if (companyError) throw companyError;
+
+      // Prepare data for PDF
+      const summaryData: BODSummaryData = {
+        company: {
+          name: company.name || 'Company Name',
+          registration_no: company.registration_no || 'N/A',
+          address: company.address || 'N/A',
+          phone: company.phone || 'N/A',
+          logo_url: company.logo_url || null
+        },
+        period: {
+          display: format(filterDate, 'MMMM yyyy')
+        },
+        generatedDate: format(new Date(), 'dd/MM/yyyy HH:mm'),
+        statistics: {
+          totalEmployees: filteredData.length,
+          totalHours: stats.totalHours,
+          totalCost: stats.totalCost,
+          withViolations: stats.withViolations
+        },
+        employees: filteredData.map(emp => ({
+          employeeNo: emp.employee_no,
+          name: emp.employee_name,
+          department: emp.department,
+          position: emp.position,
+          otHours: emp.total_ot_hours,
+          otAmount: emp.monthly_total,
+          hasViolations: emp.has_violations
+        }))
+      };
+
+      generateBODSummaryPDF(summaryData);
+
+      toast({
+        title: 'Report generated',
+        description: 'PDF summary report has been downloaded successfully.'
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF report. Please try again.',
+        variant: 'destructive'
+      });
+    }
   };
 
   return (
