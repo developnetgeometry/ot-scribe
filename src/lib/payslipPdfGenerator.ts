@@ -34,7 +34,8 @@ export function generatePayslipPDF(data: PayslipData): void {
   });
 
   // Color scheme - Teal theme
-  const primaryColor: [number, number, number] = [47, 182, 201]; // #2FB6C9
+  const primaryColor: [number, number, number] = [47, 182, 201]; // #2FB6C9 - for accents
+  const blackColor: [number, number, number] = [34, 34, 34]; // #222 - for company name
   const textColor: [number, number, number] = [34, 34, 34]; // #222
   const grayColor: [number, number, number] = [119, 119, 119]; // #777
   const borderColor: [number, number, number] = [230, 230, 230]; // #E6E6E6
@@ -49,7 +50,7 @@ export function generatePayslipPDF(data: PayslipData): void {
   // ===== HEADER SECTION =====
   
   // Company logo placeholder (left side)
-  const logoSize = 40; // 40mm x 40mm
+  const logoSize = 35; // 35mm x 35mm
   
   if (data.company.logo_url) {
     // TODO: In a production app, you'd load the image from URL and embed it
@@ -64,20 +65,23 @@ export function generatePayslipPDF(data: PayslipData): void {
   
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...primaryColor);
+  doc.setTextColor(...blackColor); // Black color for company name
   doc.text(data.company.name, companyInfoX, yPos + 8);
   
-  yPos += 14;
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...textColor);
-  doc.text(data.company.registration_no, companyInfoX, yPos);
-  
-  yPos += 6;
+  yPos += 13;
   doc.setFontSize(10);
-  doc.text(data.company.address, companyInfoX, yPos, { maxWidth: 100 });
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...grayColor);
+  doc.text(`(Registration No. ${data.company.registration_no})`, companyInfoX, yPos);
   
   yPos += 6;
+  doc.setFontSize(9);
+  doc.setTextColor(...grayColor);
+  const addressUpper = data.company.address.toUpperCase();
+  doc.text(addressUpper, companyInfoX, yPos, { maxWidth: 100 });
+  
+  yPos += 10;
+  doc.setFontSize(9);
   doc.text(`Telephone No. ${data.company.phone}`, companyInfoX, yPos);
 
   // ===== EMPLOYEE SUMMARY ROW =====
@@ -85,86 +89,96 @@ export function generatePayslipPDF(data: PayslipData): void {
   
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...textColor);
+  doc.setTextColor(...blackColor);
   doc.text(data.employee.full_name, leftMargin, yPos);
   
   yPos += 6;
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...grayColor);
   doc.text(`(Employee No: ${data.employee.employee_no})`, leftMargin, yPos);
 
   // Period (right aligned)
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...textColor);
-  doc.text(`Period: ${data.period.display}`, pageWidth - rightMargin, yPos - 6, { align: 'right' });
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...grayColor);
+  doc.text('Period: ', pageWidth - rightMargin - 45, yPos);
+  doc.setTextColor(...blackColor);
+  doc.text(data.period.display, pageWidth - rightMargin, yPos, { align: 'right' });
 
-  // NET PAY box (right side)
-  yPos += 8;
-  const boxWidth = 60;
-  const boxHeight = 22;
+  // ===== EMPLOYEE DETAILS (Left) & NET PAY BOX (Right) =====
+  yPos += 10;
+  const detailsStartY = yPos;
+  
+  // Employee details - left column
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...blackColor);
+  
+  doc.text(`Position: ${data.employee.position}`, leftMargin, yPos);
+  yPos += 7;
+  doc.text(`Dept: ${data.employee.department}`, leftMargin, yPos);
+  yPos += 7;
+  const icNo = data.employee.ic_no || 'Not Provided';
+  doc.text(`IC/Passport: ${icNo}`, leftMargin, yPos);
+
+  // NET PAY box - right side
+  const boxWidth = 55;
+  const boxHeight = 24;
   const boxX = pageWidth - rightMargin - boxWidth;
-  const boxY = yPos - 8;
+  const boxY = detailsStartY - 2;
 
   // Draw NET PAY box with teal border and light background
   doc.setFillColor(...lightTealBg);
   doc.setDrawColor(...primaryColor);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, 'FD');
+  doc.setLineWidth(1.5);
+  doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 2, 2, 'FD');
 
   // NET PAY label
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(...primaryColor);
-  doc.text('NET PAY', boxX + boxWidth / 2, boxY + 8, { align: 'center' });
+  doc.text('NET PAY', boxX + boxWidth / 2, boxY + 9, { align: 'center' });
 
   // Amount
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...textColor);
-  const amountText = `RM ${data.overtime.amount.toFixed(2)}`;
-  doc.text(amountText, boxX + boxWidth / 2, boxY + 16, { align: 'center' });
-
-  // ===== EMPLOYEE DETAILS =====
-  yPos += 2;
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...textColor);
-  
-  doc.text(`Position: ${data.employee.position}`, leftMargin, yPos);
-  yPos += 6;
-  doc.text(`Dept: ${data.employee.department}`, leftMargin, yPos);
-  yPos += 6;
-  const icNo = data.employee.ic_no || 'Not Provided';
-  doc.text(`IC/Passport: ${icNo}`, leftMargin, yPos);
+  doc.setTextColor(...blackColor);
+  const amountText = `RM ${data.overtime.amount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  doc.text(amountText, boxX + boxWidth / 2, boxY + 18, { align: 'center' });
 
   // ===== EARNINGS SECTION =====
-  yPos += 15;
+  yPos += 18;
   
-  // Section title
-  doc.setFontSize(16);
+  // Section title (left) and subtitle (right)
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...primaryColor);
   doc.text('Employee Earnings/Reimbursements', leftMargin, yPos);
+  
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...grayColor);
+  doc.text('Current', pageWidth - rightMargin, yPos, { align: 'right' });
   
   yPos += 2;
   doc.setDrawColor(...borderColor);
   doc.setLineWidth(0.3);
   doc.line(leftMargin, yPos, pageWidth - rightMargin, yPos);
 
-  // Table content
-  yPos += 10;
+  // Overtime Pay row - clean layout without borders
+  yPos += 9;
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...textColor);
+  doc.setTextColor(...blackColor);
   
-  // Overtime Pay row
   doc.text('Overtime Pay', leftMargin, yPos);
-  doc.text(`RM ${data.overtime.amount.toFixed(2)}`, pageWidth - rightMargin, yPos, { align: 'right' });
+  const overtimeAmount = `RM ${data.overtime.amount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  doc.text(overtimeAmount, pageWidth - rightMargin, yPos, { align: 'right' });
 
   // ===== FOOTER =====
   const footerY = 280; // Fixed position near bottom
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...grayColor);
   const footerText = 'This is a computer-generated payslip.';
@@ -198,8 +212,8 @@ function drawLogoPlaceholder(
     .join('');
 
   // Draw initials
-  doc.setFontSize(14);
+  doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(47, 182, 201); // Teal color
-  doc.text(initials, x + size / 2, y + size / 2 + 3, { align: 'center' });
+  doc.text(initials, x + size / 2, y + size / 2 + 2.5, { align: 'center' });
 }
