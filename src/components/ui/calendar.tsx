@@ -18,7 +18,7 @@ function Calendar({ className, classNames, showOutsideDays = true, compact = fal
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: compact ? "space-y-3" : "space-y-6",
         caption: compact 
-          ? "flex justify-center pt-1 relative items-center mb-3" 
+          ? "flex justify-center pt-1 relative items-center mb-3 pb-2 border-b border-[#F1F5F9]" 
           : "flex justify-center pt-1 relative items-center mb-6",
         caption_label: compact 
           ? "text-sm font-semibold text-[#1E293B]" 
@@ -27,7 +27,7 @@ function Calendar({ className, classNames, showOutsideDays = true, compact = fal
         nav_button: compact
           ? cn(
               buttonVariants({ variant: "ghost" }),
-              "h-7 w-7 bg-[#F1F5F9] hover:bg-[#EDE9FE] hover:text-[#3730A3] text-[#4F46E5] border-0 rounded-lg transition-all duration-200 p-0"
+              "h-[26px] w-[26px] bg-[#EEF2FF] hover:bg-[#5F26B4] hover:text-white text-[#5F26B4] border-0 rounded-md transition-all duration-200 p-0"
             )
           : cn(
               buttonVariants({ variant: "outline" }),
@@ -38,12 +38,12 @@ function Calendar({ className, classNames, showOutsideDays = true, compact = fal
         table: "w-full border-collapse",
         head_row: compact ? "flex gap-1 mb-2" : "flex gap-4 mb-4",
         head_cell: compact 
-          ? "text-[#6B7280] font-medium text-xs flex-1 text-center py-1" 
+          ? "text-[#6B7280] font-semibold text-[11px] flex-1 text-center py-1 tracking-[0.3px]" 
           : "text-gray-600 font-semibold text-sm flex-1 text-center",
         row: compact ? "flex w-full gap-1 mb-1" : "flex w-full gap-4 mb-4",
         cell: "flex-1 text-center text-base p-0 relative",
         day: compact
-          ? "h-9 w-full p-0 font-medium text-[13px] text-[#1E293B] border-0 rounded-md hover:bg-[#EDE9FE] hover:text-[#5B21B6] transition-all duration-200 aria-selected:opacity-100 bg-transparent"
+          ? "h-[34px] w-full p-0 font-medium text-[13px] text-[#1E293B] border-0 rounded-md hover:bg-[#F3E8FF] hover:text-[#5F26B4] transition-all duration-200 aria-selected:opacity-100 bg-transparent"
           : "h-20 w-full p-4 font-medium border border-gray-200 rounded-lg hover:scale-105 hover:shadow-[0_0_10px_rgba(95,38,180,0.15)] transition-all duration-200 aria-selected:opacity-100 bg-white",
         day_range_end: "day-range-end",
         day_selected: compact
@@ -60,8 +60,8 @@ function Calendar({ className, classNames, showOutsideDays = true, compact = fal
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />,
-        IconRight: ({ ..._props }) => <ChevronRight className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />,
+        IconLeft: ({ ..._props }) => <ChevronLeft className={compact ? "h-3 w-3" : "h-4 w-4"} />,
+        IconRight: ({ ..._props }) => <ChevronRight className={compact ? "h-3 w-3" : "h-4 w-4"} />,
       }}
       {...props}
     />
