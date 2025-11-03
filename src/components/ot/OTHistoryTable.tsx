@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Eye, RotateCcw, ChevronDown, Edit } from 'lucide-react';
+import { RotateCcw, ChevronDown, Edit } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -170,34 +170,6 @@ export function OTHistoryTable({ requests, onViewDetails, onResubmit, onEdit }: 
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">
-                  {grouped.sessions.length === 1 ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onViewDetails(grouped.sessions[0].request)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
-                          <ChevronDown className="h-3 w-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {grouped.sessions.map((session) => (
-                          <DropdownMenuItem
-                            key={session.id}
-                            onClick={() => onViewDetails(session.request)}
-                          >
-                            {formatTimeRange(session.startTime, session.endTime)}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
                   {grouped.sessions.some(s => s.status === 'pending_verification') && onEdit && (
                     grouped.sessions.filter(s => s.status === 'pending_verification').length === 1 ? (
                       <Button
