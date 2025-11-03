@@ -47,7 +47,7 @@ export default function ApproveOT() {
         <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="supervisor_verified">
           <TabsList>
             <TabsTrigger value="supervisor_verified">Pending HR Approval</TabsTrigger>
-            <TabsTrigger value="hr_certified">Approved</TabsTrigger>
+            <TabsTrigger value="hr_certified">Certified</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
             <TabsTrigger value="all">All</TabsTrigger>
           </TabsList>
