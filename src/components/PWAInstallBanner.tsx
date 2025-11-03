@@ -7,11 +7,12 @@ import { useAuth } from '@/hooks/useAuth';
 
 export function PWAInstallBanner() {
   const { user } = useAuth();
-  const { isInstallable, isInstalled, promptInstall } = usePWAInstall();
+  const { isInstallable, isInstalled, promptInstall, isSupported } = usePWAInstall();
   const [isDismissed, setIsDismissed] = useState(() => {
     // Check if user has dismissed the banner before
     return localStorage.getItem('pwa-banner-dismissed') === 'true';
   });
+  const [showManualInstructions, setShowManualInstructions] = useState(false);
 
   // Reset dismissal after 7 days to remind users again
   useEffect(() => {
@@ -26,23 +27,25 @@ export function PWAInstallBanner() {
     }
   }, []);
 
-  // Only show banner if:
-  // - User is authenticated
-  // - App is not already installed
-  // - User hasn't dismissed it
-  // - Installation is actually possible
-  if (!user || isInstalled || isDismissed || !isInstallable) {
+  // Show banner if user is authenticated and app supports PWA (even if not installable via prompt)
+  // This covers desktop browsers where manual install is needed
+  if (!user || isInstalled || isDismissed || !isSupported) {
     return null;
   }
 
   const handleInstall = async () => {
-    try {
-      await promptInstall();
-      // Banner will automatically hide when app is installed due to isInstalled check
-    } catch (error) {
-      console.error('Failed to install PWA:', error);
-      // Auto-dismiss if installation fails
-      handleDismiss();
+    if (isInstallable) {
+      try {
+        await promptInstall();
+        // Banner will automatically hide when app is installed due to isInstalled check
+      } catch (error) {
+        console.error('Failed to install PWA:', error);
+        // Show manual instructions if automatic install fails
+        setShowManualInstructions(true);
+      }
+    } else {
+      // Show manual instructions for browsers that don't support automatic install
+      setShowManualInstructions(true);
     }
   };
 

@@ -20,18 +20,9 @@ export default function Auth() {
   // Redirect authenticated users to their dashboard
   // Wait for server state (roles, profile) to load before navigating
   useEffect(() => {
-    const timestamp = new Date().toISOString();
-    console.log(`Auth page: ${timestamp} [INFO] Auth state check`, {
-      hasUser: !!user,
-      userId: user?.id,
-      isLoadingRoles,
-      isLoadingProfile
-    });
-
     // Only navigate when we have a user AND server state is loaded
     if (user && !isLoadingRoles && !isLoadingProfile) {
       const defaultRoute = getDefaultRoute();
-      console.log(`Auth page: ${timestamp} [INFO] Navigating to ${defaultRoute}`);
       navigate(defaultRoute, { replace: true });
     }
   }, [user, isLoadingRoles, isLoadingProfile, getDefaultRoute, navigate]);
