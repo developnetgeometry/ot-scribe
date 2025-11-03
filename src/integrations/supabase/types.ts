@@ -768,6 +768,9 @@ export type Database = {
         | "approved"
         | "reviewed"
         | "rejected"
+        | "supervisor_verified"
+        | "hr_certified"
+        | "bod_approved"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -903,6 +906,9 @@ export const Constants = {
         "approved",
         "reviewed",
         "rejected",
+        "supervisor_verified",
+        "hr_certified",
+        "bod_approved",
       ],
     },
   },
