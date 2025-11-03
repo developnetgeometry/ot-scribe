@@ -105,7 +105,7 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
         .eq('employee_id', employeeId)
         .gte('ot_date', startDate)
         .lte('ot_date', endDate)
-        .in('status', ['approved', 'reviewed']);
+        .in('status', ['hr_certified', 'bod_approved']);
 
       if (otError) throw otError;
 
