@@ -109,7 +109,10 @@ export function EmployeeDetailsSheet({
             {/* Row 1: Employee No + Full Name */}
             <div className="grid gap-2">
               <Label>Employee No</Label>
-              <div className="font-mono text-sm">{employee.employee_id}</div>
+              {/* Employee ID is ALWAYS read-only - set by HR during creation */}
+              <div className="font-mono text-sm font-semibold bg-muted/50 p-2 rounded">
+                {employee.employee_id}
+              </div>
             </div>
 
             <div className="grid gap-2">

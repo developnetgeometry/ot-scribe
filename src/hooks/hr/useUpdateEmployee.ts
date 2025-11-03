@@ -31,6 +31,8 @@ export function useUpdateEmployee() {
   return useMutation({
     mutationFn: async (data: UpdateEmployeeData) => {
       const { id, role, ...profileData } = data;
+      
+      // Note: employee_id is intentionally never updatable - it's a permanent identifier
 
       // Whitelist of valid profiles table columns
       const allowedColumns = [
