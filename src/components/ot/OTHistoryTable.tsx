@@ -142,7 +142,6 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
             <TableHead>Date</TableHead>
             <TableHead>Time Sessions</TableHead>
             <TableHead className="text-right">Total Hours</TableHead>
-            <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -160,26 +159,13 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
               <TableCell>
                 <div className="flex flex-col gap-1">
                   {grouped.sessions.map((session) => (
-                    <div key={session.id} className="text-sm">
-                      <span className="text-foreground">
+                    <div key={session.id} className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm text-foreground">
                         {formatTimeRange(session.startTime, session.endTime)}
                       </span>
-                      <span className="text-muted-foreground ml-1">
+                      <span className="text-sm text-muted-foreground">
                         ({formatHours(session.hours)} hrs)
                       </span>
-                    </div>
-                  ))}
-                </div>
-              </TableCell>
-              <TableCell className="text-right">
-                <span className="text-lg font-semibold text-primary">
-                  {formatHours(grouped.totalHours)} hours
-                </span>
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-col gap-1">
-                  {grouped.sessions.map((session) => (
-                    <div key={session.id} className="flex items-center gap-2">
                       <button
                         onClick={() => onViewDetails(session.request)}
                         className="cursor-pointer hover:opacity-80 transition-opacity"
@@ -195,6 +181,11 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
                     </div>
                   ))}
                 </div>
+              </TableCell>
+              <TableCell className="text-right">
+                <span className="text-lg font-semibold text-primary">
+                  {formatHours(grouped.totalHours)} hours
+                </span>
               </TableCell>
             </TableRow>
           ))}
