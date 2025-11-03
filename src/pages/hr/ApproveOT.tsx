@@ -40,13 +40,13 @@ export default function ApproveOT() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">OT Requests</h1>
-          <p className="text-muted-foreground">View and monitor overtime requests across all statuses</p>
+          <h1 className="text-3xl font-bold">Certify OT Requests</h1>
+          <p className="text-muted-foreground">Certify overtime requests that have been verified by supervisors</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="supervisor_verified">
           <TabsList>
-            <TabsTrigger value="supervisor_verified">Pending HR Approval</TabsTrigger>
+            <TabsTrigger value="supervisor_verified">Pending Certification</TabsTrigger>
             <TabsTrigger value="hr_certified">Certified</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
             <TabsTrigger value="all">All</TabsTrigger>

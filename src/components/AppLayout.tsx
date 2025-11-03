@@ -74,7 +74,7 @@ function AppSidebar() {
     { path: '/supervisor/verify', label: 'Verify OT', icon: CheckCircle, roles: ['supervisor'] },
     
     // HR actions
-    { path: '/hr/approve', label: 'Approve OT', icon: CheckCircle, roles: ['hr'] },
+    { path: '/hr/approve', label: 'Certify OT', icon: CheckCircle, roles: ['hr'] },
     { path: '/hr/employees', label: 'Employees', icon: Users, roles: ['hr'] },
     { path: '/hr/departments', label: 'Departments', icon: Building2, roles: ['hr'] },
     { path: '/hr/ot-reports', label: 'OT Reports', icon: FileText, roles: ['hr'] },
