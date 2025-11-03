@@ -7,9 +7,9 @@ interface OTApprovalStatsProps {
 }
 
 export function OTApprovalStats({ requests }: OTApprovalStatsProps) {
-  const pendingCount = requests.filter(r => r.status === 'verified').length;
+  const pendingCount = requests.filter(r => r.status === 'supervisor_verified').length;
   const approvedThisMonth = requests.filter(r => {
-    const isApproved = r.status === 'approved';
+    const isApproved = r.status === 'hr_certified';
     const isThisMonth = r.hr_approved_at && 
       new Date(r.hr_approved_at).getMonth() === new Date().getMonth();
     return isApproved && isThisMonth;

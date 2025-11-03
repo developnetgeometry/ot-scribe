@@ -65,7 +65,7 @@ export default function AdminDashboard() {
     const totalOTHours = otRequests?.reduce((sum, req) => sum + (req.total_hours || 0), 0) || 0;
     const totalExpenditure = otRequests?.reduce((sum, req) => sum + (req.ot_amount || 0), 0) || 0;
     const pendingRequests = otRequests?.filter(req => 
-      req.status === 'pending_verification' || req.status === 'verified'
+      req.status === 'pending_verification' || req.status === 'supervisor_verified'
     ).length || 0;
 
     setStats({

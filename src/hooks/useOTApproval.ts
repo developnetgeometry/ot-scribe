@@ -58,7 +58,7 @@ const getStatusFilter = (role: ApprovalRole, statusFilter?: string): OTStatus[] 
   if (statusFilter && statusFilter !== 'all') {
     // Handle "completed" as a special case that includes multiple statuses
     if (statusFilter === 'completed') {
-      return ['verified', 'approved', 'reviewed'];
+      return ['supervisor_verified', 'hr_certified', 'bod_approved'];
     }
     return [statusFilter as OTStatus];
   }
@@ -66,13 +66,13 @@ const getStatusFilter = (role: ApprovalRole, statusFilter?: string): OTStatus[] 
   // Handle "all" case specifically for each role
   if (statusFilter === 'all') {
     if (role === 'supervisor') {
-      return ['pending_verification', 'verified', 'approved', 'reviewed', 'rejected'];
+      return ['pending_verification', 'supervisor_verified', 'hr_certified', 'bod_approved', 'rejected'];
     }
     if (role === 'hr') {
-      return ['pending_verification', 'verified', 'rejected'];
+      return ['pending_verification', 'supervisor_verified', 'rejected'];
     }
     if (role === 'bod') {
-      return ['approved', 'reviewed', 'rejected'];
+      return ['hr_certified', 'bod_approved', 'rejected'];
     }
   }
 
@@ -80,9 +80,9 @@ const getStatusFilter = (role: ApprovalRole, statusFilter?: string): OTStatus[] 
     case 'supervisor':
       return ['pending_verification'];
     case 'hr':
-      return ['pending_verification', 'verified'];
+      return ['pending_verification', 'supervisor_verified'];
     case 'bod':
-      return ['approved'];
+      return ['hr_certified'];
     default:
       return [];
   }
@@ -92,13 +92,13 @@ const getStatusFilter = (role: ApprovalRole, statusFilter?: string): OTStatus[] 
 const getApprovedStatus = (role: ApprovalRole): OTStatus => {
   switch (role) {
     case 'supervisor':
-      return 'verified';
+      return 'supervisor_verified';
     case 'hr':
-      return 'approved';
+      return 'hr_certified';
     case 'bod':
-      return 'reviewed';
+      return 'bod_approved';
     default:
-      return 'approved';
+      return 'hr_certified';
   }
 };
 

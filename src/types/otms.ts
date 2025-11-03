@@ -1,5 +1,5 @@
 export type AppRole = 'employee' | 'supervisor' | 'hr' | 'bod' | 'admin';
-export type OTStatus = 'pending_verification' | 'verified' | 'approved' | 'reviewed' | 'rejected';
+export type OTStatus = 'pending_verification' | 'supervisor_verified' | 'hr_certified' | 'bod_approved' | 'rejected';
 export type DayType = 'weekday' | 'saturday' | 'sunday' | 'public_holiday';
 
 export interface OTRequest {

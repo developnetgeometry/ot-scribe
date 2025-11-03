@@ -42,7 +42,7 @@ export function useBODReportData(selectedMonth?: Date) {
         `)
         .gte('ot_date', startDate)
         .lte('ot_date', endDate)
-        .in('status', ['approved', 'reviewed'])
+        .in('status', ['hr_certified', 'bod_approved'])
         .order('ot_date', { ascending: false });
 
       if (error) throw error;
@@ -97,7 +97,7 @@ function aggregateByEmployee(requests: any[]): EmployeeOTSummary[] {
 
 function calculateStats(requests: any[]) {
   return {
-    pendingReview: requests.filter(r => r.status === 'approved').length,
+    pendingReview: requests.filter(r => r.status === 'hr_certified').length,
     totalHours: requests.reduce((sum, r) => sum + (r.total_hours || 0), 0),
     totalCost: requests.reduce((sum, r) => sum + (r.ot_amount || 0), 0),
     withViolations: requests.filter(r => 

@@ -45,11 +45,11 @@ export function RecentTeamOTTable() {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      const formattedData = data?.map(req => ({
+      const formattedData: RecentOTRequest[] = data?.map(req => ({
         id: req.id,
         ot_date: req.ot_date,
         total_hours: req.total_hours,
-        status: req.status,
+        status: req.status as OTStatus,
         employee_name: (req.profiles as any)?.full_name || 'Unknown',
         employee_id: (req.profiles as any)?.employee_id || 'N/A'
       })) || [];
@@ -66,9 +66,9 @@ export function RecentTeamOTTable() {
     switch (status) {
       case 'pending_verification':
         return 'warning';
-      case 'verified':
-      case 'approved':
-      case 'reviewed':
+      case 'supervisor_verified':
+      case 'hr_certified':
+      case 'bod_approved':
         return 'success';
       case 'rejected':
         return 'destructive';
@@ -81,12 +81,12 @@ export function RecentTeamOTTable() {
     switch (status) {
       case 'pending_verification':
         return 'Pending';
-      case 'verified':
+      case 'supervisor_verified':
         return 'Verified';
-      case 'approved':
+      case 'hr_certified':
+        return 'Certified';
+      case 'bod_approved':
         return 'Approved';
-      case 'reviewed':
-        return 'Reviewed';
       case 'rejected':
         return 'Rejected';
       default:

@@ -56,11 +56,11 @@ export default function HRDashboard() {
       .gte('created_at', startOfMonth.toISOString());
 
     const pendingApprovals = otRequests?.filter(req => 
-      req.status === 'pending_verification' || req.status === 'verified'
+      req.status === 'pending_verification' || req.status === 'supervisor_verified'
     ).length || 0;
 
     const approvedThisMonth = otRequests?.filter(req => 
-      req.status === 'approved' || req.status === 'reviewed'
+      req.status === 'hr_certified' || req.status === 'bod_approved'
     ).length || 0;
 
     const totalOTHours = otRequests?.reduce((sum, req) => sum + (req.total_hours || 0), 0) || 0;

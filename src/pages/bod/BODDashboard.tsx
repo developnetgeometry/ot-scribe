@@ -66,7 +66,7 @@ export default function BODDashboard() {
     const totalExpenditure = currentMonthData?.reduce((sum, req) => sum + (req.ot_amount || 0), 0) || 0;
     
     const approvedCount = currentMonthData?.filter(req => 
-      req.status === 'approved' || req.status === 'reviewed'
+      req.status === 'hr_certified' || req.status === 'bod_approved'
     ).length || 0;
     const totalCount = currentMonthData?.length || 1;
     const complianceRate = Math.round((approvedCount / totalCount) * 100);

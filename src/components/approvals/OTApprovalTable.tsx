@@ -59,8 +59,8 @@ export function OTApprovalTable({
 
   const canApproveOrReject = (request: GroupedOTRequest) => {
     if (role === 'supervisor') return request.status === 'pending_verification';
-    if (role === 'hr') return request.status === 'verified';
-    if (role === 'bod') return request.status === 'approved';
+    if (role === 'hr') return request.status === 'supervisor_verified';
+    if (role === 'bod') return request.status === 'hr_certified';
     return false;
   };
 

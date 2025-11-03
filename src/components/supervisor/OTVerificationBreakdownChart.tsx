@@ -36,7 +36,7 @@ export function OTVerificationBreakdownChart() {
       .gte('created_at', startOfMonth.toISOString());
 
     const verified = otRequests?.filter(req => 
-      req.status === 'verified' || req.status === 'approved' || req.status === 'reviewed'
+      req.status === 'supervisor_verified' || req.status === 'hr_certified' || req.status === 'bod_approved'
     ).length || 0;
 
     const pending = otRequests?.filter(req => 

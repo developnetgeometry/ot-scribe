@@ -64,7 +64,7 @@ export default function EmployeeDashboard() {
       req.status === 'pending_verification'
     ).length || 0;
     const approvedRequests = data?.filter(req => 
-      req.status === 'approved' || req.status === 'reviewed' || req.status === 'verified'
+      req.status === 'hr_certified' || req.status === 'bod_approved' || req.status === 'supervisor_verified'
     ).length || 0;
 
     setStats({ totalHours, pendingRequests, approvedRequests });

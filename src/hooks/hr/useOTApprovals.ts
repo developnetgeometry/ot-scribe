@@ -18,11 +18,11 @@ export function useOTApprovals(options: UseOTApprovalsOptions = {}) {
 
       if (options.status) {
         if (options.status === 'all') {
-          // Show all finalized requests: approved, rejected, and reviewed
-          query = query.in('status', ['approved', 'rejected', 'reviewed'] as OTStatus[]);
-        } else if (options.status === 'verified') {
-          // Show both pending_verification and verified for HR approval
-          query = query.in('status', ['pending_verification', 'verified'] as OTStatus[]);
+          // Show all finalized requests: hr_certified, rejected, and bod_approved
+          query = query.in('status', ['hr_certified', 'rejected', 'bod_approved'] as OTStatus[]);
+        } else if (options.status === 'supervisor_verified') {
+          // Show both pending_verification and supervisor_verified for HR approval
+          query = query.in('status', ['pending_verification', 'supervisor_verified'] as OTStatus[]);
         } else {
           query = query.eq('status', options.status as OTStatus);
         }
@@ -47,7 +47,7 @@ export function useOTApprovalAction() {
       const { error } = await supabase
         .from('ot_requests')
         .update({
-          status: 'approved',
+          status: 'hr_certified',
           hr_id: user.id,
           hr_approved_at: new Date().toISOString(),
           hr_remarks: remarks,

@@ -62,7 +62,7 @@ export default function SupervisorDashboard() {
 
     const teamOTHours = otRequests?.reduce((sum, req) => sum + (req.total_hours || 0), 0) || 0;
     const pendingVerifications = otRequests?.filter(req => req.status === 'pending_verification').length || 0;
-    const verifiedRequests = otRequests?.filter(req => req.status === 'verified' || req.status === 'approved' || req.status === 'reviewed').length || 0;
+    const verifiedRequests = otRequests?.filter(req => req.status === 'supervisor_verified' || req.status === 'hr_certified' || req.status === 'bod_approved').length || 0;
 
     setStats({
       teamOTHours,

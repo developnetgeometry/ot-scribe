@@ -49,7 +49,7 @@ export default function Dashboard() {
 
       const totalHours = data?.reduce((sum, req) => sum + (req.total_hours || 0), 0) || 0;
       const pending = data?.filter(req => req.status === 'pending_verification').length || 0;
-      const approved = data?.filter(req => req.status === 'approved' || req.status === 'reviewed').length || 0;
+      const approved = data?.filter(req => req.status === 'hr_certified' || req.status === 'bod_approved').length || 0;
 
       setStats({ totalHours, pending, approved });
     } catch (error: any) {

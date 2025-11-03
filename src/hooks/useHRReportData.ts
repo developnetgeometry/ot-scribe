@@ -43,7 +43,7 @@ export function useHRReportData(selectedMonth?: Date) {
         `)
         .gte('ot_date', startDate)
         .lte('ot_date', endDate)
-        .in('status', ['verified', 'approved', 'reviewed'])
+        .in('status', ['supervisor_verified', 'hr_certified', 'bod_approved'])
         .order('ot_date', { ascending: false });
 
       if (error) throw error;
@@ -99,7 +99,7 @@ function aggregateByEmployee(requests: any[]): EmployeeOTSummary[] {
 
 function calculateStats(requests: any[]) {
   return {
-    pendingReview: requests.filter(r => r.status === 'verified').length,
+    pendingReview: requests.filter(r => r.status === 'supervisor_verified').length,
     totalHours: requests.reduce((sum, r) => sum + (r.total_hours || 0), 0),
     totalCost: requests.reduce((sum, r) => sum + (r.ot_amount || 0), 0),
     withViolations: requests.filter(r => 
