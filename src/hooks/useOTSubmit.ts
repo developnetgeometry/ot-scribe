@@ -35,6 +35,34 @@ export function useOTSubmit() {
         throw new Error('You are not eligible to submit OT requests. Please contact HR.');
       }
 
+      // Check for duplicate or overlapping OT requests
+      const { data: existingRequests, error: checkError } = await supabase
+        .from('ot_requests')
+        .select('id, start_time, end_time, status')
+        .eq('employee_id', user.id)
+        .eq('ot_date', data.ot_date)
+        .neq('status', 'rejected');
+
+      if (checkError) throw checkError;
+
+      if (existingRequests && existingRequests.length > 0) {
+        // Check for time overlap
+        for (const existing of existingRequests) {
+          const existingStart = existing.start_time;
+          const existingEnd = existing.end_time;
+          const newStart = data.start_time;
+          const newEnd = data.end_time;
+
+          // Overlap occurs if: (newStart < existingEnd) AND (newEnd > existingStart)
+          if (newStart < existingEnd && newEnd > existingStart) {
+            throw new Error(
+              `You already have an OT request for ${data.ot_date} from ${existingStart} to ${existingEnd}. ` +
+              `Please cancel or modify the existing request before submitting a new one.`
+            );
+          }
+        }
+      }
+
       const { data: otRequest, error } = await supabase
         .from('ot_requests')
         .insert({
