@@ -9,7 +9,7 @@ interface UpdateOTParams {
     start_time: string;
     end_time: string;
     total_hours: number;
-    day_type: string;
+    day_type: 'weekday' | 'saturday' | 'sunday' | 'public_holiday';
     reason: string;
     attachment_url?: string | null;
     employee_id: string;
