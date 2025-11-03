@@ -61,7 +61,7 @@ export default function VerifyOT() {
             <Tabs value={statusFilter} onValueChange={setStatusFilter}>
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="pending_verification">Pending</TabsTrigger>
-                <TabsTrigger value="completed">Completed</TabsTrigger>
+                <TabsTrigger value="completed">Verified</TabsTrigger>
                 <TabsTrigger value="rejected">Rejected</TabsTrigger>
                 <TabsTrigger value="all">All</TabsTrigger>
               </TabsList>

@@ -159,10 +159,10 @@ export function OTApprovalTable({
                               className="bg-green-600 hover:bg-green-700 text-white"
                             >
                               <CheckCircle className="h-4 w-4 mr-1" />
-                              {approvingRequestId === request.id 
-                                ? (role === 'hr' ? 'Certifying...' : 'Approving...') 
-                                : (role === 'hr' ? 'Certify' : 'Approve')
-                              }
+                  {approvingRequestId === request.id 
+                    ? (role === 'hr' ? 'Certifying...' : role === 'supervisor' ? 'Verifying...' : 'Approving...') 
+                    : (role === 'hr' ? 'Certify' : role === 'supervisor' ? 'Verify' : 'Approve')
+                  }
                             </Button>
                             <Button
                               size="sm"
