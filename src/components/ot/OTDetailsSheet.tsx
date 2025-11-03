@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { ExternalLink, FileText } from 'lucide-react';
+import { ExternalLink, FileText, Pencil } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,9 +12,10 @@ interface OTDetailsSheetProps {
   request: OTRequest | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onEdit?: (request: OTRequest) => void;
 }
 
-export function OTDetailsSheet({ request, open, onOpenChange }: OTDetailsSheetProps) {
+export function OTDetailsSheet({ request, open, onOpenChange, onEdit }: OTDetailsSheetProps) {
   if (!request) return null;
 
   return (
@@ -25,10 +26,28 @@ export function OTDetailsSheet({ request, open, onOpenChange }: OTDetailsSheetPr
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
-          {/* Status */}
-          <div>
-            <p className="text-sm font-medium text-muted-foreground mb-2">Status</p>
-            <StatusBadge status={request.status} />
+          {/* Status with Edit button */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground mb-2">Status</p>
+              <StatusBadge status={request.status} />
+            </div>
+            
+            {/* Edit button - only for pending_verification status */}
+            {request.status === 'pending_verification' && onEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onEdit(request);
+                  onOpenChange(false);
+                }}
+                className="gap-2"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit Request
+              </Button>
+            )}
           </div>
 
           <Separator />

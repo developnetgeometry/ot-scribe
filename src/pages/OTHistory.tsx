@@ -145,6 +145,7 @@ export default function OTHistory() {
           request={selectedRequest}
           open={sheetOpen}
           onOpenChange={setSheetOpen}
+          onEdit={handleEdit}
         />
 
         <Dialog open={resubmitDialogOpen} onOpenChange={setResubmitDialogOpen}>
