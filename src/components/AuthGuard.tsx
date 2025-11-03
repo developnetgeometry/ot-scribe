@@ -7,11 +7,11 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { user, isLoadingSession } = useAuth();
+  const { user, isLoadingSession, isLoadingRoles, getDefaultRoute } = useAuth();
   const location = useLocation();
 
-  // Show loading skeleton while checking authentication
-  if (isLoadingSession) {
+  // Show loading skeleton while checking authentication or roles
+  if (isLoadingSession || (user && isLoadingRoles)) {
     return <LoadingSkeleton />;
   }
 
@@ -22,9 +22,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return <Navigate to="/auth" replace />;
   }
 
-  // If user is authenticated and on auth page, redirect to dashboard
-  if (user && location.pathname === '/auth') {
-    return <Navigate to="/dashboard" replace />;
+  // If user is authenticated and on auth page, redirect to their role-based dashboard
+  // Only redirect after roles have loaded to ensure proper role-based routing
+  if (user && location.pathname === '/auth' && !isLoadingRoles) {
+    return <Navigate to={getDefaultRoute()} replace />;
   }
 
   return <>{children}</>;

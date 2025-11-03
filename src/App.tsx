@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthGuard } from "./components/AuthGuard";
+import { RootRedirect } from "./components/RootRedirect";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ThemeProvider } from "./components/theme-provider";
 import { PWAInstallBanner } from "./components/PWAInstallBanner";
@@ -49,7 +50,7 @@ const App = () => (
             <AuthGuard>
               <PWAInstallBanner />
               <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/" element={<RootRedirect />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/set-password" element={<SetPassword />} />
                 <Route path="/setup-password" element={<SetupPassword />} />

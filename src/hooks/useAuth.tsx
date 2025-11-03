@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, ReactNode, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,15 +15,12 @@ export const authKeys = {
 } as const;
 
 // Types
-interface AuthState {
+interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
   roles: AppRole[];
   profileStatus: 'active' | 'pending_password' | null;
-}
-
-interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<{ error?: Error }>;
   signOut: () => Promise<void>;
   isLoadingSession: boolean;
@@ -43,13 +40,6 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const queryClient = useQueryClient();
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    session: null,
-    profile: null,
-    roles: [],
-    profileStatus: null,
-  });
 
   // Session Query
   const {
@@ -109,7 +99,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         .select('role')
         .eq('user_id', session.user.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Roles Query Error:', error);
+        throw error;
+      }
+      
       return (data || []).map(item => item.role as AppRole);
     },
     enabled: !!session?.user?.id,
@@ -156,13 +150,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     onSuccess: () => {
       // Clear all queries and reset auth state
       queryClient.clear();
-      setAuthState({
-        user: null,
-        session: null,
-        profile: null,
-        roles: [],
-        profileStatus: null,
-      });
     },
   });
 
@@ -183,22 +170,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => subscription.unsubscribe();
   }, [queryClient]);
 
-  // Update auth state when queries resolve
-  useEffect(() => {
-    const user = session?.user || null;
-    const profileStatus = profile?.status === 'pending_password' ? 'pending_password' : 'active';
-    
-    setAuthState({
-      user,
-      session,
-      profile,
-      roles,
-      profileStatus,
-    });
-  }, [session, profile, roles]);
-
   // Get default route based on user roles
-  const getDefaultRoute = () => {
+  const getDefaultRoute = useCallback(() => {
     if (!roles.length) return '/dashboard';
     
     // Priority order for role-based routing
@@ -209,12 +182,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (roles.includes('employee')) return '/employee/dashboard';
     
     return '/dashboard';
-  };
+  }, [roles]);
 
   // Check if user has a specific role
-  const hasRole = (role: AppRole) => {
+  const hasRole = useCallback((role: AppRole) => {
     return roles.includes(role);
-  };
+  }, [roles]);
 
   // Sign in wrapper
   const signIn = async (email: string, password: string) => {
@@ -236,8 +209,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Derive auth state directly from query data
+  const user = session?.user || null;
+  const profileStatus = profile?.status === 'pending_password' ? 'pending_password' : 'active';
+
   const value: AuthContextType = {
-    ...authState,
+    user,
+    session,
+    profile,
+    roles,
+    profileStatus,
     signIn,
     signOut,
     isLoadingSession,
