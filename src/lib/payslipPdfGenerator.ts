@@ -95,15 +95,22 @@ export async function generatePayslipPDF(data: PayslipData): Promise<void> {
   doc.text(companyNameLines, companyInfoX, yPos + 8);
   
   // Calculate height of company name (in case it wrapped)
-  const nameHeight = companyNameLines.length * 6; // ~6mm per line
+  const nameHeight = companyNameLines.length * 7; // 7mm per line for 16pt font
   
-  yPos += Math.max(12, nameHeight + 4);
+  yPos += Math.max(14, nameHeight + 6); // More spacing after company name
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...grayColor);
-  doc.text(`(Registration No. ${data.company.registration_no})`, companyInfoX, yPos, { maxWidth: maxTextWidth });
+  const regNoLines = doc.splitTextToSize(
+    `(Registration No. ${data.company.registration_no})`,
+    maxTextWidth
+  );
+  doc.text(regNoLines, companyInfoX, yPos);
   
-  yPos += 6;
+  // Calculate height of registration number
+  const regNoHeight = regNoLines.length * 5; // 5mm per line for 10pt font
+  
+  yPos += Math.max(6, regNoHeight + 2); // Dynamic spacing
   doc.setFontSize(9);
   doc.setTextColor(...grayColor);
   const addressUpper = data.company.address.toUpperCase();
