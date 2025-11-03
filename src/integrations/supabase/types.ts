@@ -373,10 +373,14 @@ export type Database = {
           hr_remarks: string | null
           hrp: number | null
           id: string
+          is_resubmission: boolean | null
           orp: number | null
           ot_amount: number | null
           ot_date: string
+          parent_request_id: string | null
           reason: string
+          rejection_stage: string | null
+          resubmission_count: number | null
           start_time: string
           status: Database["public"]["Enums"]["ot_status"] | null
           supervisor_id: string | null
@@ -401,10 +405,14 @@ export type Database = {
           hr_remarks?: string | null
           hrp?: number | null
           id?: string
+          is_resubmission?: boolean | null
           orp?: number | null
           ot_amount?: number | null
           ot_date: string
+          parent_request_id?: string | null
           reason: string
+          rejection_stage?: string | null
+          resubmission_count?: number | null
           start_time: string
           status?: Database["public"]["Enums"]["ot_status"] | null
           supervisor_id?: string | null
@@ -429,10 +437,14 @@ export type Database = {
           hr_remarks?: string | null
           hrp?: number | null
           id?: string
+          is_resubmission?: boolean | null
           orp?: number | null
           ot_amount?: number | null
           ot_date?: string
+          parent_request_id?: string | null
           reason?: string
+          rejection_stage?: string | null
+          resubmission_count?: number | null
           start_time?: string
           status?: Database["public"]["Enums"]["ot_status"] | null
           supervisor_id?: string | null
@@ -458,10 +470,62 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ot_requests_parent_request_id_fkey"
+            columns: ["parent_request_id"]
+            isOneToOne: false
+            referencedRelation: "ot_requests"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ot_requests_supervisor_id_fkey"
             columns: ["supervisor_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ot_resubmission_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          original_request_id: string
+          rejected_by_role: Database["public"]["Enums"]["app_role"]
+          rejection_reason: string
+          resubmitted_at: string | null
+          resubmitted_request_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          original_request_id: string
+          rejected_by_role: Database["public"]["Enums"]["app_role"]
+          rejection_reason: string
+          resubmitted_at?: string | null
+          resubmitted_request_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          original_request_id?: string
+          rejected_by_role?: Database["public"]["Enums"]["app_role"]
+          rejection_reason?: string
+          resubmitted_at?: string | null
+          resubmitted_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ot_resubmission_history_original_request_id_fkey"
+            columns: ["original_request_id"]
+            isOneToOne: false
+            referencedRelation: "ot_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ot_resubmission_history_resubmitted_request_id_fkey"
+            columns: ["resubmitted_request_id"]
+            isOneToOne: false
+            referencedRelation: "ot_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -771,6 +835,7 @@ export type Database = {
         | "supervisor_verified"
         | "hr_certified"
         | "bod_approved"
+        | "pending_hr_recertification"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -909,6 +974,7 @@ export const Constants = {
         "supervisor_verified",
         "hr_certified",
         "bod_approved",
+        "pending_hr_recertification",
       ],
     },
   },

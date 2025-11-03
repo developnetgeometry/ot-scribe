@@ -4,10 +4,12 @@ import { ArrowLeft, Filter, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AppLayout } from '@/components/AppLayout';
 import { OTHistoryTable } from '@/components/ot/OTHistoryTable';
 import { OTDetailsSheet } from '@/components/ot/OTDetailsSheet';
 import { OTSummaryCards } from '@/components/ot/OTSummaryCards';
+import { ResubmitOTForm } from '@/components/ot/ResubmitOTForm';
 import { useOTRequests } from '@/hooks/useOTRequests';
 import { OTRequest } from '@/types/otms';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,12 +19,19 @@ export default function OTHistory() {
   const [selectedRequest, setSelectedRequest] = useState<OTRequest | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [resubmitDialogOpen, setResubmitDialogOpen] = useState(false);
+  const [resubmitRequest, setResubmitRequest] = useState<OTRequest | null>(null);
 
   const { data: requests = [], isLoading } = useOTRequests({ status: statusFilter });
 
   const handleViewDetails = (request: OTRequest) => {
     setSelectedRequest(request);
     setSheetOpen(true);
+  };
+
+  const handleResubmit = (request: OTRequest) => {
+    setResubmitRequest(request);
+    setResubmitDialogOpen(true);
   };
 
   const handleExportCSV = () => {
@@ -91,10 +100,11 @@ export default function OTHistory() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending_verification">Pending</SelectItem>
-                    <SelectItem value="verified">Verified</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="reviewed">Reviewed</SelectItem>
+                    <SelectItem value="pending_verification">Pending Verification</SelectItem>
+                    <SelectItem value="supervisor_verified">Supervisor Verified</SelectItem>
+                    <SelectItem value="hr_certified">HR Certified</SelectItem>
+                    <SelectItem value="bod_approved">BOD Approved</SelectItem>
+                    <SelectItem value="pending_hr_recertification">Pending HR Recertification</SelectItem>
                     <SelectItem value="rejected">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
@@ -113,7 +123,11 @@ export default function OTHistory() {
                 ))}
               </div>
             ) : (
-              <OTHistoryTable requests={requests} onViewDetails={handleViewDetails} />
+              <OTHistoryTable 
+                requests={requests} 
+                onViewDetails={handleViewDetails}
+                onResubmit={handleResubmit}
+              />
             )}
           </CardContent>
         </Card>
@@ -123,6 +137,23 @@ export default function OTHistory() {
           open={sheetOpen}
           onOpenChange={setSheetOpen}
         />
+
+        <Dialog open={resubmitDialogOpen} onOpenChange={setResubmitDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Resubmit OT Request</DialogTitle>
+            </DialogHeader>
+            {resubmitRequest && (
+              <ResubmitOTForm
+                request={resubmitRequest}
+                onSuccess={() => {
+                  setResubmitDialogOpen(false);
+                  setResubmitRequest(null);
+                }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );

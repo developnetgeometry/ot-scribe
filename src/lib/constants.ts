@@ -4,6 +4,7 @@ export const STATUS_COLORS = {
   hr_certified: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
   bod_approved: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
   rejected: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400',
+  pending_hr_recertification: 'bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400',
 } as const;
 
 export const STATUS_LABELS = {
@@ -12,4 +13,5 @@ export const STATUS_LABELS = {
   hr_certified: 'Certified by HR',
   bod_approved: 'Approved by BOD',
   rejected: 'Rejected',
+  pending_hr_recertification: 'Pending HR Recertification',
 } as const;

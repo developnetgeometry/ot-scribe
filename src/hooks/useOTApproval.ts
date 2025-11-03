@@ -246,9 +246,9 @@ export function useOTApproval(options: UseOTApprovalOptions) {
     },
   });
 
-  // Reject mutation - now supports batch operations
+  // Reject mutation - now supports batch operations with rejection stage
   const rejectMutation = useMutation({
-    mutationFn: async ({ requestIds, remarks }: ApprovalAction) => {
+    mutationFn: async ({ requestIds, remarks, rejectionStage }: ApprovalAction & { rejectionStage?: string }) => {
       if (!remarks || remarks.trim() === '') {
         throw new Error('Remarks are required when rejecting a request');
       }
@@ -256,10 +256,14 @@ export function useOTApproval(options: UseOTApprovalOptions) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // BOD rejection goes to HR recertification instead of final rejection
+      const status = role === 'bod' ? 'pending_hr_recertification' : 'rejected';
+
       const updateData: any = {
-        status: 'rejected',
+        status: status,
         [getRemarksField(role)]: remarks,
         [getTimestampField(role)]: new Date().toISOString(),
+        rejection_stage: rejectionStage || role,
       };
 
       // Add ID field if applicable

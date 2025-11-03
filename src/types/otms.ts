@@ -1,5 +1,5 @@
 export type AppRole = 'employee' | 'supervisor' | 'hr' | 'bod' | 'admin';
-export type OTStatus = 'pending_verification' | 'supervisor_verified' | 'hr_certified' | 'bod_approved' | 'rejected';
+export type OTStatus = 'pending_verification' | 'supervisor_verified' | 'hr_certified' | 'bod_approved' | 'rejected' | 'pending_hr_recertification';
 export type DayType = 'weekday' | 'saturday' | 'sunday' | 'public_holiday';
 
 export interface OTRequest {
@@ -27,6 +27,10 @@ export interface OTRequest {
   eligibility_rule_id: string | null;
   formula_id: string | null;
   threshold_violations: any;
+  parent_request_id: string | null;
+  resubmission_count: number;
+  rejection_stage: string | null;
+  is_resubmission: boolean;
   created_at: string;
   updated_at: string;
 }

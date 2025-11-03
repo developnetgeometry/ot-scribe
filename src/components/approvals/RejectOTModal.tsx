@@ -20,11 +20,12 @@ interface RejectOTModalProps {
   request: GroupedOTRequest | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (remarks: string) => void;
+  onConfirm: (remarks: string, rejectionStage: string) => void;
   isLoading?: boolean;
+  rejectionStage?: 'supervisor' | 'hr' | 'bod';
 }
 
-export function RejectOTModal({ request, open, onOpenChange, onConfirm, isLoading }: RejectOTModalProps) {
+export function RejectOTModal({ request, open, onOpenChange, onConfirm, isLoading, rejectionStage = 'supervisor' }: RejectOTModalProps) {
   const [remarks, setRemarks] = useState('');
   const [error, setError] = useState('');
 
@@ -38,7 +39,7 @@ export function RejectOTModal({ request, open, onOpenChange, onConfirm, isLoadin
       return;
     }
     
-    onConfirm(remarks);
+    onConfirm(remarks, rejectionStage);
     setRemarks('');
     setError('');
   };
