@@ -149,21 +149,17 @@ export function OTHistoryTable({ requests, onViewDetails, onResubmit }: OTHistor
               </TableCell>
               <TableCell>
                 <div className="flex flex-col gap-1">
-                  <div className="flex flex-wrap gap-1">
-                    {grouped.statuses.length === 1 ? (
-                      <StatusBadge status={grouped.statuses[0]} />
-                    ) : (
-                      grouped.statuses.map((status) => (
-                        <StatusBadge key={status} status={status} />
-                      ))
-                    )}
-                  </div>
-                  {grouped.resubmissionInfo && (
-                    <ResubmissionBadge 
-                      resubmissionCount={grouped.resubmissionInfo.count} 
-                      isResubmission={grouped.resubmissionInfo.isResubmission} 
-                    />
-                  )}
+                  {grouped.sessions.map((session) => (
+                    <div key={session.id} className="flex items-center gap-2">
+                      <StatusBadge status={session.status} />
+                      {session.request.is_resubmission && (
+                        <ResubmissionBadge 
+                          resubmissionCount={session.request.resubmission_count} 
+                          isResubmission={session.request.is_resubmission} 
+                        />
+                      )}
+                    </div>
+                  ))}
                 </div>
               </TableCell>
               <TableCell className="text-right">
