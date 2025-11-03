@@ -152,7 +152,12 @@ export function OTHistoryTable({ requests, onViewDetails, onResubmit, onEdit }: 
                 <div className="flex flex-col gap-1">
                   {grouped.sessions.map((session) => (
                     <div key={session.id} className="flex items-center gap-2">
-                      <StatusBadge status={session.status} />
+                      <button
+                        onClick={() => onViewDetails(session.request)}
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        <StatusBadge status={session.status} />
+                      </button>
                       {session.request.is_resubmission && (
                         <ResubmissionBadge 
                           resubmissionCount={session.request.resubmission_count} 
