@@ -29,6 +29,10 @@ interface GroupedOTRequest {
     count: number;
     isResubmission: boolean;
   };
+  profiles?: {
+    employee_id: string;
+    full_name: string;
+  };
 }
 
 interface OTHistoryTableProps {
@@ -50,6 +54,7 @@ function groupRequestsByDate(requests: OTRequest[]): GroupedOTRequest[] {
         statuses: new Set<OTStatus>(),
         hasRejected: false,
         resubmissionInfo: undefined,
+        profiles: request.profiles,
       };
     }
     
@@ -103,60 +108,66 @@ export function OTHistoryTable({ requests, onViewDetails, onResubmit }: OTHistor
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Employee</TableHead>
             <TableHead>Date</TableHead>
-            <TableHead>Day Type</TableHead>
             <TableHead>Time Sessions</TableHead>
             <TableHead className="text-right">Total Hours</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Info</TableHead>
-            <TableHead className="text-center">Actions</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {groupedRequests.map((grouped) => (
             <TableRow key={grouped.date}>
+              <TableCell>
+                <div className="flex flex-col">
+                  <span className="font-medium">{grouped.profiles?.full_name || 'Unknown'}</span>
+                  <span className="text-sm text-muted-foreground">{grouped.profiles?.employee_id || '-'}</span>
+                </div>
+              </TableCell>
               <TableCell className="font-medium">
                 {format(new Date(grouped.date), 'dd MMM yyyy')}
               </TableCell>
               <TableCell>
-                <Badge className={getDayTypeColor(grouped.dayType)}>
-                  {getDayTypeLabel(grouped.dayType)}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <div className="text-sm text-muted-foreground">
-                  {grouped.sessions.map((session, idx) => (
-                    <span key={session.id}>
-                      {formatTimeRange(session.startTime, session.endTime)}
-                      {idx < grouped.sessions.length - 1 && ', '}
-                    </span>
+                <div className="flex flex-col gap-1">
+                  {grouped.sessions.map((session) => (
+                    <div key={session.id} className="text-sm">
+                      <span className="text-foreground">
+                        {formatTimeRange(session.startTime, session.endTime)}
+                      </span>
+                      <span className="text-muted-foreground ml-1">
+                        ({formatHours(session.hours)} hrs)
+                      </span>
+                    </div>
                   ))}
                 </div>
               </TableCell>
-              <TableCell className="text-right font-medium">
-                {formatHours(grouped.totalHours)}
+              <TableCell className="text-right">
+                <span className="text-lg font-semibold text-primary">
+                  {formatHours(grouped.totalHours)} hours
+                </span>
               </TableCell>
               <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {grouped.statuses.length === 1 ? (
-                    <StatusBadge status={grouped.statuses[0]} />
-                  ) : (
-                    grouped.statuses.map((status) => (
-                      <StatusBadge key={status} status={status} />
-                    ))
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-wrap gap-1">
+                    {grouped.statuses.length === 1 ? (
+                      <StatusBadge status={grouped.statuses[0]} />
+                    ) : (
+                      grouped.statuses.map((status) => (
+                        <StatusBadge key={status} status={status} />
+                      ))
+                    )}
+                  </div>
+                  {grouped.resubmissionInfo && (
+                    <ResubmissionBadge 
+                      resubmissionCount={grouped.resubmissionInfo.count} 
+                      isResubmission={grouped.resubmissionInfo.isResubmission} 
+                    />
                   )}
                 </div>
               </TableCell>
-              <TableCell>
-                {grouped.resubmissionInfo && (
-                  <ResubmissionBadge 
-                    resubmissionCount={grouped.resubmissionInfo.count} 
-                    isResubmission={grouped.resubmissionInfo.isResubmission} 
-                  />
-                )}
-              </TableCell>
-              <TableCell className="text-center">
-                <div className="flex items-center justify-center gap-2">
+              <TableCell className="text-right">
+                <div className="flex items-center justify-end gap-2">
                   {grouped.sessions.length === 1 ? (
                     <Button
                       variant="ghost"

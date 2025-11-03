@@ -17,7 +17,13 @@ export function useOTRequests(options: UseOTRequestsOptions = {}) {
 
       let query = supabase
         .from('ot_requests')
-        .select('*')
+        .select(`
+          *,
+          profiles!ot_requests_employee_id_fkey(
+            employee_id,
+            full_name
+          )
+        `)
         .eq('employee_id', user.id)
         .order('ot_date', { ascending: false });
 

@@ -33,6 +33,10 @@ export interface OTRequest {
   is_resubmission: boolean;
   created_at: string;
   updated_at: string;
+  profiles?: {
+    employee_id: string;
+    full_name: string;
+  };
 }
 
 export interface Position {
