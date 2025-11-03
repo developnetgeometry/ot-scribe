@@ -141,54 +141,57 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
             <TableHead>Employee</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Time Sessions</TableHead>
-            <TableHead className="text-right">Total Hours</TableHead>
+            <TableHead className="text-right">Hours</TableHead>
+            <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {groupedRequests.map((grouped) => (
-            <TableRow key={grouped.date}>
-              <TableCell>
-                <div className="flex flex-col">
-                  <span className="font-medium">{grouped.profiles?.full_name || 'Unknown'}</span>
-                  <span className="text-sm text-muted-foreground">{grouped.profiles?.employee_id || '-'}</span>
-                </div>
-              </TableCell>
-              <TableCell className="font-medium">
-                {format(new Date(grouped.date), 'dd MMM yyyy')}
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-col gap-1">
-                  {grouped.sessions.map((session) => (
-                    <div key={session.id} className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm text-foreground">
-                        {formatTimeRange(session.startTime, session.endTime)}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        ({formatHours(session.hours)} hrs)
-                      </span>
-                      <button
-                        onClick={() => onViewDetails(session.request)}
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                      >
-                        <StatusBadge status={session.status} />
-                      </button>
-                      {session.request.is_resubmission && (
-                        <ResubmissionBadge 
-                          resubmissionCount={session.request.resubmission_count} 
-                          isResubmission={session.request.is_resubmission} 
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </TableCell>
-              <TableCell className="text-right">
-                <span className="text-lg font-semibold text-primary">
-                  {formatHours(grouped.totalHours)} hours
-                </span>
-              </TableCell>
-            </TableRow>
-          ))}
+          {groupedRequests.flatMap((grouped) => 
+            grouped.sessions.map((session) => (
+              <TableRow key={session.id}>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{grouped.profiles?.full_name || 'Unknown'}</span>
+                    <span className="text-sm text-muted-foreground">{grouped.profiles?.employee_id || '-'}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium">
+                  {format(new Date(grouped.date), 'dd MMM yyyy')}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-foreground">
+                      {formatTimeRange(session.startTime, session.endTime)}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      ({formatHours(session.hours)} hrs)
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <span className="font-semibold text-primary">
+                    {formatHours(session.hours)} hours
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onViewDetails(session.request)}
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      <StatusBadge status={session.status} />
+                    </button>
+                    {session.request.is_resubmission && (
+                      <ResubmissionBadge 
+                        resubmissionCount={session.request.resubmission_count} 
+                        isResubmission={session.request.is_resubmission} 
+                      />
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>
