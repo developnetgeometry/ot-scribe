@@ -86,23 +86,28 @@ export async function generatePayslipPDF(data: PayslipData): Promise<void> {
 
   // Company info (right side)
   const companyInfoX = leftMargin + logoSize + 15;
+  const maxTextWidth = pageWidth - companyInfoX - rightMargin; // ~112mm
   
-  doc.setFontSize(20);
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...blackColor); // Black color for company name
-  doc.text(data.company.name, companyInfoX, yPos + 8);
+  doc.setTextColor(...blackColor);
+  const companyNameLines = doc.splitTextToSize(data.company.name, maxTextWidth);
+  doc.text(companyNameLines, companyInfoX, yPos + 8);
   
-  yPos += 13;
+  // Calculate height of company name (in case it wrapped)
+  const nameHeight = companyNameLines.length * 6; // ~6mm per line
+  
+  yPos += Math.max(12, nameHeight + 4);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...grayColor);
-  doc.text(`(Registration No. ${data.company.registration_no})`, companyInfoX, yPos);
+  doc.text(`(Registration No. ${data.company.registration_no})`, companyInfoX, yPos, { maxWidth: maxTextWidth });
   
   yPos += 6;
   doc.setFontSize(9);
   doc.setTextColor(...grayColor);
   const addressUpper = data.company.address.toUpperCase();
-  doc.text(addressUpper, companyInfoX, yPos, { maxWidth: 100 });
+  doc.text(addressUpper, companyInfoX, yPos, { maxWidth: maxTextWidth });
   
   yPos += 10;
   doc.setFontSize(9);
