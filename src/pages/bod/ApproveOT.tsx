@@ -9,7 +9,7 @@ import { Search } from 'lucide-react';
 
 export default function ApproveOT() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('approved');
+  const [activeTab, setActiveTab] = useState('hr_certified');
   
   const { 
     requests, 
@@ -44,10 +44,10 @@ export default function ApproveOT() {
           <p className="text-muted-foreground">Review and approve overtime requests as Board of Directors</p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="approved">
+        <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="hr_certified">
           <TabsList>
-            <TabsTrigger value="approved">Pending BOD Review</TabsTrigger>
-            <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
+            <TabsTrigger value="hr_certified">Pending BOD Review</TabsTrigger>
+            <TabsTrigger value="bod_approved">Reviewed</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
             <TabsTrigger value="all">All</TabsTrigger>
           </TabsList>
@@ -71,7 +71,7 @@ export default function ApproveOT() {
                   role="bod"
                   approveRequest={handleApprove}
                   rejectRequest={handleReject}
-                  showActions={activeTab === 'approved'}
+                  showActions={activeTab === 'hr_certified'}
                 />
               </div>
             </Card>
