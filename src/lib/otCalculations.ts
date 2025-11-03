@@ -49,3 +49,7 @@ export function formatTime12Hour(time: string): string {
   const hour12 = hours % 12 || 12;
   return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
+
+export function formatTimeRange(startTime: string, endTime: string): string {
+  return `${formatTime12Hour(startTime)} - ${formatTime12Hour(endTime)}`;
+}
