@@ -134,8 +134,6 @@ export default function OTHistory() {
               <OTHistoryTable 
                 requests={requests} 
                 onViewDetails={handleViewDetails}
-                onResubmit={handleResubmit}
-                onEdit={handleEdit}
               />
             )}
           </CardContent>

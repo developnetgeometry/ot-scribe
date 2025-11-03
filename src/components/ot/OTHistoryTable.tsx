@@ -1,13 +1,10 @@
 import { format } from 'date-fns';
-import { RotateCcw, ChevronDown, Edit } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ResubmissionBadge } from './ResubmissionBadge';
 import { OTRequest, OTStatus, DayType } from '@/types/otms';
 import { formatCurrency, formatHours, getDayTypeColor, getDayTypeLabel, formatTimeRange } from '@/lib/otCalculations';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface OTSession {
   id: string;
@@ -38,8 +35,6 @@ interface GroupedOTRequest {
 interface OTHistoryTableProps {
   requests: OTRequest[];
   onViewDetails: (request: OTRequest) => void;
-  onResubmit?: (request: OTRequest) => void;
-  onEdit?: (request: OTRequest) => void;
 }
 
 function groupRequestsByDate(requests: OTRequest[]): GroupedOTRequest[] {
@@ -128,7 +123,7 @@ function groupRequestsByDate(requests: OTRequest[]): GroupedOTRequest[] {
   }));
 }
 
-export function OTHistoryTable({ requests, onViewDetails, onResubmit, onEdit }: OTHistoryTableProps) {
+export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps) {
   const groupedRequests = groupRequestsByDate(requests);
   if (requests.length === 0) {
     return (
@@ -148,7 +143,6 @@ export function OTHistoryTable({ requests, onViewDetails, onResubmit, onEdit }: 
             <TableHead>Time Sessions</TableHead>
             <TableHead className="text-right">Total Hours</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -200,80 +194,6 @@ export function OTHistoryTable({ requests, onViewDetails, onResubmit, onEdit }: 
                       )}
                     </div>
                   ))}
-                </div>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-2">
-                  {grouped.sessions.some(s => s.status === 'pending_verification') && onEdit && (
-                    grouped.sessions.filter(s => s.status === 'pending_verification').length === 1 ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onEdit(grouped.sessions.find(s => s.status === 'pending_verification')!.request)}
-                        className="gap-1"
-                      >
-                        <Edit className="h-4 w-4" />
-                        Edit
-                      </Button>
-                    ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="gap-1">
-                            <Edit className="h-4 w-4" />
-                            Edit
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {grouped.sessions
-                            .filter(s => s.status === 'pending_verification')
-                            .map((session) => (
-                              <DropdownMenuItem
-                                key={session.id}
-                                onClick={() => onEdit(session.request)}
-                              >
-                                {formatTimeRange(session.startTime, session.endTime)}
-                              </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )
-                  )}
-                  {grouped.hasRejected && onResubmit && (
-                    grouped.sessions.filter(s => s.status === 'rejected').length === 1 ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onResubmit(grouped.sessions.find(s => s.status === 'rejected')!.request)}
-                        className="gap-1"
-                      >
-                        <RotateCcw className="h-4 w-4" />
-                        Resubmit
-                      </Button>
-                    ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="gap-1">
-                            <RotateCcw className="h-4 w-4" />
-                            Resubmit
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {grouped.sessions
-                            .filter(s => s.status === 'rejected')
-                            .map((session) => (
-                              <DropdownMenuItem
-                                key={session.id}
-                                onClick={() => onResubmit(session.request)}
-                              >
-                                {formatTimeRange(session.startTime, session.endTime)}
-                              </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )
-                  )}
                 </div>
               </TableCell>
             </TableRow>
