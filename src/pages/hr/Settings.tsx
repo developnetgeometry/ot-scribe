@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EligibilityRulesTab } from '@/components/hr/settings/EligibilityRulesTab';
 import { ThresholdsTab } from '@/components/hr/settings/ThresholdsTab';
 import { FormulasTab } from '@/components/hr/settings/FormulasTab';
+import { CompanyProfileTab } from '@/components/hr/settings/CompanyProfileTab';
 
 export default function Settings() {
   return (
@@ -16,10 +17,11 @@ export default function Settings() {
 
         <Card className="p-6">
           <Tabs defaultValue="eligibility" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="eligibility">Eligibility</TabsTrigger>
               <TabsTrigger value="thresholds">Thresholds</TabsTrigger>
               <TabsTrigger value="formulas">Formulas</TabsTrigger>
+              <TabsTrigger value="company">Company Profile</TabsTrigger>
             </TabsList>
 
             <TabsContent value="eligibility" className="mt-6">
@@ -32,6 +34,10 @@ export default function Settings() {
 
             <TabsContent value="formulas" className="mt-6">
               <FormulasTab />
+            </TabsContent>
+
+            <TabsContent value="company" className="mt-6">
+              <CompanyProfileTab />
             </TabsContent>
           </Tabs>
         </Card>

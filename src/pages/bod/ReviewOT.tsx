@@ -141,7 +141,7 @@ export default function ReviewOT() {
         }))
       };
 
-      generateBODSummaryPDF(summaryData);
+      await generateBODSummaryPDF(summaryData);
 
       toast({
         title: 'Report generated',

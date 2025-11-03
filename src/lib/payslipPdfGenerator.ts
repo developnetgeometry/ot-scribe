@@ -26,7 +26,23 @@ export interface PayslipData {
   };
 }
 
-export function generatePayslipPDF(data: PayslipData): void {
+async function loadImageFromUrl(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Failed to load image:', error);
+    return null;
+  }
+}
+
+export async function generatePayslipPDF(data: PayslipData): Promise<void> {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -49,13 +65,21 @@ export function generatePayslipPDF(data: PayslipData): void {
 
   // ===== HEADER SECTION =====
   
-  // Company logo placeholder (left side)
+  // Company logo (left side)
   const logoSize = 35; // 35mm x 35mm
   
   if (data.company.logo_url) {
-    // TODO: In a production app, you'd load the image from URL and embed it
-    // For now, we'll draw a placeholder circle with initials
-    drawLogoPlaceholder(doc, leftMargin, yPos, logoSize, data.company.name);
+    const imageData = await loadImageFromUrl(data.company.logo_url);
+    if (imageData) {
+      try {
+        doc.addImage(imageData, 'PNG', leftMargin, yPos, logoSize, logoSize);
+      } catch (error) {
+        console.error('Failed to add image to PDF:', error);
+        drawLogoPlaceholder(doc, leftMargin, yPos, logoSize, data.company.name);
+      }
+    } else {
+      drawLogoPlaceholder(doc, leftMargin, yPos, logoSize, data.company.name);
+    }
   } else {
     drawLogoPlaceholder(doc, leftMargin, yPos, logoSize, data.company.name);
   }

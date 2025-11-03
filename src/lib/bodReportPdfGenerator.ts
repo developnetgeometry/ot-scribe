@@ -30,7 +30,23 @@ export interface BODSummaryData {
   }>;
 }
 
-export function generateBODSummaryPDF(data: BODSummaryData): void {
+async function loadImageFromUrl(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Failed to load image:', error);
+    return null;
+  }
+}
+
+export async function generateBODSummaryPDF(data: BODSummaryData): Promise<void> {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -52,9 +68,24 @@ export function generateBODSummaryPDF(data: BODSummaryData): void {
 
   // ===== HEADER SECTION (matching payslip) =====
   
-  // Company logo placeholder (left side)
+  // Company logo (left side)
   const logoSize = 35; // 35mm x 35mm
-  drawLogoPlaceholder(doc, leftMargin, yPos, logoSize, data.company.name);
+  
+  if (data.company.logo_url) {
+    const imageData = await loadImageFromUrl(data.company.logo_url);
+    if (imageData) {
+      try {
+        doc.addImage(imageData, 'PNG', leftMargin, yPos, logoSize, logoSize);
+      } catch (error) {
+        console.error('Failed to add image to PDF:', error);
+        drawLogoPlaceholder(doc, leftMargin, yPos, logoSize, data.company.name);
+      }
+    } else {
+      drawLogoPlaceholder(doc, leftMargin, yPos, logoSize, data.company.name);
+    }
+  } else {
+    drawLogoPlaceholder(doc, leftMargin, yPos, logoSize, data.company.name);
+  }
 
   // Company info (right side)
   const companyInfoX = leftMargin + logoSize + 15;
