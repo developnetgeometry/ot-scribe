@@ -13,120 +13,50 @@ import { supabase } from '@/integrations/supabase/client';
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { signIn, user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { signIn, user, isLoadingRoles, isLoadingProfile, getDefaultRoute } = useAuth();
 
+  // Redirect authenticated users to their dashboard
+  // Wait for server state (roles, profile) to load before navigating
   useEffect(() => {
-    const redirectUser = async () => {
-      if (user) {
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
+    const timestamp = new Date().toISOString();
+    console.log(`Auth page: ${timestamp} [INFO] Auth state check`, {
+      hasUser: !!user,
+      userId: user?.id,
+      isLoadingRoles,
+      isLoadingProfile
+    });
 
-        const role = roleData?.role;
-
-        switch(role) {
-          case 'admin':
-            navigate('/admin/dashboard', { replace: true });
-            break;
-          case 'hr':
-            navigate('/hr/dashboard', { replace: true });
-            break;
-          case 'supervisor':
-            navigate('/supervisor/dashboard', { replace: true });
-            break;
-          case 'bod':
-            navigate('/bod/dashboard', { replace: true });
-            break;
-          case 'employee':
-            navigate('/employee/dashboard', { replace: true });
-            break;
-          default:
-            navigate('/dashboard', { replace: true });
-        }
-      }
-    };
-
-    redirectUser();
-  }, [user, navigate]);
+    // Only navigate when we have a user AND server state is loaded
+    if (user && !isLoadingRoles && !isLoadingProfile) {
+      const defaultRoute = getDefaultRoute();
+      console.log(`Auth page: ${timestamp} [INFO] Navigating to ${defaultRoute}`);
+      navigate(defaultRoute, { replace: true });
+    }
+  }, [user, isLoadingRoles, isLoadingProfile, getDefaultRoute, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsSubmitting(true);
 
     const { error } = await signIn(email, password);
 
     if (error) {
-      toast.error(error.message);
-      setLoading(false);
+      // Use the user-friendly error message from signIn
+      toast.error(error.message || 'Unable to sign in. Please try again.');
+      setIsSubmitting(false);
       return;
     }
 
-    // Fetch user session to get user ID
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (session?.user) {
-      // Fetch user profile with status
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('full_name, status')
-        .eq('id', session.user.id)
-        .single();
-
-      console.log('Profile status after login:', profile?.status);
-
-      // Check if password needs to be set up
-      if (!profileError && profile?.status === 'pending_setup') {
-        toast.info('Please set up your password to continue');
-        navigate('/setup-password');
-        setLoading(false);
-        return;
-      }
-
-      // Fetch user role
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const role = roleData?.role;
-      const fullName = profile?.full_name || 'User';
-
-      toast.success(`Welcome back, ${fullName}!`);
-
-      // Redirect based on role
-      switch(role) {
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        case 'hr':
-          navigate('/hr/dashboard');
-          break;
-        case 'supervisor':
-          navigate('/supervisor/dashboard');
-          break;
-        case 'bod':
-          navigate('/bod/dashboard');
-          break;
-        case 'employee':
-          navigate('/employee/dashboard');
-          break;
-        default:
-          navigate('/dashboard');
-      }
-    } else {
-      navigate('/dashboard');
-    }
-
-    setLoading(false);
+    // Success - React Query will handle loading server state
+    // The useEffect will handle navigation when data is ready
+    toast.success('Welcome back!');
+    // Keep isSubmitting true - navigation will reset the page
   };
 
   const handleCreateTestUsers = async () => {
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-test-users', {
         body: {}
@@ -139,7 +69,7 @@ export default function Auth() {
     } catch (error: any) {
       toast.error(error.message || 'Failed to create test users');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -163,7 +93,7 @@ export default function Auth() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={loading}
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -174,11 +104,11 @@ export default function Auth() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={loading}
+                disabled={isSubmitting}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 
@@ -199,7 +129,7 @@ export default function Auth() {
               variant="outline"
               className="w-full"
               onClick={handleCreateTestUsers}
-              disabled={loading}
+              disabled={isSubmitting}
             >
               Create Test Users (Dev Only)
             </Button>

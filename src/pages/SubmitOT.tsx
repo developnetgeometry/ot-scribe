@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLayout } from '@/components/AppLayout';
+import { ContentLoadingSkeleton } from '@/components/ContentLoadingSkeleton';
 import { OTForm } from '@/components/ot/OTForm';
 import { useOTSubmit } from '@/hooks/useOTSubmit';
 import { useAuth } from '@/hooks/useAuth';
@@ -43,9 +44,7 @@ export default function SubmitOT() {
   if (profileLoading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <p>Loading...</p>
-        </div>
+        <ContentLoadingSkeleton />
       </AppLayout>
     );
   }

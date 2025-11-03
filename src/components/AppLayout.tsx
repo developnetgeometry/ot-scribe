@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/NotificationBell';
+import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { 
   LayoutDashboard, 
   PlusCircle, 
@@ -40,6 +41,7 @@ import {
   LogOut,
   Calendar
 } from 'lucide-react';
+import { AppRole } from '@/types/otms';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -65,7 +67,10 @@ function AppSidebar() {
     
     // Shared - Calendar (all users)
     { path: '/calendar', label: 'Calendar', icon: Calendar, roles: ['admin', 'hr', 'supervisor', 'employee', 'bod'] },
-    
+
+    // Shared - Settings (all users)
+    { path: '/settings', label: 'Settings', icon: Settings, roles: ['admin', 'hr', 'supervisor', 'employee', 'bod'] },
+
     // Employee actions
     { path: '/ot/submit', label: 'Submit OT', icon: PlusCircle, roles: ['employee'] },
     { path: '/ot/history', label: 'OT History', icon: History, roles: ['employee'] },
@@ -78,7 +83,6 @@ function AppSidebar() {
     { path: '/hr/employees', label: 'Employees', icon: Users, roles: ['hr'] },
     { path: '/hr/departments', label: 'Departments', icon: Building2, roles: ['hr'] },
     { path: '/hr/ot-reports', label: 'OT Reports', icon: FileText, roles: ['hr'] },
-    { path: '/hr/settings', label: 'HR Settings', icon: Settings, roles: ['hr'] },
     
     // BOD actions
     { path: '/bod/approve', label: 'Approve OT', icon: CheckCircle, roles: ['bod'] },
@@ -86,7 +90,7 @@ function AppSidebar() {
   ];
 
   const filteredItems = menuItems.filter(item => 
-    item.roles.some(role => hasRole(role as any))
+    item.roles.some(role => hasRole(role as AppRole))
   );
 
   return (
@@ -159,6 +163,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
           </header>
           <main className="flex-1 p-6 overflow-auto">
+            <InstallBanner />
             {children}
           </main>
         </div>
