@@ -50,7 +50,7 @@ function groupRequestsByDate(requests: OTRequest[]): GroupedOTRequest[] {
       acc[date] = {
         date,
         dayType: request.day_type,
-        sessions: [],
+        sessions: new Map(), // Use Map for deduplication by time slot
         totalHours: 0,
         statuses: new Set<OTStatus>(),
         hasRejected: false,
@@ -58,37 +58,71 @@ function groupRequestsByDate(requests: OTRequest[]): GroupedOTRequest[] {
         profiles: request.profiles,
       };
     }
+
+    // Create unique key for this time slot
+    const timeSlotKey = `${request.start_time}_${request.end_time}`;
     
-    acc[date].sessions.push({
-      id: request.id,
-      startTime: request.start_time,
-      endTime: request.end_time,
-      hours: request.total_hours,
-      status: request.status,
-      request,
-    });
+    // Check if we already have a session for this time slot
+    const existingSession = acc[date].sessions.get(timeSlotKey);
     
-    acc[date].totalHours += request.total_hours;
-    acc[date].statuses.add(request.status);
-    
-    if (request.status === 'rejected') {
-      acc[date].hasRejected = true;
+    if (existingSession) {
+      // Keep the most recent request (latest created_at or updated_at)
+      const existingTimestamp = new Date(existingSession.request.updated_at || existingSession.request.created_at);
+      const currentTimestamp = new Date(request.updated_at || request.created_at);
+      
+      if (currentTimestamp > existingTimestamp) {
+        // Replace with newer request - adjust total hours
+        acc[date].totalHours -= existingSession.hours;
+        
+        acc[date].sessions.set(timeSlotKey, {
+          id: request.id,
+          startTime: request.start_time,
+          endTime: request.end_time,
+          hours: request.total_hours,
+          status: request.status,
+          request,
+        });
+        
+        acc[date].totalHours += request.total_hours;
+      }
+      // If existing is newer, skip this request
+    } else {
+      // First time seeing this time slot, add it
+      acc[date].sessions.set(timeSlotKey, {
+        id: request.id,
+        startTime: request.start_time,
+        endTime: request.end_time,
+        hours: request.total_hours,
+        status: request.status,
+        request,
+      });
+      
+      acc[date].totalHours += request.total_hours;
     }
     
+    // Rebuild statuses from current sessions
+    acc[date].statuses = new Set([...acc[date].sessions.values()].map((s: OTSession) => s.status));
+    
+    // Check for rejected status
+    acc[date].hasRejected = [...acc[date].sessions.values()].some((s: OTSession) => s.status === 'rejected');
+    
+    // Track highest resubmission count
     if (request.is_resubmission || request.resubmission_count > 0) {
-      acc[date].resubmissionInfo = {
-        count: request.resubmission_count,
-        isResubmission: request.is_resubmission,
-      };
+      if (!acc[date].resubmissionInfo || request.resubmission_count > acc[date].resubmissionInfo.count) {
+        acc[date].resubmissionInfo = {
+          count: request.resubmission_count,
+          isResubmission: request.is_resubmission,
+        };
+      }
     }
-    
+
     return acc;
   }, {} as Record<string, any>);
-  
+
   return Object.values(grouped).map(g => ({
     ...g,
     statuses: Array.from(g.statuses),
-    sessions: g.sessions.sort((a: OTSession, b: OTSession) => 
+    sessions: Array.from(g.sessions.values()).sort((a: OTSession, b: OTSession) => 
       a.startTime.localeCompare(b.startTime)
     ),
   }));
