@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Eye, RotateCcw, ChevronDown } from 'lucide-react';
+import { Eye, RotateCcw, ChevronDown, Edit } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +39,7 @@ interface OTHistoryTableProps {
   requests: OTRequest[];
   onViewDetails: (request: OTRequest) => void;
   onResubmit?: (request: OTRequest) => void;
+  onEdit?: (request: OTRequest) => void;
 }
 
 function groupRequestsByDate(requests: OTRequest[]): GroupedOTRequest[] {
@@ -93,7 +94,7 @@ function groupRequestsByDate(requests: OTRequest[]): GroupedOTRequest[] {
   }));
 }
 
-export function OTHistoryTable({ requests, onViewDetails, onResubmit }: OTHistoryTableProps) {
+export function OTHistoryTable({ requests, onViewDetails, onResubmit, onEdit }: OTHistoryTableProps) {
   const groupedRequests = groupRequestsByDate(requests);
   if (requests.length === 0) {
     return (
@@ -191,6 +192,41 @@ export function OTHistoryTable({ requests, onViewDetails, onResubmit }: OTHistor
                         ))}
                       </DropdownMenuContent>
                     </DropdownMenu>
+                  )}
+                  {grouped.sessions.some(s => s.status === 'pending_verification') && onEdit && (
+                    grouped.sessions.filter(s => s.status === 'pending_verification').length === 1 ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEdit(grouped.sessions.find(s => s.status === 'pending_verification')!.request)}
+                        className="gap-1"
+                      >
+                        <Edit className="h-4 w-4" />
+                        Edit
+                      </Button>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="gap-1">
+                            <Edit className="h-4 w-4" />
+                            Edit
+                            <ChevronDown className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {grouped.sessions
+                            .filter(s => s.status === 'pending_verification')
+                            .map((session) => (
+                              <DropdownMenuItem
+                                key={session.id}
+                                onClick={() => onEdit(session.request)}
+                              >
+                                {formatTimeRange(session.startTime, session.endTime)}
+                              </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )
                   )}
                   {grouped.hasRejected && onResubmit && (
                     grouped.sessions.filter(s => s.status === 'rejected').length === 1 ? (

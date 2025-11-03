@@ -10,6 +10,7 @@ import { OTHistoryTable } from '@/components/ot/OTHistoryTable';
 import { OTDetailsSheet } from '@/components/ot/OTDetailsSheet';
 import { OTSummaryCards } from '@/components/ot/OTSummaryCards';
 import { ResubmitOTForm } from '@/components/ot/ResubmitOTForm';
+import { EditOTForm } from '@/components/ot/EditOTForm';
 import { useOTRequests } from '@/hooks/useOTRequests';
 import { OTRequest } from '@/types/otms';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,6 +22,8 @@ export default function OTHistory() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [resubmitDialogOpen, setResubmitDialogOpen] = useState(false);
   const [resubmitRequest, setResubmitRequest] = useState<OTRequest | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editRequest, setEditRequest] = useState<OTRequest | null>(null);
 
   const { data: requests = [], isLoading } = useOTRequests({ status: statusFilter });
 
@@ -32,6 +35,11 @@ export default function OTHistory() {
   const handleResubmit = (request: OTRequest) => {
     setResubmitRequest(request);
     setResubmitDialogOpen(true);
+  };
+
+  const handleEdit = (request: OTRequest) => {
+    setEditRequest(request);
+    setEditDialogOpen(true);
   };
 
   const handleExportCSV = () => {
@@ -127,6 +135,7 @@ export default function OTHistory() {
                 requests={requests} 
                 onViewDetails={handleViewDetails}
                 onResubmit={handleResubmit}
+                onEdit={handleEdit}
               />
             )}
           </CardContent>
@@ -150,6 +159,24 @@ export default function OTHistory() {
                   setResubmitDialogOpen(false);
                   setResubmitRequest(null);
                 }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit OT Request</DialogTitle>
+            </DialogHeader>
+            {editRequest && (
+              <EditOTForm
+                request={editRequest}
+                onSuccess={() => {
+                  setEditDialogOpen(false);
+                  setEditRequest(null);
+                }}
+                onCancel={() => setEditDialogOpen(false)}
               />
             )}
           </DialogContent>

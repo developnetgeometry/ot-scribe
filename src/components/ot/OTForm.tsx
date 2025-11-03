@@ -55,15 +55,16 @@ interface OTFormProps {
   employeeId: string;
   fullName: string;
   onCancel: () => void;
+  defaultValues?: Partial<OTFormValues>;
 }
 
-export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel }: OTFormProps) {
+export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel, defaultValues }: OTFormProps) {
   const [totalHours, setTotalHours] = useState<number>(0);
   const [dayType, setDayType] = useState<string>('weekday');
 
   const form = useForm<OTFormValues>({
     resolver: zodResolver(otFormSchema),
-    defaultValues: {
+    defaultValues: defaultValues || {
       reason_other: '',
       attachment_url: '',
     },
