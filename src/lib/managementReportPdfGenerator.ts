@@ -17,7 +17,6 @@ export interface ManagementSummaryData {
     totalEmployees: number;
     totalHours: number;
     totalCost: number;
-    withViolations: number;
   };
   employees: Array<{
     employeeNo: string;
@@ -26,7 +25,6 @@ export interface ManagementSummaryData {
     position: string;
     otHours: number;
     otAmount: number;
-    hasViolations: boolean;
   }>;
 }
 
@@ -194,7 +192,7 @@ export async function generateManagementSummaryPDF(data: ManagementSummaryData):
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...grayColor);
-  doc.text(`Total Employees: ${data.statistics.totalEmployees} | With Violations: ${data.statistics.withViolations}`, leftMargin, yPos);
+  doc.text(`Total Employees: ${data.statistics.totalEmployees}`, leftMargin, yPos);
 
   // ===== EMPLOYEE DATA SECTION =====
   yPos += 8;

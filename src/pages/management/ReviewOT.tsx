@@ -36,8 +36,7 @@ export default function ReviewOT() {
   const stats = data?.stats || {
     pendingReview: 0,
     totalHours: 0,
-    totalCost: 0,
-    withViolations: 0
+    totalCost: 0
   };
 
   const filteredData = aggregatedData.filter(item => {
@@ -127,8 +126,7 @@ export default function ReviewOT() {
         statistics: {
           totalEmployees: filteredData.length,
           totalHours: stats.totalHours,
-          totalCost: stats.totalCost,
-          withViolations: stats.withViolations
+          totalCost: stats.totalCost
         },
         employees: filteredData.map(emp => ({
           employeeNo: emp.employee_no,
@@ -136,8 +134,7 @@ export default function ReviewOT() {
           department: emp.department,
           position: emp.position,
           otHours: emp.total_ot_hours,
-          otAmount: emp.monthly_total,
-          hasViolations: emp.has_violations
+          otAmount: emp.monthly_total
         }))
       };
 
@@ -183,12 +180,6 @@ export default function ReviewOT() {
             value={formatCurrency(stats.totalCost)}
             icon={DollarSign}
             variant="success"
-          />
-          <EnhancedDashboardCard
-            title="With Violations"
-            value={stats.withViolations}
-            icon={AlertTriangle}
-            variant="warning"
           />
         </div>
 

@@ -32,8 +32,7 @@ export default function OTReports() {
   const stats = data?.stats || {
     pendingReview: 0,
     totalHours: 0,
-    totalCost: 0,
-    withViolations: 0
+    totalCost: 0
   };
 
   const filteredData = aggregatedData.filter(item => {
@@ -125,13 +124,6 @@ export default function OTReports() {
             icon={DollarSign}
             variant="success"
             subtitle="Total RM paid for overtime this month"
-          />
-          <EnhancedDashboardCard
-            title="With Violations"
-            value={stats.withViolations}
-            icon={AlertTriangle}
-            variant="warning"
-            subtitle="Requests exceeding approval threshold"
           />
         </div>
 

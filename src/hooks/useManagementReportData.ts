@@ -10,7 +10,6 @@ interface EmployeeOTSummary {
   total_ot_hours: number;
   amount: number;
   monthly_total: number;
-  has_violations: boolean;
 }
 
 export function useManagementReportData(selectedMonth?: Date) {
@@ -77,8 +76,7 @@ function aggregateByEmployee(requests: any[]): EmployeeOTSummary[] {
         position: profile?.positions?.title || 'N/A',
         total_ot_hours: 0,
         amount: 0,
-        monthly_total: 0,
-        has_violations: false,
+        monthly_total: 0
       });
     }
     
@@ -86,10 +84,6 @@ function aggregateByEmployee(requests: any[]): EmployeeOTSummary[] {
     emp.total_ot_hours += req.total_hours || 0;
     emp.amount += req.ot_amount || 0;
     emp.monthly_total = emp.amount;
-    
-    if (req.threshold_violations && Object.keys(req.threshold_violations).length > 0) {
-      emp.has_violations = true;
-    }
   });
   
   return Array.from(grouped.values());
@@ -99,9 +93,6 @@ function calculateStats(requests: any[]) {
   return {
     pendingReview: requests.filter(r => r.status === 'hr_certified').length,
     totalHours: requests.reduce((sum, r) => sum + (r.total_hours || 0), 0),
-    totalCost: requests.reduce((sum, r) => sum + (r.ot_amount || 0), 0),
-    withViolations: requests.filter(r => 
-      r.threshold_violations && Object.keys(r.threshold_violations).length > 0
-    ).length,
+    totalCost: requests.reduce((sum, r) => sum + (r.ot_amount || 0), 0)
   };
 }
