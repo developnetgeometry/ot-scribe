@@ -142,7 +142,6 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
             <TableHead>Date</TableHead>
             <TableHead>Time Sessions</TableHead>
             <TableHead className="text-right">Hours</TableHead>
-            <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -167,33 +166,28 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
                       <span className="text-sm text-muted-foreground">
                         ({formatHours(session.hours)} hrs)
                       </span>
+                      <button
+                        onClick={() => onViewDetails(session.request)}
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        <StatusBadge status={session.status} />
+                      </button>
                     </div>
                   ))}
+                  {grouped.resubmissionInfo && (
+                    <div className="mt-1">
+                      <ResubmissionBadge 
+                        resubmissionCount={grouped.resubmissionInfo.count} 
+                        isResubmission={grouped.resubmissionInfo.isResubmission} 
+                      />
+                    </div>
+                  )}
                 </div>
               </TableCell>
               <TableCell className="text-right">
                 <span className="font-semibold text-primary">
                   {formatHours(grouped.totalHours)} hours
                 </span>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {Array.from(new Set(grouped.sessions.map(s => s.status))).map((status, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => onViewDetails(grouped.sessions.find(s => s.status === status)?.request!)}
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                    >
-                      <StatusBadge status={status} />
-                    </button>
-                  ))}
-                  {grouped.resubmissionInfo && (
-                    <ResubmissionBadge 
-                      resubmissionCount={grouped.resubmissionInfo.count} 
-                      isResubmission={grouped.resubmissionInfo.isResubmission} 
-                    />
-                  )}
-                </div>
               </TableCell>
             </TableRow>
           ))}
