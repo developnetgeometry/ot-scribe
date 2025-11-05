@@ -31,7 +31,7 @@ interface EmployeeDetailsSheetProps {
   mode: 'view' | 'edit';
 }
 
-const roles: AppRole[] = ['employee', 'supervisor', 'hr', 'bod', 'admin'];
+const roles: AppRole[] = ['employee', 'supervisor', 'hr', 'management', 'admin'];
 const employmentTypes = ['Permanent', 'Contract', 'Internship'];
 const statuses = ['active', 'inactive'];
 

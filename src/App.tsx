@@ -34,9 +34,9 @@ import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import HRDashboard from "./pages/hr/HRDashboard";
 import SupervisorDashboard from "./pages/supervisor/SupervisorDashboard";
 import VerifyOT from "./pages/supervisor/VerifyOT";
-import BODDashboard from "./pages/bod/BODDashboard";
-import ReviewOT from "./pages/bod/ReviewOT";
-import BODApproveOT from "./pages/bod/ApproveOT";
+import ManagementDashboard from "./pages/management/ManagementDashboard";
+import ReviewOT from "./pages/management/ReviewOT";
+import ManagementApproveOT from "./pages/management/ApproveOT";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const queryClient = createQueryClient();
@@ -62,7 +62,7 @@ const App = () => (
                 <Route path="/hr/dashboard" element={<ProtectedRoute requiredRole="hr"><HRDashboard /></ProtectedRoute>} />
                 <Route path="/supervisor/dashboard" element={<ProtectedRoute requiredRole="supervisor"><SupervisorDashboard /></ProtectedRoute>} />
                 <Route path="/employee/dashboard" element={<ProtectedRoute requiredRole="employee"><EmployeeDashboard /></ProtectedRoute>} />
-                <Route path="/bod/dashboard" element={<ProtectedRoute requiredRole="bod"><BODDashboard /></ProtectedRoute>} />
+                <Route path="/management/dashboard" element={<ProtectedRoute requiredRole="management"><ManagementDashboard /></ProtectedRoute>} />
                 
                 {/* Fallback dashboard */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -88,9 +88,9 @@ const App = () => (
                 <Route path="/hr/settings" element={<ProtectedRoute requiredRole="hr"><HRSettings /></ProtectedRoute>} />
                 <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole="hr"><OTReports /></ProtectedRoute>} />
                 
-                {/* BOD routes */}
-                <Route path="/bod/approve" element={<ProtectedRoute requiredRole="bod"><BODApproveOT /></ProtectedRoute>} />
-                <Route path="/bod/review" element={<ProtectedRoute requiredRole="bod"><ReviewOT /></ProtectedRoute>} />
+                {/* Management routes */}
+                <Route path="/management/approve" element={<ProtectedRoute requiredRole="management"><ManagementApproveOT /></ProtectedRoute>} />
+                <Route path="/management/review" element={<ProtectedRoute requiredRole="management"><ReviewOT /></ProtectedRoute>} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -16,7 +16,7 @@ export default function ApproveOT() {
     isLoading, 
     approveRequest: approveRequestMutation, 
     rejectRequest: rejectRequestMutation, 
-  } = useOTApproval({ role: 'bod', status: activeTab });
+  } = useOTApproval({ role: 'management', status: activeTab });
 
   const filteredRequests = requests?.filter(request => {
     if (!searchQuery) return true;
@@ -40,14 +40,14 @@ export default function ApproveOT() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">BOD Approval</h1>
-          <p className="text-muted-foreground">Review and approve overtime requests as Board of Directors</p>
+          <h1 className="text-3xl font-bold">Management Approval</h1>
+          <p className="text-muted-foreground">Review and approve overtime requests as Management</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="hr_certified">
           <TabsList>
-            <TabsTrigger value="hr_certified">Pending BOD Review</TabsTrigger>
-            <TabsTrigger value="bod_approved">Reviewed</TabsTrigger>
+            <TabsTrigger value="hr_certified">Pending Management Review</TabsTrigger>
+            <TabsTrigger value="management_approved">Reviewed</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
             <TabsTrigger value="all">All</TabsTrigger>
           </TabsList>
@@ -68,7 +68,7 @@ export default function ApproveOT() {
                 <OTApprovalTable 
                   requests={filteredRequests} 
                   isLoading={isLoading}
-                  role="bod"
+                  role="management"
                   approveRequest={handleApprove}
                   rejectRequest={handleReject}
                   showActions={activeTab === 'hr_certified'}

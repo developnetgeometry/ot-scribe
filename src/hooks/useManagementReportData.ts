@@ -13,13 +13,13 @@ interface EmployeeOTSummary {
   has_violations: boolean;
 }
 
-export function useBODReportData(selectedMonth?: Date) {
+export function useManagementReportData(selectedMonth?: Date) {
   const month = selectedMonth || new Date();
   const startDate = format(startOfMonth(month), 'yyyy-MM-dd');
   const endDate = format(endOfMonth(month), 'yyyy-MM-dd');
 
   return useQuery({
-    queryKey: ['bod-report', startDate, endDate],
+    queryKey: ['management-report', startDate, endDate],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ot_requests')
@@ -42,7 +42,7 @@ export function useBODReportData(selectedMonth?: Date) {
         `)
         .gte('ot_date', startDate)
         .lte('ot_date', endDate)
-        .in('status', ['hr_certified', 'bod_approved'])
+        .in('status', ['hr_certified', 'management_approved'])
         .order('ot_date', { ascending: false });
 
       if (error) throw error;

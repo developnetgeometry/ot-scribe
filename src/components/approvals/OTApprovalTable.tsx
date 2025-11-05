@@ -10,7 +10,7 @@ import { OTApprovalDetailsSheet } from './OTApprovalDetailsSheet';
 import { RejectOTModal } from './RejectOTModal';
 import { Badge } from '@/components/ui/badge';
 
-type ApprovalRole = 'supervisor' | 'hr' | 'bod';
+type ApprovalRole = 'supervisor' | 'hr' | 'management';
 
 interface OTApprovalTableProps {
   requests: GroupedOTRequest[];
@@ -60,7 +60,7 @@ export function OTApprovalTable({
   const canApproveOrReject = (request: GroupedOTRequest) => {
     if (role === 'supervisor') return request.status === 'pending_verification';
     if (role === 'hr') return request.status === 'supervisor_verified';
-    if (role === 'bod') return request.status === 'hr_certified';
+    if (role === 'management') return request.status === 'hr_certified';
     return false;
   };
 

@@ -22,7 +22,7 @@ interface RejectOTModalProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: (remarks: string, rejectionStage: string) => void;
   isLoading?: boolean;
-  rejectionStage?: 'supervisor' | 'hr' | 'bod';
+  rejectionStage?: 'supervisor' | 'hr' | 'management';
 }
 
 export function RejectOTModal({ request, open, onOpenChange, onConfirm, isLoading, rejectionStage = 'supervisor' }: RejectOTModalProps) {

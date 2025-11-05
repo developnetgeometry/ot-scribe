@@ -9,7 +9,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { GroupedOTRequest } from '@/types/otms';
 import { formatCurrency, formatHours, formatTime12Hour } from '@/lib/otCalculations';
 
-type ApprovalRole = 'supervisor' | 'hr' | 'bod';
+type ApprovalRole = 'supervisor' | 'hr' | 'management';
 
 interface OTApprovalDetailsSheetProps {
   request: GroupedOTRequest | null;
@@ -98,8 +98,8 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OT
             </div>
           </div>
 
-          {/* Calculation Details - Only visible to HR and BOD */}
-          {(role === 'hr' || role === 'bod') && (
+          {/* Calculation Details - Only visible to HR and Management */}
+          {(role === 'hr' || role === 'management') && (
             <div className="space-y-2 bg-muted/50 p-4 rounded-lg">
               <h4 className="font-semibold text-sm">Calculation</h4>
               <div className="grid grid-cols-3 gap-4 text-sm">
@@ -179,18 +179,18 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OT
               </div>
             )}
 
-            {request.bod_remarks && (
+            {request.management_remarks && (
               <div className="bg-muted/50 p-3 rounded-md space-y-1">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-purple-600" />
-                  <span className="font-medium text-sm">BOD Review</span>
-                  {request.bod_reviewed_at && (
+                  <span className="font-medium text-sm">Management Review</span>
+                  {request.management_reviewed_at && (
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date(request.bod_reviewed_at), 'dd MMM yyyy HH:mm')}
+                      {format(new Date(request.management_reviewed_at), 'dd MMM yyyy HH:mm')}
                     </span>
                   )}
                 </div>
-                <p className="text-sm pl-6">{request.bod_remarks}</p>
+                <p className="text-sm pl-6">{request.management_remarks}</p>
               </div>
             )}
           </div>

@@ -28,7 +28,7 @@ const inviteSchema = z.object({
   joining_date: z.string().min(1, 'Joining date is required'),
   work_location: z.string().trim().min(1, 'Work location is required').max(100),
   supervisor_id: z.string().uuid().optional().or(z.literal('')),
-  role: z.enum(['employee', 'supervisor', 'hr', 'bod', 'admin']),
+  role: z.enum(['employee', 'supervisor', 'hr', 'management', 'admin']),
   is_ot_eligible: z.boolean().default(true),
 });
 
@@ -417,7 +417,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
                       <SelectItem value="employee">Employee</SelectItem>
                       <SelectItem value="supervisor">Supervisor</SelectItem>
                       <SelectItem value="hr">HR</SelectItem>
-                      <SelectItem value="bod">BOD</SelectItem>
+                      <SelectItem value="management">Management</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>

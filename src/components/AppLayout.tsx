@@ -63,13 +63,13 @@ function AppSidebar() {
     { path: '/hr/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['hr'] },
     { path: '/supervisor/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['supervisor'] },
     { path: '/employee/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['employee'] },
-    { path: '/bod/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['bod'] },
+    { path: '/management/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['management'] },
     
     // Shared - Calendar (all users)
-    { path: '/calendar', label: 'Calendar', icon: Calendar, roles: ['admin', 'hr', 'supervisor', 'employee', 'bod'] },
+    { path: '/calendar', label: 'Calendar', icon: Calendar, roles: ['admin', 'hr', 'supervisor', 'employee', 'management'] },
 
     // Shared - Settings (all users)
-    { path: '/settings', label: 'Settings', icon: Settings, roles: ['admin', 'hr', 'supervisor', 'employee', 'bod'] },
+    { path: '/settings', label: 'Settings', icon: Settings, roles: ['admin', 'hr', 'supervisor', 'employee', 'management'] },
 
     // Employee actions
     { path: '/ot/submit', label: 'Submit OT', icon: PlusCircle, roles: ['employee'] },
@@ -84,9 +84,9 @@ function AppSidebar() {
     { path: '/hr/departments', label: 'Departments', icon: Building2, roles: ['hr'] },
     { path: '/hr/ot-reports', label: 'OT Reports', icon: FileText, roles: ['hr'] },
     
-    // BOD actions
-    { path: '/bod/approve', label: 'Approve OT', icon: CheckCircle, roles: ['bod'] },
-    { path: '/bod/review', label: 'BOD Review', icon: Eye, roles: ['bod'] },
+    // Management actions
+    { path: '/management/approve', label: 'Approve OT', icon: CheckCircle, roles: ['management'] },
+    { path: '/management/review', label: 'Management Review', icon: Eye, roles: ['management'] },
   ];
 
   const filteredItems = menuItems.filter(item => 

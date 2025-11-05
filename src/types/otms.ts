@@ -1,5 +1,5 @@
-export type AppRole = 'employee' | 'supervisor' | 'hr' | 'bod' | 'admin';
-export type OTStatus = 'pending_verification' | 'supervisor_verified' | 'hr_certified' | 'bod_approved' | 'rejected' | 'pending_hr_recertification';
+export type AppRole = 'employee' | 'supervisor' | 'hr' | 'management' | 'admin';
+export type OTStatus = 'pending_verification' | 'supervisor_verified' | 'hr_certified' | 'management_approved' | 'rejected' | 'pending_hr_recertification';
 export type DayType = 'weekday' | 'saturday' | 'sunday' | 'public_holiday';
 
 export interface OTRequest {
@@ -22,8 +22,8 @@ export interface OTRequest {
   hr_id: string | null;
   hr_approved_at: string | null;
   hr_remarks: string | null;
-  bod_reviewed_at: string | null;
-  bod_remarks: string | null;
+  management_reviewed_at: string | null;
+  management_remarks: string | null;
   eligibility_rule_id: string | null;
   formula_id: string | null;
   threshold_violations: any;

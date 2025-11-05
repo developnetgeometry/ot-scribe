@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { OTRequest, OTStatus, AppRole, GroupedOTRequest } from '@/types/otms';
 import { toast } from 'sonner';
 
-type ApprovalRole = 'supervisor' | 'hr' | 'bod';
+type ApprovalRole = 'supervisor' | 'hr' | 'management';
 
 interface UseOTApprovalOptions {
   role: ApprovalRole;
@@ -58,7 +58,7 @@ const getStatusFilter = (role: ApprovalRole, statusFilter?: string): OTStatus[] 
   if (statusFilter && statusFilter !== 'all') {
     // Handle "completed" as a special case that includes multiple statuses
     if (statusFilter === 'completed') {
-      return ['supervisor_verified', 'hr_certified', 'bod_approved'];
+      return ['supervisor_verified', 'hr_certified', 'management_approved'];
     }
     return [statusFilter as OTStatus];
   }
@@ -66,13 +66,13 @@ const getStatusFilter = (role: ApprovalRole, statusFilter?: string): OTStatus[] 
   // Handle "all" case specifically for each role
   if (statusFilter === 'all') {
     if (role === 'supervisor') {
-      return ['pending_verification', 'supervisor_verified', 'hr_certified', 'bod_approved', 'rejected'];
+      return ['pending_verification', 'supervisor_verified', 'hr_certified', 'management_approved', 'rejected'];
     }
     if (role === 'hr') {
       return ['pending_verification', 'supervisor_verified', 'rejected'];
     }
-    if (role === 'bod') {
-      return ['hr_certified', 'bod_approved', 'rejected'];
+    if (role === 'management') {
+      return ['hr_certified', 'management_approved', 'rejected'];
     }
   }
 
@@ -109,8 +109,8 @@ const getRemarksField = (role: ApprovalRole): string => {
       return 'supervisor_remarks';
     case 'hr':
       return 'hr_remarks';
-    case 'bod':
-      return 'bod_remarks';
+    case 'management':
+      return 'management_remarks';
     default:
       return 'hr_remarks';
   }
@@ -123,8 +123,8 @@ const getTimestampField = (role: ApprovalRole): string => {
       return 'supervisor_verified_at';
     case 'hr':
       return 'hr_approved_at';
-    case 'bod':
-      return 'bod_reviewed_at';
+    case 'management':
+      return 'management_reviewed_at';
     default:
       return 'hr_approved_at';
   }

@@ -6,13 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, DollarSign, Clock, AlertTriangle, FileCheck, Download, FileText, Filter } from 'lucide-react';
 import { EnhancedDashboardCard } from '@/components/hr/EnhancedDashboardCard';
-import { BODReportTable } from '@/components/bod/BODReportTable';
-import { useBODReportData } from '@/hooks/useBODReportData';
+import { ManagementReportTable } from '@/components/management/ManagementReportTable';
+import { useManagementReportData } from '@/hooks/useManagementReportData';
 import { exportToCSV } from '@/lib/exportUtils';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { generateBODSummaryPDF, BODSummaryData } from '@/lib/bodReportPdfGenerator';
+import { generateManagementSummaryPDF, ManagementSummaryData } from '@/lib/managementReportPdfGenerator';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function ReviewOT() {
@@ -30,7 +30,7 @@ export default function ReviewOT() {
     return new Date(parseInt(appliedYear), parseInt(appliedMonth) - 1, 1);
   }, [appliedMonth, appliedYear]);
   
-  const { data, isLoading } = useBODReportData(filterDate);
+  const { data, isLoading } = useManagementReportData(filterDate);
 
   const aggregatedData = data?.aggregated || [];
   const stats = data?.stats || {
@@ -79,7 +79,7 @@ export default function ReviewOT() {
     }));
 
     const monthStr = format(filterDate, 'MMM_yyyy');
-    exportToCSV(formattedData, `BOD_OT_Report_${monthStr}`, headers);
+    exportToCSV(formattedData, `Management_OT_Report_${monthStr}`, headers);
     
     toast({
       title: 'Report exported',
@@ -112,7 +112,7 @@ export default function ReviewOT() {
       if (companyError) throw companyError;
 
       // Prepare data for PDF
-      const summaryData: BODSummaryData = {
+      const summaryData: ManagementSummaryData = {
         company: {
           name: company.name || 'Company Name',
           registration_no: company.registration_no || 'N/A',
@@ -141,7 +141,7 @@ export default function ReviewOT() {
         }))
       };
 
-      await generateBODSummaryPDF(summaryData);
+      await generateManagementSummaryPDF(summaryData);
 
       toast({
         title: 'Report generated',
@@ -161,7 +161,7 @@ export default function ReviewOT() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">BOD Review</h1>
+          <h1 className="text-3xl font-bold">Management Review</h1>
           <p className="text-muted-foreground">Filter and export monthly overtime summaries by department and employee.</p>
         </div>
 
@@ -277,7 +277,7 @@ export default function ReviewOT() {
               </div>
             </div>
 
-          <BODReportTable 
+          <ManagementReportTable 
             data={filteredData}
             isLoading={isLoading}
             selectedMonth={filterDate}

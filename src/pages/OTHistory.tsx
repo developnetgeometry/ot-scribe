@@ -111,7 +111,7 @@ export default function OTHistory() {
                     <SelectItem value="pending_verification">Pending Verification</SelectItem>
                     <SelectItem value="supervisor_verified">Supervisor Verified</SelectItem>
                     <SelectItem value="hr_certified">HR Certified</SelectItem>
-                    <SelectItem value="bod_approved">BOD Approved</SelectItem>
+                    <SelectItem value="management_approved">Management Approved</SelectItem>
                     <SelectItem value="pending_hr_recertification">Pending HR Recertification</SelectItem>
                     <SelectItem value="rejected">Rejected</SelectItem>
                   </SelectContent>
