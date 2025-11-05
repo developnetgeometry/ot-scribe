@@ -733,6 +733,47 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth_key: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          is_active: boolean
+          p256dh_key: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auth_key: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean
+          p256dh_key: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auth_key?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean
+          p256dh_key?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -824,7 +865,13 @@ export type Database = {
       mark_expired_tokens: { Args: never; Returns: undefined }
     }
     Enums: {
-      app_role: "employee" | "supervisor" | "hr" | "bod" | "admin"
+      app_role:
+        | "employee"
+        | "supervisor"
+        | "hr"
+        | "bod"
+        | "admin"
+        | "management"
       day_type: "weekday" | "saturday" | "sunday" | "public_holiday"
       ot_status:
         | "pending_verification"
@@ -836,6 +883,7 @@ export type Database = {
         | "hr_certified"
         | "bod_approved"
         | "pending_hr_recertification"
+        | "management_approved"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -963,7 +1011,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["employee", "supervisor", "hr", "bod", "admin"],
+      app_role: ["employee", "supervisor", "hr", "bod", "admin", "management"],
       day_type: ["weekday", "saturday", "sunday", "public_holiday"],
       ot_status: [
         "pending_verification",
@@ -975,6 +1023,7 @@ export const Constants = {
         "hr_certified",
         "bod_approved",
         "pending_hr_recertification",
+        "management_approved",
       ],
     },
   },
