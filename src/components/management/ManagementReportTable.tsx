@@ -31,10 +31,10 @@ export function ManagementReportTable({ data, isLoading, selectedMonth }: Manage
   const [sortColumn, setSortColumn] = useState<SortColumn>('employee_no');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  const handleDownloadPayslip = async (employeeNo: string) => {
+  const handleDownloadOTSlip = async (employeeNo: string) => {
     try {
       toast({
-        title: 'Generating payslip...',
+        title: 'Generating OT slip...',
         description: 'Please wait while we prepare the PDF.'
       });
 
@@ -83,7 +83,7 @@ export function ManagementReportTable({ data, isLoading, selectedMonth }: Manage
       const totalAmount = otRequests?.reduce((sum, req) => sum + (req.ot_amount || 0), 0) || 0;
 
       // Format data for PDF generator
-      const payslipData = {
+      const otSlipData = {
         company: {
           name: company.name || 'Company Name',
           registration_no: company.registration_no || 'N/A',
@@ -110,18 +110,18 @@ export function ManagementReportTable({ data, isLoading, selectedMonth }: Manage
       };
 
       // Generate PDF
-      generatePayslipPDF(payslipData);
+      generatePayslipPDF(otSlipData);
 
       toast({
-        title: 'Payslip generated',
+        title: 'OT slip generated',
         description: 'PDF has been downloaded successfully.'
       });
 
     } catch (error) {
-      console.error('Error generating payslip:', error);
+      console.error('Error generating OT slip:', error);
       toast({
         title: 'Error',
-        description: 'Failed to generate payslip. Please try again.',
+        description: 'Failed to generate OT slip. Please try again.',
         variant: 'destructive'
       });
     }
@@ -240,10 +240,10 @@ export function ManagementReportTable({ data, isLoading, selectedMonth }: Manage
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDownloadPayslip(row.employee_no)}
+                  onClick={() => handleDownloadOTSlip(row.employee_no)}
                 >
                   <FileDown className="h-4 w-4 mr-1" />
-                  Payslip
+                  OT Slip
                 </Button>
               </TableCell>
             </TableRow>

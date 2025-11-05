@@ -32,11 +32,11 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
 
-  const handleDownloadPayslip = async (employeeId: string, employeeNo: string) => {
+  const handleDownloadOTSlip = async (employeeId: string, employeeNo: string) => {
     setDownloadingIds(prev => new Set(prev).add(employeeId));
 
     try {
-      // Check user role - only HR and Management can generate payslips
+      // Check user role - only HR and Management can generate OT slips
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -57,7 +57,7 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
       if (!isAuthorized) {
         toast({
           title: 'Access Denied',
-          description: 'Only HR and Management can generate payslips.',
+          description: 'Only HR and Management can generate OT slips.',
           variant: 'destructive',
         });
         return;
@@ -115,7 +115,7 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
       const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                           'July', 'August', 'September', 'October', 'November', 'December'];
 
-      // Generate PDF with complete data
+      // Generate OT slip PDF with complete data
       generatePayslipPDF({
         company: {
           name: company.name,
@@ -144,13 +144,13 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
 
       toast({
         title: 'Success',
-        description: 'Payslip downloaded successfully',
+        description: 'OT slip downloaded successfully',
       });
     } catch (error: any) {
-      console.error('Error downloading payslip:', error);
+      console.error('Error downloading OT slip:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to generate payslip',
+        description: error.message || 'Failed to generate OT slip',
         variant: 'destructive',
       });
     } finally {
@@ -274,11 +274,11 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleDownloadPayslip(row.employee_id, row.employee_no)}
+                  onClick={() => handleDownloadOTSlip(row.employee_id, row.employee_no)}
                   disabled={downloadingIds.has(row.employee_id)}
                 >
                   <FileText className="h-4 w-4 mr-2" />
-                  {downloadingIds.has(row.employee_id) ? 'Generating...' : 'Payslip'}
+                  {downloadingIds.has(row.employee_id) ? 'Generating...' : 'OT Slip'}
                 </Button>
               </TableCell>
             </TableRow>
