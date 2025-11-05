@@ -360,8 +360,6 @@ export type Database = {
       ot_requests: {
         Row: {
           attachment_url: string | null
-          bod_remarks: string | null
-          bod_reviewed_at: string | null
           created_at: string | null
           day_type: Database["public"]["Enums"]["day_type"]
           eligibility_rule_id: string | null
@@ -374,6 +372,8 @@ export type Database = {
           hrp: number | null
           id: string
           is_resubmission: boolean | null
+          management_remarks: string | null
+          management_reviewed_at: string | null
           orp: number | null
           ot_amount: number | null
           ot_date: string
@@ -392,8 +392,6 @@ export type Database = {
         }
         Insert: {
           attachment_url?: string | null
-          bod_remarks?: string | null
-          bod_reviewed_at?: string | null
           created_at?: string | null
           day_type: Database["public"]["Enums"]["day_type"]
           eligibility_rule_id?: string | null
@@ -406,6 +404,8 @@ export type Database = {
           hrp?: number | null
           id?: string
           is_resubmission?: boolean | null
+          management_remarks?: string | null
+          management_reviewed_at?: string | null
           orp?: number | null
           ot_amount?: number | null
           ot_date: string
@@ -424,8 +424,6 @@ export type Database = {
         }
         Update: {
           attachment_url?: string | null
-          bod_remarks?: string | null
-          bod_reviewed_at?: string | null
           created_at?: string | null
           day_type?: Database["public"]["Enums"]["day_type"]
           eligibility_rule_id?: string | null
@@ -438,6 +436,8 @@ export type Database = {
           hrp?: number | null
           id?: string
           is_resubmission?: boolean | null
+          management_remarks?: string | null
+          management_reviewed_at?: string | null
           orp?: number | null
           ot_amount?: number | null
           ot_date?: string
