@@ -68,7 +68,7 @@ export function RecentTeamOTTable() {
         return 'warning';
       case 'supervisor_verified':
       case 'hr_certified':
-      case 'bod_approved':
+      case 'management_approved':
         return 'success';
       case 'rejected':
         return 'destructive';
@@ -85,7 +85,7 @@ export function RecentTeamOTTable() {
         return 'Verified';
       case 'hr_certified':
         return 'Certified';
-      case 'bod_approved':
+      case 'management_approved':
         return 'Approved';
       case 'rejected':
         return 'Rejected';

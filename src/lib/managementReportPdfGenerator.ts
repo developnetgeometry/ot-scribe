@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-export interface BODSummaryData {
+export interface ManagementSummaryData {
   company: {
     name: string;
     registration_no: string;
@@ -46,7 +46,7 @@ async function loadImageFromUrl(url: string): Promise<string | null> {
   }
 }
 
-export async function generateBODSummaryPDF(data: BODSummaryData): Promise<void> {
+export async function generateManagementSummaryPDF(data: ManagementSummaryData): Promise<void> {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -268,7 +268,7 @@ export async function generateBODSummaryPDF(data: BODSummaryData): Promise<void>
   doc.text(footerText, pageWidth / 2, footerY, { align: 'center' });
 
   // ===== SAVE PDF =====
-  const fileName = `BOD_OT_Summary_${data.period.display.replace(' ', '_')}.pdf`;
+  const fileName = `Management_OT_Summary_${data.period.display.replace(' ', '_')}.pdf`;
   doc.save(fileName);
 }
 

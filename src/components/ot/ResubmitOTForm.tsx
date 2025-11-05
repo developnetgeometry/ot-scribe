@@ -60,7 +60,7 @@ export function ResubmitOTForm({ request, onSuccess }: ResubmitOTFormProps) {
     });
   };
   
-  const rejectionReason = request.supervisor_remarks || request.hr_remarks || request.bod_remarks;
+  const rejectionReason = request.supervisor_remarks || request.hr_remarks || request.management_remarks;
   
   return (
     <div className="space-y-6">

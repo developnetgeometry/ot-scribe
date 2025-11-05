@@ -59,16 +59,16 @@ export default function RecertifyOT() {
             </Button>
             <div>
               <h1 className="text-3xl font-bold">OT Recertification</h1>
-              <p className="text-muted-foreground">Review BOD-rejected requests for recertification</p>
+              <p className="text-muted-foreground">Review Management-rejected requests for recertification</p>
             </div>
           </div>
         </div>
 
         <Alert>
           <AlertDescription>
-            These requests were previously certified by HR but rejected by BOD. You can choose to:
+            These requests were previously certified by HR but rejected by Management. You can choose to:
             <br />
-            <strong>Recertify</strong> - Send back to BOD for another review
+            <strong>Recertify</strong> - Send back to Management for another review
             <br />
             <strong>Decline</strong> - Send back to employee for corrections
           </AlertDescription>
@@ -100,7 +100,7 @@ export default function RecertifyOT() {
                       <TableHead>Day Type</TableHead>
                       <TableHead className="text-right">Hours</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>BOD Remarks</TableHead>
+                      <TableHead>Management Remarks</TableHead>
                       <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -129,7 +129,7 @@ export default function RecertifyOT() {
                         </TableCell>
                         <TableCell>
                           <p className="text-sm text-muted-foreground line-clamp-2">
-                            {request.bod_remarks || 'No remarks'}
+                            {request.management_remarks || 'No remarks'}
                           </p>
                         </TableCell>
                         <TableCell>
@@ -171,7 +171,7 @@ export default function RecertifyOT() {
               </DialogTitle>
               <DialogDescription>
                 {action === 'recertify'
-                  ? 'Confirm that this request meets all requirements and should be sent back to BOD.'
+                  ? 'Confirm that this request meets all requirements and should be sent back to Management.'
                   : 'Provide clear feedback for the employee to make necessary corrections.'}
               </DialogDescription>
             </DialogHeader>
@@ -180,8 +180,8 @@ export default function RecertifyOT() {
               <div className="space-y-4">
                 <Alert>
                   <AlertDescription>
-                    <strong>BOD Rejection Reason:</strong>
-                    <p className="mt-2">{selectedRequest.bod_remarks || 'No remarks provided'}</p>
+                    <strong>Management Rejection Reason:</strong>
+                    <p className="mt-2">{selectedRequest.management_remarks || 'No remarks provided'}</p>
                   </AlertDescription>
                 </Alert>
 
@@ -210,7 +210,7 @@ export default function RecertifyOT() {
                 onClick={handleSubmit}
                 disabled={!remarks.trim() || recertify.isPending || decline.isPending}
               >
-                {action === 'recertify' ? 'Recertify & Send to BOD' : 'Decline & Send to Employee'}
+                {action === 'recertify' ? 'Recertify & Send to Management' : 'Decline & Send to Employee'}
               </Button>
             </DialogFooter>
           </DialogContent>

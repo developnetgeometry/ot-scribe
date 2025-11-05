@@ -5,8 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
 import { EnhancedDashboardCard } from '@/components/hr/EnhancedDashboardCard';
 import { OTTrendChart } from '@/components/hr/charts/OTTrendChart';
-import { OTCostChart } from '@/components/bod/charts/OTCostChart';
-import { QuickInsights } from '@/components/bod/QuickInsights';
+import { OTCostChart } from '@/components/management/charts/OTCostChart';
+import { QuickInsights } from '@/components/management/QuickInsights';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCircle, DollarSign, Clock, TrendingUp } from 'lucide-react';
@@ -66,7 +66,7 @@ export default function BODDashboard() {
     const totalExpenditure = currentMonthData?.reduce((sum, req) => sum + (req.ot_amount || 0), 0) || 0;
     
     const approvedCount = currentMonthData?.filter(req => 
-      req.status === 'hr_certified' || req.status === 'bod_approved'
+      req.status === 'hr_certified' || req.status === 'management_approved'
     ).length || 0;
     const totalCount = currentMonthData?.length || 1;
     const complianceRate = Math.round((approvedCount / totalCount) * 100);
@@ -88,7 +88,7 @@ export default function BODDashboard() {
     <AppLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold">BOD Dashboard</h1>
+          <h1 className="text-3xl font-bold">Management Dashboard</h1>
           <p className="text-muted-foreground mt-1">
             {fullName ? `Welcome back, ${fullName}!` : 'Welcome back!'} Here's your executive overview.
           </p>

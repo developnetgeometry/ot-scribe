@@ -81,7 +81,7 @@ const getStatusFilter = (role: ApprovalRole, statusFilter?: string): OTStatus[] 
       return ['pending_verification'];
     case 'hr':
       return ['pending_verification', 'supervisor_verified'];
-    case 'bod':
+    case 'management':
       return ['hr_certified'];
     default:
       return [];
@@ -95,8 +95,8 @@ const getApprovedStatus = (role: ApprovalRole): OTStatus => {
       return 'supervisor_verified';
     case 'hr':
       return 'hr_certified';
-    case 'bod':
-      return 'bod_approved';
+    case 'management':
+      return 'management_approved';
     default:
       return 'hr_certified';
   }
@@ -112,7 +112,7 @@ const getRemarksField = (role: ApprovalRole): string => {
     case 'management':
       return 'management_remarks';
     default:
-      return 'hr_remarks';
+      return 'management_remarks';
   }
 };
 
@@ -126,7 +126,7 @@ const getTimestampField = (role: ApprovalRole): string => {
     case 'management':
       return 'management_reviewed_at';
     default:
-      return 'hr_approved_at';
+      return 'management_reviewed_at';
   }
 };
 
@@ -137,8 +137,8 @@ const getIdField = (role: ApprovalRole): string | null => {
       return 'supervisor_id';
     case 'hr':
       return 'hr_id';
-    case 'bod':
-      return null; // BOD doesn't have a dedicated ID field
+    case 'management':
+      return null; // Management doesn't have a dedicated ID field
     default:
       return null;
   }
@@ -256,8 +256,8 @@ export function useOTApproval(options: UseOTApprovalOptions) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // BOD rejection goes to HR recertification instead of final rejection
-      const status = role === 'bod' ? 'pending_hr_recertification' : 'rejected';
+      // Management rejection goes to HR recertification instead of final rejection
+      const status = role === 'management' ? 'pending_hr_recertification' : 'rejected';
 
       const updateData: any = {
         status: status,

@@ -19,7 +19,7 @@ interface InviteEmployeeData {
   joining_date: string;
   work_location: string;
   supervisor_id: string | null;
-  role: 'employee' | 'supervisor' | 'hr' | 'bod' | 'admin';
+  role: 'employee' | 'supervisor' | 'hr' | 'management' | 'admin';
   is_ot_eligible: boolean;
 }
 

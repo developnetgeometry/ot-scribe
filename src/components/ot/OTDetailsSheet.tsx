@@ -104,7 +104,7 @@ export function OTDetailsSheet({ request, open, onOpenChange, onEdit }: OTDetail
           )}
 
           {/* Remarks */}
-          {(request.supervisor_remarks || request.hr_remarks || request.bod_remarks) && (
+          {(request.supervisor_remarks || request.hr_remarks || request.management_remarks) && (
             <>
               <Separator />
               <div className="space-y-3">
@@ -121,10 +121,10 @@ export function OTDetailsSheet({ request, open, onOpenChange, onEdit }: OTDetail
                     <p className="text-sm">{request.hr_remarks}</p>
                   </div>
                 )}
-                {request.bod_remarks && (
+                {request.management_remarks && (
                   <div className="bg-muted/50 p-3 rounded-lg">
-                    <p className="text-xs font-medium text-muted-foreground mb-1">BOD</p>
-                    <p className="text-sm">{request.bod_remarks}</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Management</p>
+                    <p className="text-sm">{request.management_remarks}</p>
                   </div>
                 )}
               </div>
@@ -167,13 +167,13 @@ export function OTDetailsSheet({ request, open, onOpenChange, onEdit }: OTDetail
                   </div>
                 </div>
               )}
-              {request.bod_reviewed_at && (
+              {request.management_reviewed_at && (
                 <div className="flex gap-3">
                   <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
                   <div>
-                    <p className="text-sm font-medium">Reviewed by BOD</p>
+                    <p className="text-sm font-medium">Reviewed by Management</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(request.bod_reviewed_at), 'PPp')}
+                      {format(new Date(request.management_reviewed_at), 'PPp')}
                     </p>
                   </div>
                 </div>

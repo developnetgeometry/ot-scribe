@@ -25,7 +25,7 @@ export function useOTResubmit() {
       // Get original request info
       const { data: originalRequest, error: fetchError } = await supabase
         .from('ot_requests')
-        .select('resubmission_count, rejection_stage, supervisor_remarks, hr_remarks, bod_remarks, supervisor_id')
+        .select('resubmission_count, rejection_stage, supervisor_remarks, hr_remarks, management_remarks, supervisor_id')
         .eq('id', data.originalRequestId)
         .single();
 
@@ -57,13 +57,13 @@ export function useOTResubmit() {
       // Log resubmission history
       const rejectionReason = originalRequest.supervisor_remarks || 
                              originalRequest.hr_remarks || 
-                             originalRequest.bod_remarks || 
+                             originalRequest.management_remarks || 
                              'No remarks provided';
       
       await supabase.from('ot_resubmission_history').insert([{
         original_request_id: data.originalRequestId,
         resubmitted_request_id: newRequest.id,
-        rejected_by_role: (originalRequest.rejection_stage || 'supervisor') as 'employee' | 'supervisor' | 'hr' | 'bod' | 'admin',
+        rejected_by_role: (originalRequest.rejection_stage || 'supervisor') as 'employee' | 'supervisor' | 'hr' | 'management' | 'admin',
         rejection_reason: rejectionReason
       }]);
 
