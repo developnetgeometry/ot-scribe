@@ -10,7 +10,7 @@ interface ResubmitData {
   total_hours: number;
   day_type: 'weekday' | 'saturday' | 'sunday' | 'public_holiday';
   reason: string;
-  attachment_url?: string | null;
+  attachment_urls: string[];
 }
 
 export function useOTResubmit() {
@@ -46,7 +46,7 @@ export function useOTResubmit() {
           total_hours: data.total_hours,
           day_type: data.day_type,
           reason: data.reason,
-          attachment_url: data.attachment_url || null,
+          attachment_urls: data.attachment_urls,
           status: 'pending_verification'
         })
         .select()

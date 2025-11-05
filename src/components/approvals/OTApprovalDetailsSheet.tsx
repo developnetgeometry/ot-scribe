@@ -195,15 +195,19 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OT
             )}
           </div>
 
-          {/* Attachment */}
-          {request.attachment_url && (
+          {/* Attachments */}
+          {request.attachment_urls && request.attachment_urls.length > 0 && (
             <div className="space-y-2">
-              <span className="font-semibold">Attachment</span>
-              <Button variant="outline" size="sm" asChild>
-                <a href={request.attachment_url} target="_blank" rel="noopener noreferrer">
-                  View Attachment
-                </a>
-              </Button>
+              <span className="font-semibold">Attachments ({request.attachment_urls.length})</span>
+              <div className="space-y-2">
+                {request.attachment_urls.map((url, index) => (
+                  <Button key={index} variant="outline" size="sm" asChild className="w-full justify-start">
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      Attachment {index + 1}
+                    </a>
+                  </Button>
+                ))}
+              </div>
             </div>
           )}
         </div>

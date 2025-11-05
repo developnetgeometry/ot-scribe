@@ -11,7 +11,7 @@ interface UpdateOTParams {
     total_hours: number;
     day_type: 'weekday' | 'saturday' | 'sunday' | 'public_holiday';
     reason: string;
-    attachment_url?: string | null;
+    attachment_urls: string[];
     employee_id: string;
   };
 }
@@ -50,7 +50,7 @@ export function useOTUpdate() {
           total_hours: data.total_hours,
           day_type: data.day_type,
           reason: data.reason,
-          attachment_url: data.attachment_url,
+          attachment_urls: data.attachment_urls,
         })
         .eq('id', requestId)
         .eq('employee_id', user.id)

@@ -11,7 +11,7 @@ export interface OTRequest {
   total_hours: number;
   day_type: DayType;
   reason: string;
-  attachment_url: string | null;
+  attachment_urls: string[];
   orp: number | null;
   hrp: number | null;
   ot_amount: number | null;

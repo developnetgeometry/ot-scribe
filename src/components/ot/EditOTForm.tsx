@@ -42,7 +42,7 @@ export function EditOTForm({ request, onSuccess, onCancel }: EditOTFormProps) {
     end_time: request.end_time,
     reason_dropdown: getReasonCategory(request.reason),
     reason_other: isOtherReason(request.reason) ? request.reason : '',
-    attachment_url: request.attachment_url || '',
+    attachment_urls: request.attachment_urls || [],
   };
   
   const handleUpdate = (data: any) => {

@@ -359,7 +359,7 @@ export type Database = {
       }
       ot_requests: {
         Row: {
-          attachment_url: string | null
+          attachment_urls: string[]
           created_at: string | null
           day_type: Database["public"]["Enums"]["day_type"]
           eligibility_rule_id: string | null
@@ -391,7 +391,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          attachment_url?: string | null
+          attachment_urls?: string[]
           created_at?: string | null
           day_type: Database["public"]["Enums"]["day_type"]
           eligibility_rule_id?: string | null
@@ -423,7 +423,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          attachment_url?: string | null
+          attachment_urls?: string[]
           created_at?: string | null
           day_type?: Database["public"]["Enums"]["day_type"]
           eligibility_rule_id?: string | null

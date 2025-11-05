@@ -42,7 +42,7 @@ export function ResubmitOTForm({ request, onSuccess }: ResubmitOTFormProps) {
     end_time: request.end_time,
     reason_dropdown: getReasonCategory(request.reason),
     reason_other: isOtherReason(request.reason) ? request.reason : '',
-    attachment_url: request.attachment_url || '',
+    attachment_urls: request.attachment_urls || [],
   };
   
   const handleResubmit = (data: any) => {
@@ -54,7 +54,7 @@ export function ResubmitOTForm({ request, onSuccess }: ResubmitOTFormProps) {
       total_hours: data.total_hours,
       day_type: data.day_type,
       reason: data.reason,
-      attachment_url: data.attachment_url,
+      attachment_urls: data.attachment_urls,
     }, {
       onSuccess
     });

@@ -86,19 +86,23 @@ export function OTDetailsSheet({ request, open, onOpenChange, onEdit }: OTDetail
             <p className="text-sm">{request.reason}</p>
           </div>
 
-          {/* Attachment */}
-          {request.attachment_url && (
+          {/* Attachments */}
+          {request.attachment_urls && request.attachment_urls.length > 0 && (
             <>
               <Separator />
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Attachment</p>
-                <Button variant="outline" size="sm" asChild>
-                  <a href={request.attachment_url} target="_blank" rel="noopener noreferrer">
-                    <FileText className="h-4 w-4 mr-2" />
-                    View Attachment
-                    <ExternalLink className="h-3 w-3 ml-2" />
-                  </a>
-                </Button>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Attachments ({request.attachment_urls.length})</p>
+                <div className="space-y-2">
+                  {request.attachment_urls.map((url, index) => (
+                    <Button key={index} variant="outline" size="sm" asChild className="w-full justify-start">
+                      <a href={url} target="_blank" rel="noopener noreferrer">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Attachment {index + 1}
+                        <ExternalLink className="h-3 w-3 ml-2" />
+                      </a>
+                    </Button>
+                  ))}
+                </div>
               </div>
             </>
           )}

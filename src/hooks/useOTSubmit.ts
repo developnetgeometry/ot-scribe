@@ -9,7 +9,7 @@ interface OTSubmitData {
   total_hours: number;
   day_type: 'weekday' | 'saturday' | 'sunday' | 'public_holiday';
   reason: string;
-  attachment_url?: string;
+  attachment_urls: string[];
 }
 
 export function useOTSubmit() {
@@ -74,7 +74,7 @@ export function useOTSubmit() {
           total_hours: data.total_hours,
           day_type: data.day_type,
           reason: data.reason,
-          attachment_url: data.attachment_url || null,
+          attachment_urls: data.attachment_urls,
         })
         .select()
         .single();

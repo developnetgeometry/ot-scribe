@@ -36,7 +36,9 @@ const otFormSchema = z.object({
   reason_other: z.string()
     .max(500, 'Reason cannot exceed 500 characters')
     .optional(),
-  attachment_url: z.string().optional(),
+  attachment_urls: z.array(z.string().url('Invalid file URL'))
+    .min(1, 'At least one attachment is required')
+    .max(5, 'Maximum 5 attachments allowed'),
 }).refine((data) => {
   if (data.reason_dropdown === 'Other') {
     return data.reason_other && data.reason_other.trim().length >= 10;
@@ -66,7 +68,7 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
     resolver: zodResolver(otFormSchema),
     defaultValues: defaultValues || {
       reason_other: '',
-      attachment_url: '',
+      attachment_urls: [],
     },
   });
 
@@ -121,7 +123,7 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
       total_hours: totalHours,
       day_type: dayType,
       reason: finalReason,
-      attachment_url: values.attachment_url || null,
+      attachment_urls: values.attachment_urls,
     });
   };
 
@@ -286,23 +288,28 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
           />
         )}
 
-        <FormField
-          control={form.control}
-          name="attachment_url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Attachment (Optional)</FormLabel>
-              <FormControl>
-                <FileUpload
-                  onUploadComplete={field.onChange}
-                  onRemove={() => field.onChange('')}
-                  currentFile={field.value}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+         <FormField
+           control={form.control}
+           name="attachment_urls"
+           render={({ field }) => (
+             <FormItem>
+               <FormLabel>Attachments *</FormLabel>
+               <FormControl>
+                 <FileUpload
+                   onUploadComplete={(urls) => field.onChange(urls)}
+                   onRemove={(index) => {
+                     const newUrls = [...(field.value || [])];
+                     newUrls.splice(index, 1);
+                     field.onChange(newUrls);
+                   }}
+                   currentFiles={field.value || []}
+                   maxFiles={5}
+                 />
+               </FormControl>
+               <FormMessage />
+             </FormItem>
+           )}
+         />
 
         <div className="flex flex-col gap-3">
           <Button 
