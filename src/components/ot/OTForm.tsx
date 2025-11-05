@@ -34,18 +34,18 @@ const otFormSchema = z.object({
     required_error: 'Please select a reason for overtime',
   }),
   reason_other: z.string()
-    .max(500, 'Reason cannot exceed 500 characters')
+    .max(100, 'Reason cannot exceed 100 characters')
     .optional(),
   attachment_urls: z.array(z.string().url('Invalid file URL'))
     .min(1, 'At least one attachment is required')
     .max(5, 'Maximum 5 attachments allowed'),
 }).refine((data) => {
   if (data.reason_dropdown === 'Other') {
-    return data.reason_other && data.reason_other.trim().length >= 10;
+    return data.reason_other && data.reason_other.trim().length >= 20;
   }
   return true;
 }, {
-  message: 'Please provide a detailed reason (at least 10 characters)',
+  message: 'Please provide a detailed reason (minimum 20 characters)',
   path: ['reason_other'],
 });
 
