@@ -42,7 +42,7 @@ export function EmployeeOTStatusChart() {
     }
 
     const approvedCount = requests?.filter(r => 
-      r.status === 'hr_certified' || r.status === 'bod_approved' || r.status === 'supervisor_verified'
+      r.status === 'hr_certified' || r.status === 'management_approved' || r.status === 'supervisor_verified'
     ).length || 0;
     const pendingCount = requests?.filter(r => 
       r.status === 'pending_verification'

@@ -18,8 +18,8 @@ export function useOTApprovals(options: UseOTApprovalsOptions = {}) {
 
       if (options.status) {
         if (options.status === 'all') {
-          // Show all finalized requests: hr_certified, rejected, and bod_approved
-          query = query.in('status', ['hr_certified', 'rejected', 'bod_approved'] as OTStatus[]);
+          // Show all finalized requests: hr_certified, rejected, and management_approved
+          query = query.in('status', ['hr_certified', 'rejected', 'management_approved'] as OTStatus[]);
         } else if (options.status === 'supervisor_verified') {
           // Show both pending_verification and supervisor_verified for HR approval
           query = query.in('status', ['pending_verification', 'supervisor_verified'] as OTStatus[]);

@@ -36,7 +36,7 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
     setDownloadingIds(prev => new Set(prev).add(employeeId));
 
     try {
-      // Check user role - only HR and BOD can generate payslips
+      // Check user role - only HR and Management can generate payslips
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -51,13 +51,13 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
       if (rolesError) throw rolesError;
 
       const isAuthorized = roles?.some(r => 
-        r.role === 'hr' || r.role === 'bod' || r.role === 'admin'
+        r.role === 'hr' || r.role === 'management' || r.role === 'admin'
       );
 
       if (!isAuthorized) {
         toast({
           title: 'Access Denied',
-          description: 'Only HR and BOD can generate payslips.',
+          description: 'Only HR and Management can generate payslips.',
           variant: 'destructive',
         });
         return;
@@ -105,7 +105,7 @@ export function HRReportTable({ data, isLoading, selectedMonth }: HRReportTableP
         .eq('employee_id', employeeId)
         .gte('ot_date', startDate)
         .lte('ot_date', endDate)
-        .in('status', ['hr_certified', 'bod_approved']);
+        .in('status', ['hr_certified', 'management_approved']);
 
       if (otError) throw otError;
 

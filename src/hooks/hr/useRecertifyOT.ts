@@ -52,7 +52,7 @@ export function useRecertifyOTActions() {
       queryClient.invalidateQueries({ queryKey: ['hr-recertify-requests'] });
       toast({
         title: 'Success',
-        description: 'OT request recertified and sent back to BOD',
+        description: 'OT request recertified and sent back to Management',
       });
     },
     onError: (error: Error) => {
