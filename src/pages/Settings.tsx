@@ -1,5 +1,7 @@
 import { AppLayout } from '@/components/AppLayout';
 import { PWAInstallSection } from '@/components/pwa/PWAInstallSection';
+import { NotificationSettings } from '@/components/pwa/NotificationSettings';
+import { HRSettingsSection } from '@/components/settings/HRSettingsSection';
 
 /**
  * General Settings Page
@@ -7,10 +9,10 @@ import { PWAInstallSection } from '@/components/pwa/PWAInstallSection';
  * Accessible to all authenticated users regardless of role.
  * Currently includes:
  * - PWA Installation settings
+ * - Notification settings (hidden by feature flag)
  *
  * Future sections could include:
  * - User preferences
- * - Notification settings
  * - Display settings (theme, language, etc.)
  *
  * @returns {JSX.Element} Settings page component
@@ -25,6 +27,10 @@ export default function Settings() {
         </div>
 
         <PWAInstallSection />
+
+        <HRSettingsSection />
+
+        <NotificationSettings />
 
         {/* Future settings sections can be added here */}
       </div>
