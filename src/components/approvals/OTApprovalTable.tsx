@@ -106,12 +106,12 @@ export function OTApprovalTable({
                       className="font-semibold cursor-pointer hover:underline"
                       onClick={() => setSelectedRequest(request)}
                     >
-                      {profile?.full_name || 'Unknown'}
+                      {profile?.full_name || 'N/A'}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-muted-foreground">
-                      {profile?.employee_id || request.employee_id}
+                      {profile?.employee_id || 'N/A'}
                     </div>
                   </TableCell>
                   <TableCell>

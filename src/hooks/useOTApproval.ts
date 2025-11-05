@@ -23,15 +23,21 @@ function groupOTRequestsByEmployee(requests: any[]): GroupedOTRequest[] {
     const key = `${request.employee_id}_${request.ot_date}`;
     
     if (!grouped.has(key)) {
+      // Preserve the first request's profile data
       grouped.set(key, {
         ...request,
-        profiles: request.profiles, // Explicitly preserve profiles
+        profiles: request.profiles, // Explicitly preserve the profiles object
         sessions: [],
         total_hours: 0,
         request_ids: [],
         start_time: '',
         end_time: '',
       });
+      
+      // Add debug warning if profile data is missing
+      if (!request.profiles) {
+        console.warn(`Missing profile data for employee_id: ${request.employee_id}`);
+      }
     }
     
     const group = grouped.get(key)!;
