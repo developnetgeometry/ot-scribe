@@ -162,7 +162,7 @@ export default function ReviewOT() {
           <p className="text-muted-foreground">Filter and export monthly overtime summaries by department and employee.</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           <EnhancedDashboardCard
             title="Pending Review"
             value={stats.pendingReview}

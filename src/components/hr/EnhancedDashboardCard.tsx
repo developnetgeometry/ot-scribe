@@ -37,19 +37,19 @@ export function EnhancedDashboardCard({
       'bg-gradient-to-br',
       gradientClasses[variant]
     )}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <h3 className="text-3xl font-bold mt-2 text-foreground">{value}</h3>
-            {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+      <CardContent className="p-8">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-3 flex-1">
+            <p className="text-sm font-medium text-muted-foreground leading-none">{title}</p>
+            <h3 className="text-3xl font-bold text-foreground leading-none">{value}</h3>
+            {subtitle && <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{subtitle}</p>}
           </div>
           <div className={cn(
-            'h-12 w-12 rounded-full flex items-center justify-center',
+            'h-16 w-16 rounded-full flex items-center justify-center flex-shrink-0',
             'bg-card shadow-sm',
             iconColorClasses[variant]
           )}>
-            <Icon className="h-6 w-6" />
+            <Icon className="h-8 w-8" />
           </div>
         </div>
       </CardContent>
