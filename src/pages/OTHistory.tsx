@@ -153,37 +153,41 @@ export default function OTHistory() {
         />
 
         <Dialog open={resubmitDialogOpen} onOpenChange={setResubmitDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Resubmit OT Request</DialogTitle>
             </DialogHeader>
-            {resubmitRequest && (
-              <ResubmitOTForm
-                request={resubmitRequest}
-                onSuccess={() => {
-                  setResubmitDialogOpen(false);
-                  setResubmitRequest(null);
-                }}
-              />
-            )}
+            <div className="overflow-y-auto flex-1 pr-2">
+              {resubmitRequest && (
+                <ResubmitOTForm
+                  request={resubmitRequest}
+                  onSuccess={() => {
+                    setResubmitDialogOpen(false);
+                    setResubmitRequest(null);
+                  }}
+                />
+              )}
+            </div>
           </DialogContent>
         </Dialog>
 
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Edit OT Request</DialogTitle>
             </DialogHeader>
-            {editRequest && (
-              <EditOTForm
-                request={editRequest}
-                onSuccess={() => {
-                  setEditDialogOpen(false);
-                  setEditRequest(null);
-                }}
-                onCancel={() => setEditDialogOpen(false)}
-              />
-            )}
+            <div className="overflow-y-auto flex-1 pr-2">
+              {editRequest && (
+                <EditOTForm
+                  request={editRequest}
+                  onSuccess={() => {
+                    setEditDialogOpen(false);
+                    setEditRequest(null);
+                  }}
+                  onCancel={() => setEditDialogOpen(false)}
+                />
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       </div>
