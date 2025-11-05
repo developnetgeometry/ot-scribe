@@ -5,11 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ShieldAlert } from 'lucide-react';
 
 export default function Unauthorized() {
-  const { roles, getDefaultRoute } = useAuth();
+  const { roles, getRoleDashboard } = useAuth();
   const navigate = useNavigate();
 
   const handleGoToDashboard = () => {
-    const dashboardPath = getDefaultRoute();
+    const dashboardPath = getRoleDashboard();
     navigate(dashboardPath);
   };
 

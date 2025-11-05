@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { DateGroupedOTApprovalView } from '@/components/hr/approve/DateGroupedOTApprovalView';
+import { OTApprovalTable } from '@/components/approvals/OTApprovalTable';
 import { useOTApproval } from '@/hooks/useOTApproval';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
@@ -12,26 +12,21 @@ export default function ApproveOT() {
   const [activeTab, setActiveTab] = useState('supervisor_verified');
   
   const { 
-    dateGroupedRequests,
+    requests, 
     isLoading, 
     approveRequest: approveRequestMutation, 
-    rejectRequest: rejectRequestMutation,
-    isApproving,
-    isRejecting,
+    rejectRequest: rejectRequestMutation, 
   } = useOTApproval({ role: 'hr', status: activeTab });
 
-  const filteredDateGroups = dateGroupedRequests?.map(group => ({
-    date: group.date,
-    requests: group.requests.filter(request => {
-      if (!searchQuery) return true;
-      const profile = (request as any).profiles;
-      const employeeName = profile?.full_name?.toLowerCase() || '';
-      const employeeId = profile?.employee_id?.toLowerCase() || '';
-      const department = (profile?.departments as any)?.name?.toLowerCase() || '';
-      const query = searchQuery.toLowerCase();
-      return employeeName.includes(query) || employeeId.includes(query) || department.includes(query);
-    })
-  })).filter(group => group.requests.length > 0) || [];
+  const filteredRequests = requests?.filter(request => {
+    if (!searchQuery) return true;
+    const profile = (request as any).profiles;
+    const employeeName = profile?.full_name?.toLowerCase() || '';
+    const employeeId = profile?.employee_id?.toLowerCase() || '';
+    const department = (profile?.departments as any)?.name?.toLowerCase() || '';
+    const query = searchQuery.toLowerCase();
+    return employeeName.includes(query) || employeeId.includes(query) || department.includes(query);
+  }) || [];
 
   const handleApprove = async (requestIds: string[], remarks?: string) => {
     await approveRequestMutation({ requestIds, remarks });
@@ -70,13 +65,12 @@ export default function ApproveOT() {
                   />
                 </div>
 
-                <DateGroupedOTApprovalView 
-                  dateGroups={filteredDateGroups}
+                <OTApprovalTable 
+                  requests={filteredRequests} 
                   isLoading={isLoading}
+                  role="hr"
                   approveRequest={handleApprove}
                   rejectRequest={handleReject}
-                  isApproving={isApproving}
-                  isRejecting={isRejecting}
                   showActions={activeTab === 'supervisor_verified'}
                 />
               </div>

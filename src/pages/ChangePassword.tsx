@@ -12,7 +12,7 @@ export default function ChangePassword() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user, getDefaultRoute } = useAuth();
+  const { user, getRoleDashboard } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,12 +29,12 @@ export default function ChangePassword() {
         .single();
 
       if (profile?.status === 'active') {
-        navigate(getDefaultRoute());
+        navigate(getRoleDashboard());
       }
     };
 
     checkStatus();
-  }, [user, navigate, getDefaultRoute]);
+  }, [user, navigate, getRoleDashboard]);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();

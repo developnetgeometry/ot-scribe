@@ -53,29 +53,6 @@ function groupOTRequestsByEmployee(requests: any[]): GroupedOTRequest[] {
   return Array.from(grouped.values());
 }
 
-// Group requests by date for date-grouped card view
-export interface DateGroup {
-  date: string;
-  requests: GroupedOTRequest[];
-}
-
-function convertToDateGroups(requests: GroupedOTRequest[]): DateGroup[] {
-  const dateMap = new Map<string, GroupedOTRequest[]>();
-  
-  requests.forEach(request => {
-    const date = request.ot_date;
-    if (!dateMap.has(date)) {
-      dateMap.set(date, []);
-    }
-    dateMap.get(date)!.push(request);
-  });
-  
-  // Convert to array and sort by date (newest first)
-  return Array.from(dateMap.entries())
-    .map(([date, requests]) => ({ date, requests }))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-}
-
 // Map roles to their respective status filters
 const getStatusFilter = (role: ApprovalRole, statusFilter?: string): OTStatus[] => {
   if (statusFilter && statusFilter !== 'all') {
@@ -312,11 +289,8 @@ export function useOTApproval(options: UseOTApprovalOptions) {
     },
   });
 
-  const groupedRequests = groupOTRequestsByEmployee(data || []);
-
   return {
-    requests: groupedRequests,
-    dateGroupedRequests: convertToDateGroups(groupedRequests),
+    requests: groupOTRequestsByEmployee(data || []),
     isLoading,
     error,
     approveRequest: approveMutation.mutateAsync,
