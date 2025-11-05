@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Upload, X, FileText } from 'lucide-react';
+import { Upload, X, FileText, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -14,6 +15,8 @@ interface FileUploadProps {
 interface UploadedFile {
   name: string;
   url: string;
+  type: string;
+  size: number;
 }
 
 export function FileUpload({ 
@@ -24,7 +27,22 @@ export function FileUpload({
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const isImageFile = (url: string, type?: string): boolean => {
+    if (type) {
+      return type.startsWith('image/');
+    }
+    const extension = url.split('.').pop()?.toLowerCase();
+    return ['jpg', 'jpeg', 'png'].includes(extension || '');
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -88,7 +106,12 @@ export function FileUpload({
           .getPublicUrl(filePath);
 
         uploadedUrls.push(publicUrl);
-        uploadedFileData.push({ name: file.name, url: publicUrl });
+        uploadedFileData.push({ 
+          name: file.name, 
+          url: publicUrl, 
+          type: file.type,
+          size: file.size 
+        });
       }
 
       const allUrls = [...currentFiles, ...uploadedUrls];
@@ -118,17 +141,31 @@ export function FileUpload({
     onRemove(index);
   };
 
-  const getFileName = (url: string, index: number): string => {
+  const getFileInfo = (url: string, index: number) => {
     const uploadedFile = uploadedFiles.find(f => f.url === url);
-    if (uploadedFile) return uploadedFile.name;
+    if (uploadedFile) {
+      return {
+        name: uploadedFile.name,
+        type: uploadedFile.type,
+        size: uploadedFile.size
+      };
+    }
     
     // Try to extract filename from URL
     try {
       const urlParts = url.split('/');
       const filename = urlParts[urlParts.length - 1];
-      return decodeURIComponent(filename);
+      return {
+        name: decodeURIComponent(filename),
+        type: '',
+        size: 0
+      };
     } catch {
-      return `Attachment ${index + 1}`;
+      return {
+        name: `Attachment ${index + 1}`,
+        type: '',
+        size: 0
+      };
     }
   };
 
@@ -136,30 +173,65 @@ export function FileUpload({
     <div className="space-y-3">
       {/* Display uploaded files */}
       {currentFiles.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="text-sm text-muted-foreground">
             {currentFiles.length}/{maxFiles} file(s) uploaded
           </div>
-          {currentFiles.map((url, index) => (
-            <div 
-              key={index} 
-              className="flex items-center gap-2 p-3 border border-border rounded-md bg-muted/50"
-            >
-              <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-              <span className="text-sm flex-1 truncate">
-                {getFileName(url, index)}
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleRemove(index)}
-                disabled={uploading}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {currentFiles.map((url, index) => {
+              const fileInfo = getFileInfo(url, index);
+              const isImage = isImageFile(url, fileInfo.type);
+              
+              return (
+                <div 
+                  key={index} 
+                  className="relative group border border-border rounded-lg overflow-hidden bg-muted/50 hover:border-primary/50 transition-colors"
+                >
+                  {isImage ? (
+                    <>
+                      <div 
+                        className="relative cursor-pointer aspect-video"
+                        onClick={() => setPreviewImage(url)}
+                      >
+                        <img 
+                          src={url} 
+                          alt={fileInfo.name}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                          <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </div>
+                      <div className="p-2 bg-background/95">
+                        <p className="text-xs truncate font-medium">{fileInfo.name}</p>
+                        {fileInfo.size > 0 && (
+                          <p className="text-xs text-muted-foreground">{formatFileSize(fileInfo.size)}</p>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-4 flex flex-col items-center justify-center min-h-[120px]">
+                      <FileText className="h-10 w-10 text-muted-foreground mb-2" />
+                      <p className="text-xs text-center truncate w-full font-medium">{fileInfo.name}</p>
+                      {fileInfo.size > 0 && (
+                        <p className="text-xs text-muted-foreground">{formatFileSize(fileInfo.size)}</p>
+                      )}
+                    </div>
+                  )}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2 h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleRemove(index)}
+                    disabled={uploading}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -189,6 +261,22 @@ export function FileUpload({
           </label>
         </div>
       )}
+
+      {/* Image Preview Dialog */}
+      <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Image Preview</DialogTitle>
+          </DialogHeader>
+          {previewImage && (
+            <img 
+              src={previewImage} 
+              alt="Preview"
+              className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
