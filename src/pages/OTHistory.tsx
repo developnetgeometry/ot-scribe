@@ -38,8 +38,14 @@ export default function OTHistory() {
   };
 
   const handleEdit = (request: OTRequest) => {
-    setEditRequest(request);
-    setEditDialogOpen(true);
+    if (request.status === 'rejected') {
+      // Rejected requests should use resubmit flow
+      handleResubmit(request);
+    } else {
+      // Pending requests use edit flow
+      setEditRequest(request);
+      setEditDialogOpen(true);
+    }
   };
 
   const handleExportCSV = () => {
