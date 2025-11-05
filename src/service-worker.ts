@@ -150,8 +150,8 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
           if (client.url.includes(self.location.origin) && 'focus' in client) {
             console.log('[SW] Focusing existing app window and navigating');
             return client.focus().then(() => {
-              // Navigate to target URL (client-side routing will handle)
-              return client.navigate(urlToOpen);
+              // Send a message to the client to navigate (client-side routing should handle this)
+              client.postMessage({ type: 'navigate', url: urlToOpen });
             });
           }
         }
