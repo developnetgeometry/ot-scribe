@@ -79,7 +79,7 @@ export default function OTReports() {
     
     toast({
       title: 'Report exported',
-      description: 'CSV file has been downloaded successfully.'
+      description: 'Excel file has been downloaded successfully.'
     });
   };
 
@@ -208,7 +208,7 @@ export default function OTReports() {
                   disabled={isLoading || filteredData.length === 0}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                  Export Excel
                 </Button>
                 <Button 
                   onClick={handleExportPDF}

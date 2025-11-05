@@ -118,7 +118,7 @@ export default function OTHistory() {
                 </Select>
                 <Button variant="outline" size="sm" onClick={handleExportCSV}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export CSV
+                  Export Excel
                 </Button>
               </div>
             </div>
