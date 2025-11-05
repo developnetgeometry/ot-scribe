@@ -18,11 +18,14 @@ export default defineConfig(({ mode }) => ({
     }),
     mode === "development" && componentTagger(),
     VitePWA({
+      strategies: 'injectManifest', // Use custom service worker for push event handlers
+      srcDir: 'src',
+      filename: 'service-worker.ts',
       registerType: 'autoUpdate',
       manifest: false, // Use existing manifest.json in public/
-      workbox: {
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        runtimeCaching: [] // Empty for now, expand in future stories
+        globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js']
       },
       devOptions: {
         enabled: false // Disable SW in dev mode for faster iteration
