@@ -75,7 +75,7 @@ self.addEventListener('push', (event: PushEvent) => {
   }
 
   // Configure notification options
-  const options: NotificationOptions = {
+  const options: any = {
     body: notificationData.body,
     icon: notificationData.icon,
     badge: notificationData.badge,
@@ -136,12 +136,13 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
       type: 'window',
       includeUncontrolled: true
     })
-      .then((clientList) => {
+      .then(async (clientList) => {
         // Check if there's already a window open with the target URL
         for (const client of clientList) {
           if (client.url.includes(urlToOpen) && 'focus' in client) {
             console.log('[SW] Focusing existing window');
-            return client.focus();
+            await client.focus();
+            return;
           }
         }
 
@@ -149,17 +150,17 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
         for (const client of clientList) {
           if (client.url.includes(self.location.origin) && 'focus' in client) {
             console.log('[SW] Focusing existing app window and navigating');
-            return client.focus().then(() => {
-              // Send a message to the client to navigate (client-side routing should handle this)
-              client.postMessage({ type: 'navigate', url: urlToOpen });
-            });
+            await client.focus();
+            // Send a message to the client to navigate (client-side routing should handle this)
+            client.postMessage({ type: 'navigate', url: urlToOpen });
+            return;
           }
         }
 
         // No existing window found, open new one
         if (clients.openWindow) {
           console.log('[SW] Opening new window');
-          return clients.openWindow(urlToOpen);
+          await clients.openWindow(urlToOpen);
         }
       })
       .catch((error) => {
