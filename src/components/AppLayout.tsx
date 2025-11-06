@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/NotificationBell';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { 
   LayoutDashboard, 
@@ -144,6 +145,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <SidebarTrigger />
             <div className="flex items-center gap-4">
               <NotificationBell />
+              <ThemeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-2">
