@@ -18,14 +18,23 @@ import { formatTime12Hour, formatHours } from '@/lib/otCalculations';
 
 interface RejectOTModalProps {
   request: GroupedOTRequest | null;
+  selectedSessionIds?: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (remarks: string, rejectionStage: string) => void;
-  isLoading?: boolean;
-  rejectionStage?: 'supervisor' | 'hr' | 'management';
+  onConfirm: (remarks: string) => Promise<void>;
+  isLoading: boolean;
+  rejectionStage?: string;
 }
 
-export function RejectOTModal({ request, open, onOpenChange, onConfirm, isLoading, rejectionStage = 'supervisor' }: RejectOTModalProps) {
+export function RejectOTModal({ 
+  request, 
+  selectedSessionIds,
+  open, 
+  onOpenChange, 
+  onConfirm, 
+  isLoading,
+  rejectionStage
+}: RejectOTModalProps) {
   const [remarks, setRemarks] = useState('');
   const [error, setError] = useState('');
 
@@ -39,7 +48,7 @@ export function RejectOTModal({ request, open, onOpenChange, onConfirm, isLoadin
       return;
     }
     
-    onConfirm(remarks, rejectionStage);
+    onConfirm(remarks);
     setRemarks('');
     setError('');
   };
@@ -53,23 +62,27 @@ export function RejectOTModal({ request, open, onOpenChange, onConfirm, isLoadin
   if (!request) return null;
 
   const profile = (request as any).profiles;
+  const selectedSessions = selectedSessionIds 
+    ? request.sessions.filter(s => selectedSessionIds.includes(s.id))
+    : request.sessions;
+  const isPartialRejection = selectedSessions.length < request.sessions.length;
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-w-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-            <XCircle className="h-5 w-5" />
-            Reject OT Submission
+          <AlertDialogTitle className="text-xl font-bold text-foreground">
+            Reject OT {isPartialRejection ? 'Sessions' : 'Request'}
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-left space-y-4 pt-4">
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                You are about to reject this overtime request. This action cannot be undone.
-              </AlertDescription>
-            </Alert>
+          <AlertDialogDescription className="text-muted-foreground">
+            {isPartialRejection 
+              ? `You are rejecting ${selectedSessions.length} out of ${request.sessions.length} sessions. Please provide a reason.`
+              : 'This action will reject the OT request. Please provide a reason for the rejection.'
+            }
+          </AlertDialogDescription>
+        </AlertDialogHeader>
 
+        <div className="space-y-4">
             {/* Employee Info */}
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -86,16 +99,22 @@ export function RejectOTModal({ request, open, onOpenChange, onConfirm, isLoadin
                   <p className="font-semibold text-foreground">{format(new Date(request.ot_date), 'dd MMM yyyy')}</p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Total Hours:</span>
-                  <p className="font-semibold text-foreground">{formatHours(request.total_hours)} hours</p>
+                  <span className="text-muted-foreground">
+                    {isPartialRejection ? 'Selected Hours:' : 'Total Hours:'}
+                  </span>
+                  <p className="font-semibold text-foreground">
+                    {formatHours(selectedSessions.reduce((sum, s) => sum + s.total_hours, 0))} hours
+                  </p>
                 </div>
               </div>
 
               {/* Sessions */}
               <div className="pt-2 border-t border-border">
-                <span className="text-muted-foreground text-sm">OT Sessions:</span>
+                <span className="text-muted-foreground text-sm">
+                  {isPartialRejection ? 'Sessions to Reject:' : 'OT Sessions:'}
+                </span>
                 <div className="space-y-1 mt-1">
-                  {request.sessions.map((session, idx) => (
+                  {selectedSessions.map((session, idx) => (
                     <div key={idx} className="text-sm text-foreground">
                       • {formatTime12Hour(session.start_time)} - {formatTime12Hour(session.end_time)} 
                       <span className="text-muted-foreground ml-2">({formatHours(session.total_hours)} hrs)</span>
@@ -140,8 +159,7 @@ export function RejectOTModal({ request, open, onOpenChange, onConfirm, isLoadin
                 {remarks.length}/10 characters minimum
               </p>
             </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+          </div>
         <AlertDialogFooter>
           <Button
             variant="outline"

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar, Clock, FileText, AlertCircle, CheckCircle2, CheckCircle, XCircle } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -5,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 import { StatusBadge } from '@/components/StatusBadge';
 import { GroupedOTRequest } from '@/types/otms';
 import { formatCurrency, formatHours, formatTime12Hour } from '@/lib/otCalculations';
@@ -16,10 +18,12 @@ interface OTApprovalDetailsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   role: ApprovalRole;
-  onApprove?: (request: GroupedOTRequest) => void;
-  onReject?: (request: GroupedOTRequest) => void;
+  onApprove?: (request: GroupedOTRequest, sessionIds: string[]) => void;
+  onReject?: (request: GroupedOTRequest, sessionIds: string[]) => void;
+  onMixedAction?: (request: GroupedOTRequest, approveIds: string[], rejectIds: string[]) => void;
   isApproving?: boolean;
   isRejecting?: boolean;
+  isMixedAction?: boolean;
 }
 
 export function OTApprovalDetailsSheet({ 
@@ -29,9 +33,20 @@ export function OTApprovalDetailsSheet({
   role,
   onApprove,
   onReject,
+  onMixedAction,
   isApproving,
-  isRejecting
+  isRejecting,
+  isMixedAction
 }: OTApprovalDetailsSheetProps) {
+  const [selectedSessionIds, setSelectedSessionIds] = useState<string[]>([]);
+
+  // Initialize with all session IDs when sheet opens
+  useEffect(() => {
+    if (open && request) {
+      setSelectedSessionIds(request.sessions.map(s => s.id));
+    }
+  }, [open, request]);
+
   if (!request) return null;
 
   const profile = (request as any).profiles;
@@ -45,6 +60,26 @@ export function OTApprovalDetailsSheet({
     if (role === 'management') return req.status === 'hr_certified';
     return false;
   };
+
+  const toggleSession = (sessionId: string) => {
+    setSelectedSessionIds(prev => 
+      prev.includes(sessionId) 
+        ? prev.filter(id => id !== sessionId)
+        : [...prev, sessionId]
+    );
+  };
+
+  const toggleAllSessions = () => {
+    if (selectedSessionIds.length === request.sessions.length) {
+      setSelectedSessionIds([]);
+    } else {
+      setSelectedSessionIds(request.sessions.map(s => s.id));
+    }
+  };
+
+  const selectedHours = request.sessions
+    .filter(s => selectedSessionIds.includes(s.id))
+    .reduce((sum, s) => sum + s.total_hours, 0);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -98,17 +133,48 @@ export function OTApprovalDetailsSheet({
                 <span className="font-medium">OT Sessions:</span>
               </div>
               <div className="space-y-2 ml-6">
+                {canApproveOrReject(request) && (
+                  <div className="flex items-center gap-2 mb-2 pb-2 border-b">
+                    <Checkbox
+                      checked={selectedSessionIds.length === request.sessions.length}
+                      onCheckedChange={toggleAllSessions}
+                    />
+                    <span className="text-sm font-medium">Select All Sessions</span>
+                  </div>
+                )}
+                
                 {request.sessions.map((session, idx) => (
-                  <div key={idx} className="text-sm bg-muted/50 p-2 rounded">
-                    {formatTime12Hour(session.start_time)} - {formatTime12Hour(session.end_time)}
-                    <span className="ml-2 text-muted-foreground">
-                      ({formatHours(session.total_hours)} hours)
-                    </span>
+                  <div key={idx} className="flex items-center gap-2">
+                    {canApproveOrReject(request) && (
+                      <Checkbox
+                        checked={selectedSessionIds.includes(session.id)}
+                        onCheckedChange={() => toggleSession(session.id)}
+                      />
+                    )}
+                    <div className="flex-1 text-sm bg-muted/50 p-2 rounded flex items-center justify-between">
+                      <div>
+                        {formatTime12Hour(session.start_time)} - {formatTime12Hour(session.end_time)}
+                        <span className="ml-2 text-muted-foreground">
+                          ({formatHours(session.total_hours)} hours)
+                        </span>
+                      </div>
+                      {session.status && <StatusBadge status={session.status} />}
+                    </div>
                   </div>
                 ))}
-                <div className="text-sm font-semibold pt-1 border-t border-border">
-                  Total: {formatHours(request.total_hours)} hours
-                </div>
+                
+                {canApproveOrReject(request) && (
+                  <div className="text-sm font-semibold pt-1 border-t border-border">
+                    Selected: {selectedSessionIds.length} / {request.sessions.length} sessions
+                    ({formatHours(selectedHours)} hours)
+                  </div>
+                )}
+                
+                {!canApproveOrReject(request) && (
+                  <div className="text-sm font-semibold pt-1 border-t border-border">
+                    Total: {formatHours(request.total_hours)} hours
+                  </div>
+                )}
               </div>
             </div>
 
@@ -235,27 +301,60 @@ export function OTApprovalDetailsSheet({
           {onApprove && onReject && canApproveOrReject(request) && (
             <>
               <Separator />
-              <div className="flex gap-3 pt-4">
-                <Button
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => onApprove(request)}
-                  disabled={isApproving || isRejecting}
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  {isApproving 
-                    ? (role === 'hr' ? 'Certifying...' : role === 'supervisor' ? 'Verifying...' : 'Approving...') 
-                    : (role === 'hr' ? 'Certify' : role === 'supervisor' ? 'Verify' : 'Approve')
-                  }
-                </Button>
-                <Button
-                  variant="destructive"
-                  className="flex-1"
-                  onClick={() => onReject(request)}
-                  disabled={isApproving || isRejecting}
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject
-                </Button>
+              <div className="flex flex-col gap-3 pt-4">
+                {/* Warning if partial selection */}
+                {selectedSessionIds.length < request.sessions.length && selectedSessionIds.length > 0 && (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      You have selected {selectedSessionIds.length} out of {request.sessions.length} sessions.
+                      Unselected sessions will remain in their current status.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {/* Main action buttons */}
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => onApprove(request, selectedSessionIds)}
+                    disabled={isApproving || isRejecting || isMixedAction || selectedSessionIds.length === 0}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {isApproving 
+                      ? (role === 'hr' ? 'Certifying...' : role === 'supervisor' ? 'Verifying...' : 'Approving...') 
+                      : (role === 'hr' ? 'Certify' : role === 'supervisor' ? 'Verify' : 'Approve')
+                    }
+                    {selectedSessionIds.length < request.sessions.length && ` (${selectedSessionIds.length})`}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={() => onReject(request, selectedSessionIds)}
+                    disabled={isApproving || isRejecting || isMixedAction || selectedSessionIds.length === 0}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Reject
+                    {selectedSessionIds.length < request.sessions.length && ` (${selectedSessionIds.length})`}
+                  </Button>
+                </div>
+                
+                {/* Mixed action: Approve selected, reject others */}
+                {onMixedAction && selectedSessionIds.length > 0 && selectedSessionIds.length < request.sessions.length && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      const rejectIds = request.sessions
+                        .filter(s => !selectedSessionIds.includes(s.id))
+                        .map(s => s.id);
+                      onMixedAction(request, selectedSessionIds, rejectIds);
+                    }}
+                    disabled={isApproving || isRejecting || isMixedAction}
+                  >
+                    {isMixedAction ? 'Processing...' : `Approve Selected & Reject Others`}
+                  </Button>
+                )}
               </div>
             </>
           )}

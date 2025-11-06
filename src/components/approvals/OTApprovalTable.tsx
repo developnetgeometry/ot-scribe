@@ -18,8 +18,10 @@ interface OTApprovalTableProps {
   role: ApprovalRole;
   approveRequest?: (requestIds: string[], remarks?: string) => Promise<void>;
   rejectRequest?: (requestIds: string[], remarks: string) => Promise<void>;
+  mixedAction?: (approveIds: string[], rejectIds: string[], approveRemarks?: string, rejectRemarks?: string) => Promise<void>;
   isApproving?: boolean;
   isRejecting?: boolean;
+  isMixedAction?: boolean;
   showActions?: boolean;
   initialSelectedRequestId?: string | null;
 }
@@ -30,13 +32,15 @@ export function OTApprovalTable({
   role,
   approveRequest,
   rejectRequest,
+  mixedAction,
   isApproving,
   isRejecting,
+  isMixedAction,
   showActions = true,
   initialSelectedRequestId = null
 }: OTApprovalTableProps) {
   const [selectedRequest, setSelectedRequest] = useState<GroupedOTRequest | null>(null);
-  const [rejectingRequest, setRejectingRequest] = useState<GroupedOTRequest | null>(null);
+  const [rejectingRequest, setRejectingRequest] = useState<{ request: GroupedOTRequest; sessionIds: string[] } | null>(null);
   const [approvingRequestId, setApprovingRequestId] = useState<string | null>(null);
 
   // Auto-open request from parent component
@@ -49,21 +53,39 @@ export function OTApprovalTable({
     }
   }, [initialSelectedRequestId, requests]);
 
-  const handleApprove = async (request: GroupedOTRequest) => {
+  const handleApprove = async (request: GroupedOTRequest, sessionIds: string[]) => {
     if (!approveRequest) return;
     setApprovingRequestId(request.id);
     try {
-      await approveRequest([request.id]);
+      await approveRequest(sessionIds);
+      setSelectedRequest(null);
     } finally {
       setApprovingRequestId(null);
     }
   };
 
+  const handleReject = (request: GroupedOTRequest, sessionIds: string[]) => {
+    setRejectingRequest({ request, sessionIds });
+  };
+
   const handleRejectConfirm = async (remarks: string) => {
     if (!rejectRequest || !rejectingRequest) return;
     try {
-      await rejectRequest([rejectingRequest.id], remarks);
+      await rejectRequest(rejectingRequest.sessionIds, remarks);
       setRejectingRequest(null);
+      setSelectedRequest(null);
+    } catch (error) {
+      // Error is handled by the hook
+    }
+  };
+
+  const handleMixedAction = async (request: GroupedOTRequest, approveIds: string[], rejectIds: string[]) => {
+    if (!mixedAction) return;
+    // For now, use empty remarks for approve, will need modal for reject remarks
+    const rejectRemarks = 'Mixed action: Some sessions rejected';
+    try {
+      await mixedAction(approveIds, rejectIds, undefined, rejectRemarks);
+      setSelectedRequest(null);
     } catch (error) {
       // Error is handled by the hook
     }
@@ -166,7 +188,7 @@ export function OTApprovalTable({
                             <Button
                               size="sm"
                               variant="default"
-                              onClick={() => handleApprove(request)}
+                              onClick={() => handleApprove(request, request.request_ids)}
                               disabled={isApproving || approvingRequestId === request.id}
                               className="bg-green-600 hover:bg-green-700 text-white"
                             >
@@ -179,7 +201,7 @@ export function OTApprovalTable({
                             <Button
                               size="sm"
                               variant="destructive"
-                              onClick={() => setRejectingRequest(request)}
+                              onClick={() => handleReject(request, request.request_ids)}
                               disabled={isRejecting}
                             >
                               <XCircle className="h-4 w-4 mr-1" />
@@ -203,13 +225,16 @@ export function OTApprovalTable({
         onOpenChange={(open) => !open && setSelectedRequest(null)}
         role={role}
         onApprove={approveRequest ? handleApprove : undefined}
-        onReject={rejectRequest ? (req) => setRejectingRequest(req) : undefined}
+        onReject={rejectRequest ? handleReject : undefined}
+        onMixedAction={mixedAction ? handleMixedAction : undefined}
         isApproving={isApproving || !!approvingRequestId}
         isRejecting={isRejecting}
+        isMixedAction={isMixedAction}
       />
 
       <RejectOTModal
-        request={rejectingRequest}
+        request={rejectingRequest?.request || null}
+        selectedSessionIds={rejectingRequest?.sessionIds}
         open={!!rejectingRequest}
         onOpenChange={(open) => !open && setRejectingRequest(null)}
         onConfirm={handleRejectConfirm}

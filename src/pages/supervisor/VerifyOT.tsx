@@ -20,8 +20,10 @@ export default function VerifyOT() {
     isLoading, 
     approveRequest: approveRequestMutation, 
     rejectRequest: rejectRequestMutation,
+    mixedAction: mixedActionMutation,
     isApproving,
-    isRejecting 
+    isRejecting,
+    isMixedAction
   } = useOTApproval({ role: 'supervisor', status: statusFilter });
 
   // Wrapper functions to match the expected API
@@ -31,6 +33,10 @@ export default function VerifyOT() {
 
   const rejectRequest = async (requestIds: string[], remarks: string) => {
     await rejectRequestMutation({ requestIds, remarks });
+  };
+
+  const mixedAction = async (approveIds: string[], rejectIds: string[], approveRemarks?: string, rejectRemarks?: string) => {
+    await mixedActionMutation({ approveIds, rejectIds, approveRemarks, rejectRemarks: rejectRemarks || 'Mixed action: Some sessions rejected' });
   };
 
   const filteredRequests = requests?.filter(request => {
@@ -115,8 +121,10 @@ export default function VerifyOT() {
                   role="supervisor"
                   approveRequest={approveRequest}
                   rejectRequest={rejectRequest}
+                  mixedAction={mixedAction}
                   isApproving={isApproving}
                   isRejecting={isRejecting}
+                  isMixedAction={isMixedAction}
                   initialSelectedRequestId={selectedRequestId}
                 />
               </TabsContent>

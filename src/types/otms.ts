@@ -56,6 +56,7 @@ export interface OTSession {
   start_time: string;
   end_time: string;
   total_hours: number;
+  status?: OTStatus;
 }
 
 export interface GroupedOTRequest extends Omit<OTRequest, 'start_time' | 'end_time' | 'total_hours'> {
