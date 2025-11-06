@@ -7,6 +7,7 @@ import { OTApprovalTable } from '@/components/approvals/OTApprovalTable';
 import { useOTApproval } from '@/hooks/useOTApproval';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function VerifyOT() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -41,6 +42,33 @@ export default function VerifyOT() {
     return employeeName.includes(query) || employeeId.includes(query);
   }) || [];
 
+  // Smart tab selection based on request status
+  useEffect(() => {
+    const requestId = searchParams.get('request');
+    if (requestId) {
+      const fetchRequestStatus = async () => {
+        const { data } = await supabase
+          .from('ot_requests')
+          .select('status')
+          .eq('id', requestId)
+          .maybeSingle();
+        
+        if (data) {
+          const statusToTab: Record<string, string> = {
+            'pending_verification': 'pending_verification',
+            'supervisor_verified': 'completed',
+            'rejected': 'rejected',
+          };
+          
+          const tab = statusToTab[data.status] || 'all';
+          setStatusFilter(tab);
+        }
+      };
+      
+      fetchRequestStatus();
+    }
+  }, [searchParams]);
+
   // Auto-open request from URL parameter
   useEffect(() => {
     const requestId = searchParams.get('request');
@@ -50,7 +78,7 @@ export default function VerifyOT() {
       searchParams.delete('request');
       setSearchParams(searchParams, { replace: true });
     }
-  }, [searchParams, requests, setSearchParams]);
+  }, [searchParams, requests, setSearchParams, statusFilter]);
 
   return (
     <AppLayout>

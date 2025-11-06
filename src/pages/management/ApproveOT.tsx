@@ -7,6 +7,7 @@ import { OTApprovalTable } from '@/components/approvals/OTApprovalTable';
 import { useOTApproval } from '@/hooks/useOTApproval';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ApproveOT() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,6 +32,33 @@ export default function ApproveOT() {
     return employeeName.includes(query) || employeeId.includes(query) || department.includes(query);
   }) || [];
 
+  // Smart tab selection based on request status
+  useEffect(() => {
+    const requestId = searchParams.get('request');
+    if (requestId) {
+      const fetchRequestStatus = async () => {
+        const { data } = await supabase
+          .from('ot_requests')
+          .select('status')
+          .eq('id', requestId)
+          .maybeSingle();
+        
+        if (data) {
+          const statusToTab: Record<string, string> = {
+            'hr_certified': 'hr_certified',
+            'management_approved': 'management_approved',
+            'rejected': 'rejected',
+          };
+          
+          const tab = statusToTab[data.status] || 'all';
+          setActiveTab(tab);
+        }
+      };
+      
+      fetchRequestStatus();
+    }
+  }, [searchParams]);
+
   // Auto-open request from URL parameter
   useEffect(() => {
     const requestId = searchParams.get('request');
@@ -40,7 +68,7 @@ export default function ApproveOT() {
       searchParams.delete('request');
       setSearchParams(searchParams, { replace: true });
     }
-  }, [searchParams, requests, setSearchParams]);
+  }, [searchParams, requests, setSearchParams, activeTab]);
 
   const handleApprove = async (requestIds: string[], remarks?: string) => {
     await approveRequestMutation({ requestIds, remarks });
