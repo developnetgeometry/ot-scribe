@@ -140,21 +140,44 @@ export function OTApprovalDetailsSheet({
                 )}
                 
                 {request.sessions.map((session, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    {canApproveOrReject(request) && (
-                      <Checkbox
-                        checked={selectedSessionIds.includes(session.id)}
-                        onCheckedChange={() => toggleSession(session.id)}
-                      />
-                    )}
-                    <div className="flex-1 text-sm bg-muted/50 p-2 rounded flex items-center justify-between">
-                      <div>
-                        {formatTime12Hour(session.start_time)} - {formatTime12Hour(session.end_time)}
-                        <span className="ml-2 text-muted-foreground">
-                          ({formatHours(session.total_hours)} hours)
-                        </span>
+                  <div key={idx} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      {canApproveOrReject(request) && (
+                        <Checkbox
+                          checked={selectedSessionIds.includes(session.id)}
+                          onCheckedChange={() => toggleSession(session.id)}
+                        />
+                      )}
+                      <div className="flex-1 bg-muted/50 p-3 rounded space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-medium">
+                            {formatTime12Hour(session.start_time)} - {formatTime12Hour(session.end_time)}
+                            <span className="ml-2 text-muted-foreground">
+                              ({formatHours(session.total_hours)} hours)
+                            </span>
+                          </div>
+                          {session.status && <StatusBadge status={session.status} />}
+                        </div>
+                        
+                        {session.reason && (
+                          <div className="text-sm">
+                            <span className="font-medium text-muted-foreground">Reason: </span>
+                            <span>{session.reason}</span>
+                          </div>
+                        )}
+                        
+                        {session.attachment_urls && session.attachment_urls.length > 0 && (
+                          <div className="flex gap-1 flex-wrap">
+                            {session.attachment_urls.map((url, i) => (
+                              <Button key={i} variant="outline" size="sm" asChild>
+                                <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs">
+                                  Attachment {i + 1}
+                                </a>
+                              </Button>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      {session.status && <StatusBadge status={session.status} />}
                     </div>
                   </div>
                 ))}
@@ -218,15 +241,6 @@ export function OTApprovalDetailsSheet({
             </Alert>
           )}
 
-          {/* Reason */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">Reason</span>
-            </div>
-            <p className="text-sm bg-muted/50 p-3 rounded-md">{request.reason}</p>
-          </div>
-
           {/* Audit Trail */}
           <div className="space-y-3">
             <h3 className="font-semibold text-lg">Audit Trail</h3>
@@ -276,22 +290,6 @@ export function OTApprovalDetailsSheet({
               </div>
             )}
           </div>
-
-          {/* Attachments */}
-          {request.attachment_urls && request.attachment_urls.length > 0 && (
-            <div className="space-y-2">
-              <span className="font-semibold">Attachments ({request.attachment_urls.length})</span>
-              <div className="space-y-2">
-                {request.attachment_urls.map((url, index) => (
-                  <Button key={index} variant="outline" size="sm" asChild className="w-full justify-start">
-                    <a href={url} target="_blank" rel="noopener noreferrer">
-                      Attachment {index + 1}
-                    </a>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Action Buttons Footer */}
           {onApprove && onReject && canApproveOrReject(request) && (
