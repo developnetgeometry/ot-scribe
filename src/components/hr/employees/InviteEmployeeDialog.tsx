@@ -167,17 +167,28 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               />
             </div>
 
-            {/* Row 3: Phone & Position */}
+            {/* Row 3: Department & Position */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="phone_no"
+                name="department_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone No</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. 012-3456789" {...field} />
-                    </FormControl>
+                    <FormLabel>Department *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Department" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {departments.map((dept) => (
+                          <SelectItem key={dept.id} value={dept.id}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -223,28 +234,17 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               />
             </div>
 
-            {/* Row 4: Department & Basic Salary */}
+            {/* Row 4: Phone No & Basic Salary */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="department_id"
+                name="phone_no"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Department *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Department" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {departments.map((dept) => (
-                          <SelectItem key={dept.id} value={dept.id}>
-                            {dept.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Phone No</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. 012-3456789" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
