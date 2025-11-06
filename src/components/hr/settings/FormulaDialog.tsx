@@ -31,6 +31,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { useCreateRateFormula } from '@/hooks/hr/useCreateRateFormula';
 import { useUpdateRateFormula } from '@/hooks/hr/useUpdateRateFormula';
+import { FormDescription } from '@/components/ui/form';
 
 const formulaSchema = z.object({
   formula_name: z.string().min(1, 'Formula name is required').max(100),
@@ -62,7 +63,7 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
       formula_name: '',
       day_type: 'weekday',
       multiplier: 1.5,
-      base_formula: 'hourly_rate',
+      base_formula: '(Basic / 26 / 8)',
       employee_category: 'All',
       is_active: true,
       effective_from: new Date().toISOString().split('T')[0],
@@ -85,7 +86,7 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
         formula_name: '',
         day_type: 'weekday',
         multiplier: 1.5,
-        base_formula: 'hourly_rate',
+        base_formula: '(Basic / 26 / 8)',
         employee_category: 'All',
         is_active: true,
         effective_from: new Date().toISOString().split('T')[0],
@@ -252,11 +253,22 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
                   <FormLabel>Base Formula *</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="e.g., hourly_rate, daily_rate"
+                      placeholder="e.g., (Basic / 26 / 8), ORP, HRP"
                       className="min-h-[100px]"
                       {...field}
                     />
                   </FormControl>
+                  <FormDescription className="text-xs">
+                    <strong>Available variables:</strong>
+                    <br />• <strong>Basic</strong>: Employee's basic salary
+                    <br />• <strong>ORP / HRP</strong>: Ordinary/Hourly Rate of Pay = (Basic / 26 / 8)
+                    <br />• <strong>Hours</strong>: Total OT hours (auto-calculated)
+                    <br />
+                    <br /><strong>Example formulas:</strong>
+                    <br />• Simple: <code className="text-xs bg-muted px-1 py-0.5 rounded">(Basic / 26 / 8)</code>
+                    <br />• With ORP: <code className="text-xs bg-muted px-1 py-0.5 rounded">ORP</code> or <code className="text-xs bg-muted px-1 py-0.5 rounded">2 × ORP</code>
+                    <br />• Conditional: <code className="text-xs bg-muted px-1 py-0.5 rounded">(1 × ORP) + (2 × HRP × (Hours - 8))</code>
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
