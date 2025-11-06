@@ -296,68 +296,13 @@ export function useOTApproval(options: UseOTApprovalOptions) {
     },
   });
 
-  // Mixed action mutation - approve selected, reject others
-  const mixedActionMutation = useMutation({
-    mutationFn: async ({ 
-      approveIds, 
-      rejectIds, 
-      approveRemarks, 
-      rejectRemarks 
-    }: {
-      approveIds: string[];
-      rejectIds: string[];
-      approveRemarks?: string;
-      rejectRemarks: string;
-    }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      // Approve selected sessions
-      const approveData: any = {
-        status: getApprovedStatus(role),
-        [getRemarksField(role)]: approveRemarks || null,
-        [getTimestampField(role)]: new Date().toISOString(),
-      };
-      const idField = getIdField(role);
-      if (idField) approveData[idField] = user.id;
-
-      await supabase
-        .from('ot_requests')
-        .update(approveData)
-        .in('id', approveIds);
-
-      // Reject unselected sessions
-      const rejectData: any = {
-        status: role === 'management' ? 'pending_hr_recertification' : 'rejected',
-        [getRemarksField(role)]: rejectRemarks,
-        [getTimestampField(role)]: new Date().toISOString(),
-        rejection_stage: role,
-      };
-      if (idField) rejectData[idField] = user.id;
-
-      await supabase
-        .from('ot_requests')
-        .update(rejectData)
-        .in('id', rejectIds);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-      toast.success('Sessions processed: approved and rejected');
-    },
-    onError: (error) => {
-      toast.error(`Failed to process sessions: ${error.message}`);
-    },
-  });
-
   return {
     requests: groupOTRequestsByEmployee(data || []),
     isLoading,
     error,
     approveRequest: approveMutation.mutateAsync,
     rejectRequest: rejectMutation.mutateAsync,
-    mixedAction: mixedActionMutation.mutateAsync,
     isApproving: approveMutation.isPending,
     isRejecting: rejectMutation.isPending,
-    isMixedAction: mixedActionMutation.isPending,
   };
 }

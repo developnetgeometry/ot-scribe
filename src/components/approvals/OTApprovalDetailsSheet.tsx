@@ -20,10 +20,8 @@ interface OTApprovalDetailsSheetProps {
   role: ApprovalRole;
   onApprove?: (request: GroupedOTRequest, sessionIds: string[]) => void;
   onReject?: (request: GroupedOTRequest, sessionIds: string[]) => void;
-  onMixedAction?: (request: GroupedOTRequest, approveIds: string[], rejectIds: string[]) => void;
   isApproving?: boolean;
   isRejecting?: boolean;
-  isMixedAction?: boolean;
 }
 
 export function OTApprovalDetailsSheet({ 
@@ -33,10 +31,8 @@ export function OTApprovalDetailsSheet({
   role,
   onApprove,
   onReject,
-  onMixedAction,
   isApproving,
-  isRejecting,
-  isMixedAction
+  isRejecting
 }: OTApprovalDetailsSheetProps) {
   const [selectedSessionIds, setSelectedSessionIds] = useState<string[]>([]);
 
@@ -318,7 +314,7 @@ export function OTApprovalDetailsSheet({
                   <Button
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                     onClick={() => onApprove(request, selectedSessionIds)}
-                    disabled={isApproving || isRejecting || isMixedAction || selectedSessionIds.length === 0}
+                    disabled={isApproving || isRejecting || selectedSessionIds.length === 0}
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
                     {isApproving 
@@ -331,30 +327,13 @@ export function OTApprovalDetailsSheet({
                     variant="destructive"
                     className="flex-1"
                     onClick={() => onReject(request, selectedSessionIds)}
-                    disabled={isApproving || isRejecting || isMixedAction || selectedSessionIds.length === 0}
+                    disabled={isApproving || isRejecting || selectedSessionIds.length === 0}
                   >
                     <XCircle className="h-4 w-4 mr-2" />
                     Reject
                     {selectedSessionIds.length < request.sessions.length && ` (${selectedSessionIds.length})`}
                   </Button>
                 </div>
-                
-                {/* Mixed action: Approve selected, reject others */}
-                {onMixedAction && selectedSessionIds.length > 0 && selectedSessionIds.length < request.sessions.length && (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      const rejectIds = request.sessions
-                        .filter(s => !selectedSessionIds.includes(s.id))
-                        .map(s => s.id);
-                      onMixedAction(request, selectedSessionIds, rejectIds);
-                    }}
-                    disabled={isApproving || isRejecting || isMixedAction}
-                  >
-                    {isMixedAction ? 'Processing...' : `Approve Selected & Reject Others`}
-                  </Button>
-                )}
               </div>
             </>
           )}

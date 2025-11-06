@@ -20,10 +20,8 @@ export default function ApproveOT() {
     isLoading, 
     approveRequest: approveRequestMutation, 
     rejectRequest: rejectRequestMutation,
-    mixedAction: mixedActionMutation,
     isApproving,
-    isRejecting,
-    isMixedAction
+    isRejecting
   } = useOTApproval({ role: 'management', status: activeTab });
 
   const filteredRequests = requests?.filter(request => {
@@ -82,10 +80,6 @@ export default function ApproveOT() {
     await rejectRequestMutation({ requestIds, remarks });
   };
 
-  const handleMixedAction = async (approveIds: string[], rejectIds: string[], approveRemarks?: string, rejectRemarks?: string) => {
-    await mixedActionMutation({ approveIds, rejectIds, approveRemarks, rejectRemarks: rejectRemarks || 'Mixed action: Some sessions rejected' });
-  };
-
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -121,10 +115,8 @@ export default function ApproveOT() {
                   role="management"
                   approveRequest={handleApprove}
                   rejectRequest={handleReject}
-                  mixedAction={handleMixedAction}
                   isApproving={isApproving}
                   isRejecting={isRejecting}
-                  isMixedAction={isMixedAction}
                   showActions={activeTab === 'hr_certified'}
                   initialSelectedRequestId={selectedRequestId}
                 />

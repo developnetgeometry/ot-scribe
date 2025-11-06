@@ -8,7 +8,6 @@ import { GroupedOTRequest } from '@/types/otms';
 import { formatTime12Hour, formatHours } from '@/lib/otCalculations';
 import { OTApprovalDetailsSheet } from './OTApprovalDetailsSheet';
 import { RejectOTModal } from './RejectOTModal';
-import { MixedActionModal } from './MixedActionModal';
 import { Badge } from '@/components/ui/badge';
 
 type ApprovalRole = 'supervisor' | 'hr' | 'management';
@@ -19,10 +18,8 @@ interface OTApprovalTableProps {
   role: ApprovalRole;
   approveRequest?: (requestIds: string[], remarks?: string) => Promise<void>;
   rejectRequest?: (requestIds: string[], remarks: string) => Promise<void>;
-  mixedAction?: (approveIds: string[], rejectIds: string[], approveRemarks?: string, rejectRemarks?: string) => Promise<void>;
   isApproving?: boolean;
   isRejecting?: boolean;
-  isMixedAction?: boolean;
   showActions?: boolean;
   initialSelectedRequestId?: string | null;
 }
@@ -33,16 +30,13 @@ export function OTApprovalTable({
   role,
   approveRequest,
   rejectRequest,
-  mixedAction,
   isApproving,
   isRejecting,
-  isMixedAction,
   showActions = true,
   initialSelectedRequestId = null
 }: OTApprovalTableProps) {
   const [selectedRequest, setSelectedRequest] = useState<GroupedOTRequest | null>(null);
   const [rejectingRequest, setRejectingRequest] = useState<{ request: GroupedOTRequest; sessionIds: string[] } | null>(null);
-  const [mixedActionRequest, setMixedActionRequest] = useState<{ request: GroupedOTRequest; approveIds: string[]; rejectIds: string[] } | null>(null);
   const [approvingRequestId, setApprovingRequestId] = useState<string | null>(null);
 
   // Auto-open request from parent component
@@ -75,26 +69,6 @@ export function OTApprovalTable({
     try {
       await rejectRequest(rejectingRequest.sessionIds, remarks);
       setRejectingRequest(null);
-      setSelectedRequest(null);
-    } catch (error) {
-      // Error is handled by the hook
-    }
-  };
-
-  const handleMixedAction = (request: GroupedOTRequest, approveIds: string[], rejectIds: string[]) => {
-    setMixedActionRequest({ request, approveIds, rejectIds });
-  };
-
-  const handleMixedActionConfirm = async (approveRemarks: string, rejectRemarks: string) => {
-    if (!mixedAction || !mixedActionRequest) return;
-    try {
-      await mixedAction(
-        mixedActionRequest.approveIds, 
-        mixedActionRequest.rejectIds, 
-        approveRemarks || undefined, 
-        rejectRemarks
-      );
-      setMixedActionRequest(null);
       setSelectedRequest(null);
     } catch (error) {
       // Error is handled by the hook
@@ -236,10 +210,8 @@ export function OTApprovalTable({
         role={role}
         onApprove={approveRequest ? handleApprove : undefined}
         onReject={rejectRequest ? handleReject : undefined}
-        onMixedAction={mixedAction ? handleMixedAction : undefined}
         isApproving={isApproving || !!approvingRequestId}
         isRejecting={isRejecting}
-        isMixedAction={isMixedAction}
       />
 
       <RejectOTModal
@@ -249,16 +221,6 @@ export function OTApprovalTable({
         onOpenChange={(open) => !open && setRejectingRequest(null)}
         onConfirm={handleRejectConfirm}
         isLoading={isRejecting}
-      />
-
-      <MixedActionModal
-        request={mixedActionRequest?.request || null}
-        approveSessionIds={mixedActionRequest?.approveIds || []}
-        rejectSessionIds={mixedActionRequest?.rejectIds || []}
-        open={!!mixedActionRequest}
-        onOpenChange={(open) => !open && setMixedActionRequest(null)}
-        onConfirm={handleMixedActionConfirm}
-        isLoading={isMixedAction || false}
       />
     </>
   );
