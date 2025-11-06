@@ -320,9 +320,11 @@ export type Database = {
           effective_to: string | null
           employee_category: string
           formula_name: string
+          hrp_definition: string | null
           id: string
           is_active: boolean | null
           multiplier: number
+          orp_definition: string | null
           updated_at: string | null
         }
         Insert: {
@@ -335,9 +337,11 @@ export type Database = {
           effective_to?: string | null
           employee_category?: string
           formula_name: string
+          hrp_definition?: string | null
           id?: string
           is_active?: boolean | null
           multiplier: number
+          orp_definition?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -350,9 +354,11 @@ export type Database = {
           effective_to?: string | null
           employee_category?: string
           formula_name?: string
+          hrp_definition?: string | null
           id?: string
           is_active?: boolean | null
           multiplier?: number
+          orp_definition?: string | null
           updated_at?: string | null
         }
         Relationships: []

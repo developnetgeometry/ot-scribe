@@ -36,6 +36,8 @@ import { FormDescription } from '@/components/ui/form';
 const formulaSchema = z.object({
   formula_name: z.string().min(1, 'Formula name is required').max(100),
   day_type: z.enum(['weekday', 'saturday', 'sunday', 'public_holiday']),
+  orp_definition: z.string().min(1, 'ORP definition is required'),
+  hrp_definition: z.string().min(1, 'HRP definition is required'),
   multiplier: z.coerce.number().min(0, 'Multiplier must be positive'),
   base_formula: z.string().min(1, 'Base formula is required'),
   employee_category: z.string().min(1, 'Employee category is required'),
@@ -62,8 +64,10 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
     defaultValues: {
       formula_name: '',
       day_type: 'weekday',
+      orp_definition: '(Basic / 26 / 8)',
+      hrp_definition: '(Basic / 26 / 8)',
       multiplier: 1.5,
-      base_formula: '(Basic / 26 / 8)',
+      base_formula: 'ORP',
       employee_category: 'All',
       is_active: true,
       effective_from: new Date().toISOString().split('T')[0],
@@ -75,6 +79,8 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
       form.reset({
         formula_name: formula.formula_name,
         day_type: formula.day_type,
+        orp_definition: formula.orp_definition || '(Basic / 26 / 8)',
+        hrp_definition: formula.hrp_definition || '(Basic / 26 / 8)',
         multiplier: formula.multiplier,
         base_formula: formula.base_formula,
         employee_category: formula.employee_category || 'All',
@@ -85,8 +91,10 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
       form.reset({
         formula_name: '',
         day_type: 'weekday',
+        orp_definition: '(Basic / 26 / 8)',
+        hrp_definition: '(Basic / 26 / 8)',
         multiplier: 1.5,
-        base_formula: '(Basic / 26 / 8)',
+        base_formula: 'ORP',
         employee_category: 'All',
         is_active: true,
         effective_from: new Date().toISOString().split('T')[0],
@@ -110,6 +118,8 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
         {
           formula_name: data.formula_name,
           day_type: data.day_type,
+          orp_definition: data.orp_definition,
+          hrp_definition: data.hrp_definition,
           multiplier: data.multiplier,
           base_formula: data.base_formula,
           employee_category: data.employee_category,
@@ -245,6 +255,50 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
               />
             </div>
 
+              {/* ORP Definition Field */}
+              <FormField
+                control={form.control}
+                name="orp_definition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ORP (Ordinary Rate of Pay) Definition *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Basic / 26 / 8"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Define how ORP is calculated. Default: (Basic / 26 / 8)
+                      <br />Common variations: Basic / 26, Basic / 22
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* HRP Definition Field */}
+              <FormField
+                control={form.control}
+                name="hrp_definition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>HRP (Hourly Rate of Pay) Definition *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., ORP / 8 or Basic / 26 / 8"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Define how HRP is calculated. Can reference ORP.
+                      <br />Common options: ORP / 8, Basic / 26 / 8, (Basic / 26) / 8
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
             <FormField
               control={form.control}
               name="base_formula"
@@ -260,13 +314,13 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
                   </FormControl>
                   <FormDescription className="text-xs">
                     <strong>Available variables:</strong>
+                    <br />• <strong>ORP</strong>: {form.watch('orp_definition') || '(Basic / 26 / 8)'}
+                    <br />• <strong>HRP</strong>: {form.watch('hrp_definition') || '(Basic / 26 / 8)'}
                     <br />• <strong>Basic</strong>: Employee's basic salary
-                    <br />• <strong>ORP / HRP</strong>: Ordinary/Hourly Rate of Pay = (Basic / 26 / 8)
                     <br />• <strong>Hours</strong>: Total OT hours (auto-calculated)
                     <br />
                     <br /><strong>Example formulas:</strong>
-                    <br />• Simple: <code className="text-xs bg-muted px-1 py-0.5 rounded">(Basic / 26 / 8)</code>
-                    <br />• With ORP: <code className="text-xs bg-muted px-1 py-0.5 rounded">ORP</code> or <code className="text-xs bg-muted px-1 py-0.5 rounded">2 × ORP</code>
+                    <br />• Simple: <code className="text-xs bg-muted px-1 py-0.5 rounded">ORP</code> or <code className="text-xs bg-muted px-1 py-0.5 rounded">2 × ORP</code>
                     <br />• Conditional: <code className="text-xs bg-muted px-1 py-0.5 rounded">(1 × ORP) + (2 × HRP × (Hours - 8))</code>
                   </FormDescription>
                   <FormMessage />
