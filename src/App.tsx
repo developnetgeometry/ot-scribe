@@ -80,6 +80,7 @@ const App = () => (
                 
                 {/* HR routes */}
                 <Route path="/hr/approve" element={<ProtectedRoute requiredRole="hr"><ApproveOT /></ProtectedRoute>} />
+                <Route path="/hr/recertify" element={<ProtectedRoute requiredRole="hr"><RecertifyOT /></ProtectedRoute>} />
                 <Route path="/hr/employees" element={<ProtectedRoute requiredRole="hr"><Employees /></ProtectedRoute>} />
                 <Route path="/hr/departments" element={<ProtectedRoute requiredRole="hr"><Departments /></ProtectedRoute>} />
                 <Route path="/hr/calendar" element={<ProtectedRoute requiredRole="hr"><HolidayCalendars /></ProtectedRoute>} />
