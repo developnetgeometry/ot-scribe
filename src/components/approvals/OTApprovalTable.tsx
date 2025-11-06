@@ -202,6 +202,10 @@ export function OTApprovalTable({
         open={!!selectedRequest}
         onOpenChange={(open) => !open && setSelectedRequest(null)}
         role={role}
+        onApprove={approveRequest ? handleApprove : undefined}
+        onReject={rejectRequest ? (req) => setRejectingRequest(req) : undefined}
+        isApproving={isApproving || !!approvingRequestId}
+        isRejecting={isRejecting}
       />
 
       <RejectOTModal

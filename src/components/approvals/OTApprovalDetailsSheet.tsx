@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Calendar, Clock, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, FileText, AlertCircle, CheckCircle2, CheckCircle, XCircle } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -16,15 +16,35 @@ interface OTApprovalDetailsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   role: ApprovalRole;
+  onApprove?: (request: GroupedOTRequest) => void;
+  onReject?: (request: GroupedOTRequest) => void;
+  isApproving?: boolean;
+  isRejecting?: boolean;
 }
 
-export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OTApprovalDetailsSheetProps) {
+export function OTApprovalDetailsSheet({ 
+  request, 
+  open, 
+  onOpenChange, 
+  role,
+  onApprove,
+  onReject,
+  isApproving,
+  isRejecting
+}: OTApprovalDetailsSheetProps) {
   if (!request) return null;
 
   const profile = (request as any).profiles;
 
   const hasThresholdViolations = request.threshold_violations &&
     Object.keys(request.threshold_violations).length > 0;
+
+  const canApproveOrReject = (req: GroupedOTRequest) => {
+    if (role === 'supervisor') return req.status === 'pending_verification';
+    if (role === 'hr') return req.status === 'supervisor_verified';
+    if (role === 'management') return req.status === 'hr_certified';
+    return false;
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -209,6 +229,35 @@ export function OTApprovalDetailsSheet({ request, open, onOpenChange, role }: OT
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Action Buttons Footer */}
+          {onApprove && onReject && canApproveOrReject(request) && (
+            <>
+              <Separator />
+              <div className="flex gap-3 pt-4">
+                <Button
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => onApprove(request)}
+                  disabled={isApproving || isRejecting}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  {isApproving 
+                    ? (role === 'hr' ? 'Certifying...' : role === 'supervisor' ? 'Verifying...' : 'Approving...') 
+                    : (role === 'hr' ? 'Certify' : role === 'supervisor' ? 'Verify' : 'Approve')
+                  }
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  onClick={() => onReject(request)}
+                  disabled={isApproving || isRejecting}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Reject
+                </Button>
+              </div>
+            </>
           )}
         </div>
       </SheetContent>
