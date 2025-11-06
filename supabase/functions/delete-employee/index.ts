@@ -32,10 +32,19 @@ Deno.serve(async (req) => {
       }
     )
 
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
+    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization') || ''
+    const match = authHeader.match(/^Bearer\s+(.+)$/i)
+    const token = match?.[1]
+    
+    if (!token) {
+      console.error('Missing or malformed Authorization header')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
     
     if (userError || !user) {
       console.error('Authentication error:', userError)
