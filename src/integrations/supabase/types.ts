@@ -783,7 +783,7 @@ export type Database = {
       role_change_audit: {
         Row: {
           changed_at: string | null
-          changed_by: string
+          changed_by: string | null
           id: string
           ip_address: string | null
           new_role: Database["public"]["Enums"]["app_role"]
@@ -793,7 +793,7 @@ export type Database = {
         }
         Insert: {
           changed_at?: string | null
-          changed_by: string
+          changed_by?: string | null
           id?: string
           ip_address?: string | null
           new_role: Database["public"]["Enums"]["app_role"]
@@ -803,7 +803,7 @@ export type Database = {
         }
         Update: {
           changed_at?: string | null
-          changed_by?: string
+          changed_by?: string | null
           id?: string
           ip_address?: string | null
           new_role?: Database["public"]["Enums"]["app_role"]
