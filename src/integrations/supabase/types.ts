@@ -786,7 +786,7 @@ export type Database = {
           changed_by: string | null
           id: string
           ip_address: string | null
-          new_role: Database["public"]["Enums"]["app_role"]
+          new_role: Database["public"]["Enums"]["app_role"] | null
           old_role: Database["public"]["Enums"]["app_role"] | null
           reason: string | null
           user_id: string
@@ -796,7 +796,7 @@ export type Database = {
           changed_by?: string | null
           id?: string
           ip_address?: string | null
-          new_role: Database["public"]["Enums"]["app_role"]
+          new_role?: Database["public"]["Enums"]["app_role"] | null
           old_role?: Database["public"]["Enums"]["app_role"] | null
           reason?: string | null
           user_id: string
@@ -806,7 +806,7 @@ export type Database = {
           changed_by?: string | null
           id?: string
           ip_address?: string | null
-          new_role?: Database["public"]["Enums"]["app_role"]
+          new_role?: Database["public"]["Enums"]["app_role"] | null
           old_role?: Database["public"]["Enums"]["app_role"] | null
           reason?: string | null
           user_id?: string
