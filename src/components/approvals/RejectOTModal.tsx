@@ -105,6 +105,18 @@ export function RejectOTModal({ request, open, onOpenChange, onConfirm, isLoadin
               </div>
             </div>
 
+            {/* Employee's Reason for OT */}
+            <div className="space-y-2">
+              <Label className="text-foreground font-semibold">
+                Employee's Reason for OT
+              </Label>
+              <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 rounded-md">
+                <p className="text-sm text-foreground whitespace-pre-wrap">
+                  {request.reason || 'No reason provided'}
+                </p>
+              </div>
+            </div>
+
             {/* Rejection Reason */}
             <div className="space-y-2">
               <Label htmlFor="rejection-remarks" className="text-foreground font-semibold">
