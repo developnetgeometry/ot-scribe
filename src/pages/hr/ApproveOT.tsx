@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -8,8 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
 export default function ApproveOT() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('supervisor_verified');
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   
   const { 
     requests, 
@@ -27,6 +30,17 @@ export default function ApproveOT() {
     const query = searchQuery.toLowerCase();
     return employeeName.includes(query) || employeeId.includes(query) || department.includes(query);
   }) || [];
+
+  // Auto-open request from URL parameter
+  useEffect(() => {
+    const requestId = searchParams.get('request');
+    if (requestId && requests && requests.length > 0) {
+      setSelectedRequestId(requestId);
+      // Clear the parameter after opening
+      searchParams.delete('request');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, requests, setSearchParams]);
 
   const handleApprove = async (requestIds: string[], remarks?: string) => {
     await approveRequestMutation({ requestIds, remarks });
@@ -72,6 +86,7 @@ export default function ApproveOT() {
                   approveRequest={handleApprove}
                   rejectRequest={handleReject}
                   showActions={activeTab === 'supervisor_verified'}
+                  initialSelectedRequestId={selectedRequestId}
                 />
               </div>
             </Card>

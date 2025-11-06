@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Filter, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function OTHistory() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedRequest, setSelectedRequest] = useState<OTRequest | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -26,6 +27,21 @@ export default function OTHistory() {
   const [editRequest, setEditRequest] = useState<OTRequest | null>(null);
 
   const { data: requests = [], isLoading } = useOTRequests({ status: statusFilter });
+
+  // Auto-open request from URL parameter
+  useEffect(() => {
+    const requestId = searchParams.get('request');
+    if (requestId && requests.length > 0) {
+      const request = requests.find(r => r.id === requestId);
+      if (request) {
+        setSelectedRequest(request);
+        setSheetOpen(true);
+        // Clear the parameter after opening
+        searchParams.delete('request');
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [searchParams, requests, setSearchParams]);
 
   const handleViewDetails = (request: OTRequest) => {
     setSelectedRequest(request);

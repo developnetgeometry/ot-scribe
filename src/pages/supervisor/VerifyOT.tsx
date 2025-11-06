@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,8 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
 export default function VerifyOT() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('pending_verification');
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   
   const { 
     requests, 
@@ -37,6 +40,17 @@ export default function VerifyOT() {
     const query = searchQuery.toLowerCase();
     return employeeName.includes(query) || employeeId.includes(query);
   }) || [];
+
+  // Auto-open request from URL parameter
+  useEffect(() => {
+    const requestId = searchParams.get('request');
+    if (requestId && requests && requests.length > 0) {
+      setSelectedRequestId(requestId);
+      // Clear the parameter after opening
+      searchParams.delete('request');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, requests, setSearchParams]);
 
   return (
     <AppLayout>
@@ -75,6 +89,7 @@ export default function VerifyOT() {
                   rejectRequest={rejectRequest}
                   isApproving={isApproving}
                   isRejecting={isRejecting}
+                  initialSelectedRequestId={selectedRequestId}
                 />
               </TabsContent>
             </Tabs>

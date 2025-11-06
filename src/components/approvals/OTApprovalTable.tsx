@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ interface OTApprovalTableProps {
   isApproving?: boolean;
   isRejecting?: boolean;
   showActions?: boolean;
+  initialSelectedRequestId?: string | null;
 }
 
 export function OTApprovalTable({ 
@@ -31,11 +32,22 @@ export function OTApprovalTable({
   rejectRequest,
   isApproving,
   isRejecting,
-  showActions = true
+  showActions = true,
+  initialSelectedRequestId = null
 }: OTApprovalTableProps) {
   const [selectedRequest, setSelectedRequest] = useState<GroupedOTRequest | null>(null);
   const [rejectingRequest, setRejectingRequest] = useState<GroupedOTRequest | null>(null);
   const [approvingRequestId, setApprovingRequestId] = useState<string | null>(null);
+
+  // Auto-open request from parent component
+  useEffect(() => {
+    if (initialSelectedRequestId && requests.length > 0) {
+      const request = requests.find(r => r.id === initialSelectedRequestId);
+      if (request) {
+        setSelectedRequest(request);
+      }
+    }
+  }, [initialSelectedRequestId, requests]);
 
   const handleApprove = async (request: GroupedOTRequest) => {
     if (!approveRequest) return;
