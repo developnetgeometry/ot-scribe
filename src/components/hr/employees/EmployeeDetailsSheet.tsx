@@ -436,7 +436,16 @@ export function EmployeeDetailsSheet({
             {/* Row 9: Role + Status */}
             <div className="grid gap-2">
               <Label htmlFor="role">Role</Label>
-              {isEditing ? (
+              {employee.user_roles && employee.user_roles.length > 0 ? (
+                <div className="space-y-2">
+                  <Badge variant="outline" className="w-fit capitalize">
+                    {employee.user_roles[0].role}
+                  </Badge>
+                  <p className="text-xs text-muted-foreground">
+                    Role cannot be changed for security reasons. All role changes are logged.
+                  </p>
+                </div>
+              ) : isEditing ? (
                 <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as AppRole)}>
                   <SelectTrigger id="role">
                     <SelectValue />
@@ -451,9 +460,7 @@ export function EmployeeDetailsSheet({
                 </Select>
               ) : (
                 <Badge variant="outline" className="w-fit capitalize">
-                  {employee.user_roles && employee.user_roles.length > 0
-                    ? employee.user_roles[0].role
-                    : 'employee'}
+                  employee
                 </Badge>
               )}
             </div>
