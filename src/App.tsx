@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import SetPassword from "./pages/SetPassword";
 import SetupPassword from "./pages/SetupPassword";
 import ChangePassword from "./pages/ChangePassword";
+import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import SubmitOT from "./pages/SubmitOT";
 import OTHistory from "./pages/OTHistory";
@@ -28,7 +29,7 @@ import Settings from "./pages/Settings";
 import HolidayCalendars from "./pages/hr/HolidayCalendars";
 import NewHolidayCalendar from "./pages/hr/NewHolidayCalendar";
 import EditHolidayCalendar from "./pages/hr/EditHolidayCalendar";
-import RecertifyOT from "./pages/hr/RecertifyOT";
+
 import Calendar from "./pages/Calendar";
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import HRDashboard from "./pages/hr/HRDashboard";
@@ -59,10 +60,10 @@ const App = () => (
                 
                 {/* Role-specific dashboards */}
                 <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/hr/dashboard" element={<ProtectedRoute requiredRole="hr"><HRDashboard /></ProtectedRoute>} />
+                <Route path="/hr/dashboard" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HRDashboard /></ProtectedRoute>} />
                 <Route path="/supervisor/dashboard" element={<ProtectedRoute requiredRole="supervisor"><SupervisorDashboard /></ProtectedRoute>} />
                 <Route path="/employee/dashboard" element={<ProtectedRoute requiredRole="employee"><EmployeeDashboard /></ProtectedRoute>} />
-                <Route path="/management/dashboard" element={<ProtectedRoute requiredRole="management"><ManagementDashboard /></ProtectedRoute>} />
+                <Route path="/management/dashboard" element={<ProtectedRoute requiredRole={['management', 'admin']}><ManagementDashboard /></ProtectedRoute>} />
                 
                 {/* Fallback dashboard */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -70,6 +71,7 @@ const App = () => (
                 {/* Shared routes - all authenticated users */}
                 <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 
                 {/* Employee routes */}
                 <Route path="/ot/submit" element={<ProtectedRoute requiredRole="employee"><SubmitOT /></ProtectedRoute>} />
@@ -79,18 +81,18 @@ const App = () => (
                 <Route path="/supervisor/verify" element={<ProtectedRoute requiredRole="supervisor"><VerifyOT /></ProtectedRoute>} />
                 
                 {/* HR routes */}
-                <Route path="/hr/approve" element={<ProtectedRoute requiredRole="hr"><ApproveOT /></ProtectedRoute>} />
-                <Route path="/hr/employees" element={<ProtectedRoute requiredRole="hr"><Employees /></ProtectedRoute>} />
-                <Route path="/hr/departments" element={<ProtectedRoute requiredRole="hr"><Departments /></ProtectedRoute>} />
-                <Route path="/hr/calendar" element={<ProtectedRoute requiredRole="hr"><HolidayCalendars /></ProtectedRoute>} />
-                <Route path="/hr/calendar/new" element={<ProtectedRoute requiredRole="hr"><NewHolidayCalendar /></ProtectedRoute>} />
-                <Route path="/hr/calendar/:id/edit" element={<ProtectedRoute requiredRole="hr"><EditHolidayCalendar /></ProtectedRoute>} />
-                <Route path="/hr/settings" element={<ProtectedRoute requiredRole="hr"><HRSettings /></ProtectedRoute>} />
-                <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole="hr"><OTReports /></ProtectedRoute>} />
+                <Route path="/hr/approve" element={<ProtectedRoute requiredRole={['hr', 'admin']}><ApproveOT /></ProtectedRoute>} />
+                <Route path="/hr/employees" element={<ProtectedRoute requiredRole={['hr', 'admin']}><Employees /></ProtectedRoute>} />
+                <Route path="/hr/departments" element={<ProtectedRoute requiredRole={['hr', 'admin']}><Departments /></ProtectedRoute>} />
+                <Route path="/hr/calendar" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HolidayCalendars /></ProtectedRoute>} />
+                <Route path="/hr/calendar/new" element={<ProtectedRoute requiredRole={['hr', 'admin']}><NewHolidayCalendar /></ProtectedRoute>} />
+                <Route path="/hr/calendar/:id/edit" element={<ProtectedRoute requiredRole={['hr', 'admin']}><EditHolidayCalendar /></ProtectedRoute>} />
+                <Route path="/hr/settings" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HRSettings /></ProtectedRoute>} />
+                <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole={['hr', 'admin']}><OTReports /></ProtectedRoute>} />
                 
                 {/* Management routes */}
-                <Route path="/management/approve" element={<ProtectedRoute requiredRole="management"><ManagementApproveOT /></ProtectedRoute>} />
-                <Route path="/management/review" element={<ProtectedRoute requiredRole="management"><ReviewOT /></ProtectedRoute>} />
+                <Route path="/management/approve" element={<ProtectedRoute requiredRole={['management', 'admin']}><ManagementApproveOT /></ProtectedRoute>} />
+                <Route path="/management/report" element={<ProtectedRoute requiredRole={['management', 'admin']}><ReviewOT /></ProtectedRoute>} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>

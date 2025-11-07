@@ -49,6 +49,8 @@ export function FormulasTab() {
     createFormula.mutate({
       formula_name: `${formula.formula_name} (Copy)`,
       day_type: formula.day_type,
+      orp_definition: formula.orp_definition || '(Basic / 26 / 8)',
+      hrp_definition: formula.hrp_definition || '(Basic / 26 / 8)',
       multiplier: formula.multiplier,
       base_formula: formula.base_formula,
       is_active: false,

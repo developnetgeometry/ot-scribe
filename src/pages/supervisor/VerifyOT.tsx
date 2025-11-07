@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,10 +7,13 @@ import { OTApprovalTable } from '@/components/approvals/OTApprovalTable';
 import { useOTApproval } from '@/hooks/useOTApproval';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function VerifyOT() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('pending_verification');
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   
   const { 
     requests, 
@@ -17,7 +21,7 @@ export default function VerifyOT() {
     approveRequest: approveRequestMutation, 
     rejectRequest: rejectRequestMutation,
     isApproving,
-    isRejecting 
+    isRejecting
   } = useOTApproval({ role: 'supervisor', status: statusFilter });
 
   // Wrapper functions to match the expected API
@@ -37,6 +41,44 @@ export default function VerifyOT() {
     const query = searchQuery.toLowerCase();
     return employeeName.includes(query) || employeeId.includes(query);
   }) || [];
+
+  // Smart tab selection based on request status
+  useEffect(() => {
+    const requestId = searchParams.get('request');
+    if (requestId) {
+      const fetchRequestStatus = async () => {
+        const { data } = await supabase
+          .from('ot_requests')
+          .select('status')
+          .eq('id', requestId)
+          .maybeSingle();
+        
+        if (data) {
+          const statusToTab: Record<string, string> = {
+            'pending_verification': 'pending_verification',
+            'supervisor_verified': 'completed',
+            'rejected': 'rejected',
+          };
+          
+          const tab = statusToTab[data.status] || 'all';
+          setStatusFilter(tab);
+        }
+      };
+      
+      fetchRequestStatus();
+    }
+  }, [searchParams]);
+
+  // Auto-open request from URL parameter
+  useEffect(() => {
+    const requestId = searchParams.get('request');
+    if (requestId && requests && requests.length > 0) {
+      setSelectedRequestId(requestId);
+      // Clear the parameter after opening
+      searchParams.delete('request');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, requests, setSearchParams, statusFilter]);
 
   return (
     <AppLayout>
@@ -75,6 +117,7 @@ export default function VerifyOT() {
                   rejectRequest={rejectRequest}
                   isApproving={isApproving}
                   isRejecting={isRejecting}
+                  initialSelectedRequestId={selectedRequestId}
                 />
               </TabsContent>
             </Tabs>

@@ -8,7 +8,9 @@ import { Search, DollarSign, Clock, AlertTriangle, FileCheck, Download, FileText
 import { EnhancedDashboardCard } from '@/components/hr/EnhancedDashboardCard';
 import { HRReportTable } from '@/components/hr/reports/HRReportTable';
 import { useHRReportData } from '@/hooks/useHRReportData';
-import { exportToCSV, exportToPDF } from '@/lib/exportUtils';
+import { useCompanyProfile } from '@/hooks/hr/useCompanyProfile';
+import { exportToCSV } from '@/lib/exportUtils';
+import { generateHRReportPDF } from '@/lib/hrReportPdfGenerator';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -27,13 +29,13 @@ export default function OTReports() {
   }, [appliedMonth, appliedYear]);
   
   const { data, isLoading } = useHRReportData(filterDate);
+  const { data: companyProfile } = useCompanyProfile();
 
   const aggregatedData = data?.aggregated || [];
   const stats = data?.stats || {
     pendingReview: 0,
     totalHours: 0,
-    totalCost: 0,
-    withViolations: 0
+    totalCost: 0
   };
 
   const filteredData = aggregatedData.filter(item => {
@@ -79,11 +81,11 @@ export default function OTReports() {
     
     toast({
       title: 'Report exported',
-      description: 'CSV file has been downloaded successfully.'
+      description: 'Excel file has been downloaded successfully.'
     });
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (filteredData.length === 0) {
       toast({
         title: 'No data to export',
@@ -93,7 +95,49 @@ export default function OTReports() {
       return;
     }
 
-    exportToPDF();
+    if (!companyProfile) {
+      toast({
+        title: 'Company profile not found',
+        description: 'Please configure company profile in settings.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      const uniqueCompanies = new Set(filteredData.map(emp => emp.company_id));
+      
+      await generateHRReportPDF({
+        companyInfo: {
+          name: companyProfile.name,
+          registrationNo: companyProfile.registration_no,
+          address: companyProfile.address,
+          phone: companyProfile.phone,
+          logoUrl: companyProfile.logo_url || undefined,
+        },
+        period: format(filterDate, 'MMMM yyyy'),
+        summary: {
+          pendingReview: stats.pendingReview,
+          totalHours: stats.totalHours,
+          totalCost: stats.totalCost,
+          totalEmployees: filteredData.length,
+          totalCompanies: uniqueCompanies.size,
+        },
+        employees: filteredData,
+      });
+      
+      toast({
+        title: 'PDF generated',
+        description: 'Report has been downloaded successfully.'
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: 'Export failed',
+        description: 'Failed to generate PDF report.',
+        variant: 'destructive'
+      });
+    }
   };
 
   return (
@@ -125,13 +169,6 @@ export default function OTReports() {
             icon={DollarSign}
             variant="success"
             subtitle="Total RM paid for overtime this month"
-          />
-          <EnhancedDashboardCard
-            title="With Violations"
-            value={stats.withViolations}
-            icon={AlertTriangle}
-            variant="warning"
-            subtitle="Requests exceeding approval threshold"
           />
         </div>
 
@@ -208,7 +245,7 @@ export default function OTReports() {
                   disabled={isLoading || filteredData.length === 0}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                  Export Excel
                 </Button>
                 <Button 
                   onClick={handleExportPDF}

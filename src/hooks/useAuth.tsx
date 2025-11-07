@@ -144,8 +144,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign Out Mutation
   const signOutMutation = useMutation({
     mutationFn: async () => {
+      // 1) Clear local session first to stop auto-refresh loops
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch {
+        // ignore local scope sign-out errors
+      }
+
+      // 2) Attempt global sign-out; treat "no session" variants as success
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        const msg = (error.message || '').toLowerCase();
+        const name = (error as any).name || '';
+        const isIgnorable =
+          msg.includes('session_not_found') ||
+          msg.includes('auth session missing') ||
+          name === 'AuthSessionMissingError' ||
+          ((error as any).__isAuthError === true && (error as any).status === 400);
+
+        if (!isIgnorable) {
+          throw error;
+        }
+      }
+
+      // 3) Fallback: purge persisted auth keys for this project ref
+      try {
+        const ref = 'kamtarwxydftzpewcgzs';
+        localStorage.removeItem(`sb-${ref}-auth-token`);
+        localStorage.removeItem(`sb-${ref}-auth-token.0`);
+        localStorage.removeItem(`sb-${ref}-auth-token.1`);
+      } catch {
+        // ignore storage errors
+      }
     },
     onSuccess: () => {
       // Clear all queries and reset auth state
@@ -157,13 +187,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       console.log(`Auth state changed: ${event}`, { session: !!session });
       
-      if (event === 'SIGNED_OUT' || !session) {
-        queryClient.invalidateQueries({ queryKey: authKeys.all });
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        queryClient.invalidateQueries({ queryKey: authKeys.all });
+      // Synchronously update session cache to make UI react instantly
+      queryClient.setQueryData(authKeys.session(), session);
+      
+      // If no session, immediately clear user-scoped caches (roles/profile)
+      if (!session?.user) {
+        queryClient.removeQueries({ queryKey: authKeys.user(), exact: false });
+      }
+      
+      // When signing in, refetch roles and profile with the new session
+      // Don't invalidate the session itself to avoid loading state issues
+      if (session?.user) {
+        queryClient.invalidateQueries({ queryKey: authKeys.user() });
       }
     });
 
@@ -204,8 +242,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       await signOutMutation.mutateAsync();
     } catch (error) {
-      console.error('Sign out error:', error);
-      toast.error('Error signing out');
+      // Only log and show errors that aren't session-not-found
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!errorMessage.includes('session_not_found')) {
+        console.error('Sign out error:', error);
+        toast.error('Error signing out');
+      }
+    } finally {
+      // Optimistically nullify session and clear user-scoped caches
+      queryClient.setQueryData(authKeys.session(), null);
+      queryClient.removeQueries({ queryKey: authKeys.user(), exact: false });
+      // Then fully clear everything
+      queryClient.clear();
     }
   };
 

@@ -17,7 +17,8 @@ import { calculateTotalHours, getDayTypeColor, getDayTypeLabel } from '@/lib/otC
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
-const otFormSchema = z.object({
+// Create schema factory that accepts requireAttachment parameter
+const createOTFormSchema = (requireAttachment: boolean) => z.object({
   ot_date: z.date({
     required_error: 'OT date is required',
   }),
@@ -34,22 +35,26 @@ const otFormSchema = z.object({
     required_error: 'Please select a reason for overtime',
   }),
   reason_other: z.string()
-    .max(500, 'Reason cannot exceed 500 characters')
+    .max(100, 'Reason cannot exceed 100 characters')
     .optional(),
-  attachment_urls: z.array(z.string().url('Invalid file URL'))
-    .min(1, 'At least one attachment is required')
-    .max(5, 'Maximum 5 attachments allowed'),
+  attachment_urls: requireAttachment 
+    ? z.array(z.string().url('Invalid file URL'))
+        .min(1, 'At least one attachment is required')
+        .max(5, 'Maximum 5 attachments allowed')
+    : z.array(z.string().url('Invalid file URL'))
+        .max(5, 'Maximum 5 attachments allowed')
+        .optional(),
 }).refine((data) => {
   if (data.reason_dropdown === 'Other') {
-    return data.reason_other && data.reason_other.trim().length >= 10;
+    return data.reason_other && data.reason_other.trim().length >= 20;
   }
   return true;
 }, {
-  message: 'Please provide a detailed reason (at least 10 characters)',
+  message: 'Please provide a detailed reason (minimum 20 characters)',
   path: ['reason_other'],
 });
 
-type OTFormValues = z.infer<typeof otFormSchema>;
+type OTFormValues = z.infer<ReturnType<typeof createOTFormSchema>>;
 
 interface OTFormProps {
   onSubmit: (data: any) => void;
@@ -58,14 +63,15 @@ interface OTFormProps {
   fullName: string;
   onCancel: () => void;
   defaultValues?: Partial<OTFormValues>;
+  requireAttachment?: boolean;
 }
 
-export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel, defaultValues }: OTFormProps) {
+export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel, defaultValues, requireAttachment = false }: OTFormProps) {
   const [totalHours, setTotalHours] = useState<number>(0);
   const [dayType, setDayType] = useState<string>('weekday');
 
   const form = useForm<OTFormValues>({
-    resolver: zodResolver(otFormSchema),
+    resolver: zodResolver(createOTFormSchema(requireAttachment)),
     defaultValues: defaultValues || {
       reason_other: '',
       attachment_urls: [],
@@ -293,7 +299,9 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
            name="attachment_urls"
            render={({ field }) => (
              <FormItem>
-               <FormLabel>Attachments *</FormLabel>
+               <FormLabel>
+                 Attachments {requireAttachment ? '*' : '(Optional)'}
+               </FormLabel>
                <FormControl>
                  <FileUpload
                    onUploadComplete={(urls) => field.onChange(urls)}

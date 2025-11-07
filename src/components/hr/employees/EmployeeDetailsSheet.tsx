@@ -22,6 +22,7 @@ import { useUpdateEmployee } from '@/hooks/hr/useUpdateEmployee';
 import { useDepartments } from '@/hooks/hr/useDepartments';
 import { useEmployees } from '@/hooks/hr/useEmployees';
 import { usePositions } from '@/hooks/hr/usePositions';
+import { useCompanies } from '@/hooks/hr/useCompanies';
 import { formatCurrency } from '@/lib/otCalculations';
 
 interface EmployeeDetailsSheetProps {
@@ -46,6 +47,7 @@ export function EmployeeDetailsSheet({
   const [selectedRole, setSelectedRole] = useState<AppRole>('employee');
 
   const updateEmployee = useUpdateEmployee();
+  const { data: companies } = useCompanies();
   const { data: departments } = useDepartments();
   const { data: employees = [] } = useEmployees();
   const { data: positions = [], isLoading: isLoadingPositions } = usePositions(formData.department_id || undefined);
@@ -167,7 +169,7 @@ export function EmployeeDetailsSheet({
               )}
             </div>
 
-            {/* Row 3: Phone No + Position */}
+            {/* Row 3: Phone No + Company */}
             <div className="grid gap-2">
               <Label htmlFor="phone_no">Phone No</Label>
               {isEditing ? (
@@ -181,6 +183,61 @@ export function EmployeeDetailsSheet({
                 />
               ) : (
                 <div className="text-sm">{employee.phone_no || '-'}</div>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="company">Company</Label>
+              {isEditing ? (
+                <Select
+                  value={formData.company_id || undefined}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, company_id: value })
+                  }
+                >
+                  <SelectTrigger id="company">
+                    <SelectValue placeholder="Select Company" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-sm">
+                  {companies?.find((c) => c.id === employee.company_id)?.name || '-'}
+                </div>
+              )}
+            </div>
+
+            {/* Row 4: Department + Position */}
+            <div className="grid gap-2">
+              <Label htmlFor="department">Department</Label>
+              {isEditing ? (
+                <Select
+                  value={formData.department_id || undefined}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, department_id: value })
+                  }
+                >
+                  <SelectTrigger id="department">
+                    <SelectValue placeholder="Select Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments?.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-sm">
+                  {departments?.find((d) => d.id === employee.department_id)?.name || '-'}
+                </div>
               )}
             </div>
 
@@ -225,34 +282,7 @@ export function EmployeeDetailsSheet({
               )}
             </div>
 
-            {/* Row 4: Department + Basic Salary */}
-            <div className="grid gap-2">
-              <Label htmlFor="department">Department</Label>
-              {isEditing ? (
-                <Select
-                  value={formData.department_id || undefined}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, department_id: value })
-                  }
-                >
-                  <SelectTrigger id="department">
-                    <SelectValue placeholder="Select Department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments?.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-sm">
-                  {departments?.find((d) => d.id === employee.department_id)?.name || '-'}
-                </div>
-              )}
-            </div>
-
+            {/* Row 5: Basic Salary + Employment Type */}
             <div className="grid gap-2">
               <Label htmlFor="basic_salary">Basic Salary (RM)</Label>
               {isEditing ? (
@@ -275,7 +305,32 @@ export function EmployeeDetailsSheet({
               )}
             </div>
 
-            {/* Row 5: EPF No + SOCSO No */}
+            <div className="grid gap-2">
+              <Label htmlFor="employment_type">Employment Type</Label>
+              {isEditing ? (
+                <Select
+                  value={formData.employment_type || undefined}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, employment_type: value })
+                  }
+                >
+                  <SelectTrigger id="employment_type">
+                    <SelectValue placeholder="Select Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employmentTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-sm">{employee.employment_type || '-'}</div>
+              )}
+            </div>
+
+            {/* Row 6: EPF No + SOCSO No */}
             <div className="grid gap-2">
               <Label htmlFor="epf_no">EPF No</Label>
               {isEditing ? (
@@ -308,7 +363,7 @@ export function EmployeeDetailsSheet({
               )}
             </div>
 
-            {/* Row 6: Income Tax No + Employment Type */}
+            {/* Row 7: Income Tax No + Joining Date */}
             <div className="grid gap-2">
               <Label htmlFor="income_tax_no">Income Tax No</Label>
               {isEditing ? (
@@ -326,32 +381,6 @@ export function EmployeeDetailsSheet({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="employment_type">Employment Type</Label>
-              {isEditing ? (
-                <Select
-                  value={formData.employment_type || undefined}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, employment_type: value })
-                  }
-                >
-                  <SelectTrigger id="employment_type">
-                    <SelectValue placeholder="Select Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employmentTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-sm">{employee.employment_type || '-'}</div>
-              )}
-            </div>
-
-            {/* Row 7: Joining Date + Work Location */}
-            <div className="grid gap-2">
               <Label htmlFor="joining_date">Joining Date</Label>
               {isEditing ? (
                 <Input
@@ -363,14 +392,11 @@ export function EmployeeDetailsSheet({
                   }
                 />
               ) : (
-                <div className="text-sm">
-                  {employee.joining_date
-                    ? new Date(employee.joining_date).toLocaleDateString()
-                    : '-'}
-                </div>
+                <div className="text-sm">{employee.joining_date || '-'}</div>
               )}
             </div>
 
+            {/* Row 8: Work Location + State */}
             <div className="grid gap-2">
               <Label htmlFor="work_location">Work Location</Label>
               {isEditing ? (
@@ -387,23 +413,7 @@ export function EmployeeDetailsSheet({
               )}
             </div>
 
-            {/* Row 8: State + Reporting To */}
-            <div className="grid gap-2">
-              <Label htmlFor="state">State</Label>
-              {isEditing ? (
-                <Input
-                  id="state"
-                  value={formData.state || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, state: e.target.value })
-                  }
-                  placeholder="e.g. Selangor"
-                />
-              ) : (
-                <div className="text-sm">{employee.state || '-'}</div>
-              )}
-            </div>
-
+            {/* Row 9: Reporting To (Full Width) */}
             <div className="grid gap-2">
               <Label htmlFor="supervisor_id">Reporting To</Label>
               {isEditing ? (
@@ -433,10 +443,19 @@ export function EmployeeDetailsSheet({
               )}
             </div>
 
-            {/* Row 9: Role + Status */}
+            {/* Row 10: Role + Status */}
             <div className="grid gap-2">
               <Label htmlFor="role">Role</Label>
-              {isEditing ? (
+              {employee.user_roles && employee.user_roles.length > 0 ? (
+                <div className="space-y-2">
+                  <Badge variant="outline" className="w-fit capitalize">
+                    {employee.user_roles[0].role}
+                  </Badge>
+                  <p className="text-xs text-muted-foreground">
+                    Role cannot be changed for security reasons. All role changes are logged.
+                  </p>
+                </div>
+              ) : isEditing ? (
                 <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as AppRole)}>
                   <SelectTrigger id="role">
                     <SelectValue />
@@ -451,9 +470,7 @@ export function EmployeeDetailsSheet({
                 </Select>
               ) : (
                 <Badge variant="outline" className="w-fit capitalize">
-                  {employee.user_roles && employee.user_roles.length > 0
-                    ? employee.user_roles[0].role
-                    : 'employee'}
+                  employee
                 </Badge>
               )}
             </div>
@@ -509,6 +526,31 @@ export function EmployeeDetailsSheet({
               ) : (
                 <Badge variant={employee.is_ot_eligible ? 'default' : 'secondary'} className="w-fit">
                   {employee.is_ot_eligible ? 'Yes' : 'No'}
+                </Badge>
+              )}
+            </div>
+
+            {/* Row 11: Require OT Attachment (Full Width) */}
+            <div className="grid gap-2 col-span-2">
+              <Label htmlFor="require_ot_attachment">Require OT Attachment</Label>
+              {isEditing ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="require_ot_attachment"
+                    checked={formData.require_ot_attachment ?? false}
+                    onChange={(e) =>
+                      setFormData({ ...formData, require_ot_attachment: e.target.checked })
+                    }
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    Require employee to attach files when submitting OT requests
+                  </span>
+                </div>
+              ) : (
+                <Badge variant={employee.require_ot_attachment ? 'default' : 'secondary'} className="w-fit">
+                  {employee.require_ot_attachment ? 'Required' : 'Optional'}
                 </Badge>
               )}
             </div>

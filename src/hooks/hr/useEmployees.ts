@@ -6,12 +6,13 @@ export function useEmployees() {
   return useQuery({
     queryKey: ['hr-employees'],
     queryFn: async () => {
-      // Fetch profiles with departments relationship
+      // Fetch profiles with departments and companies relationship
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           *,
-          departments(id, name, code)
+          departments(id, name, code),
+          companies(id, name, code)
         `)
         .order('created_at', { ascending: false });
 
@@ -30,7 +31,8 @@ export function useEmployees() {
         return {
           ...profile,
           user_roles: userRoles?.map(r => ({ role: r.role })) || [],
-          department: profile.departments || null
+          department: profile.departments || null,
+          company: profile.companies || null
         };
       });
 

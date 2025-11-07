@@ -58,6 +58,42 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          address: string | null
+          code: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          phone: string | null
+          registration_no: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          phone?: string | null
+          registration_no?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          phone?: string | null
+          registration_no?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       company_profile: {
         Row: {
           address: string
@@ -180,6 +216,39 @@ export type Database = {
           state_code?: string | null
           total_holidays?: number | null
           year?: number
+        }
+        Relationships: []
+      }
+      inventory_access_tokens: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          generated_at: string
+          id: string
+          is_active: boolean | null
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          generated_at?: string
+          id?: string
+          is_active?: boolean | null
+          token: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          generated_at?: string
+          id?: string
+          is_active?: boolean | null
+          token?: string
+          used_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -320,9 +389,11 @@ export type Database = {
           effective_to: string | null
           employee_category: string
           formula_name: string
+          hrp_definition: string | null
           id: string
           is_active: boolean | null
           multiplier: number
+          orp_definition: string | null
           updated_at: string | null
         }
         Insert: {
@@ -335,9 +406,11 @@ export type Database = {
           effective_to?: string | null
           employee_category?: string
           formula_name: string
+          hrp_definition?: string | null
           id?: string
           is_active?: boolean | null
           multiplier: number
+          orp_definition?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -350,9 +423,11 @@ export type Database = {
           effective_to?: string | null
           employee_category?: string
           formula_name?: string
+          hrp_definition?: string | null
           id?: string
           is_active?: boolean | null
           multiplier?: number
+          orp_definition?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -615,6 +690,7 @@ export type Database = {
       profiles: {
         Row: {
           basic_salary: number
+          company_id: string | null
           created_at: string | null
           department_id: string | null
           designation: string | null
@@ -631,6 +707,7 @@ export type Database = {
           phone_no: string | null
           position: string | null
           position_id: string | null
+          require_ot_attachment: boolean
           socso_no: string | null
           state: string | null
           status: string | null
@@ -640,6 +717,7 @@ export type Database = {
         }
         Insert: {
           basic_salary: number
+          company_id?: string | null
           created_at?: string | null
           department_id?: string | null
           designation?: string | null
@@ -656,6 +734,7 @@ export type Database = {
           phone_no?: string | null
           position?: string | null
           position_id?: string | null
+          require_ot_attachment?: boolean
           socso_no?: string | null
           state?: string | null
           status?: string | null
@@ -665,6 +744,7 @@ export type Database = {
         }
         Update: {
           basic_salary?: number
+          company_id?: string | null
           created_at?: string | null
           department_id?: string | null
           designation?: string | null
@@ -681,6 +761,7 @@ export type Database = {
           phone_no?: string | null
           position?: string | null
           position_id?: string | null
+          require_ot_attachment?: boolean
           socso_no?: string | null
           state?: string | null
           status?: string | null
@@ -689,6 +770,13 @@ export type Database = {
           work_location?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_department_id_fkey"
             columns: ["department_id"]
@@ -774,6 +862,39 @@ export type Database = {
           },
         ]
       }
+      role_change_audit: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          id: string
+          ip_address: string | null
+          new_role: Database["public"]["Enums"]["app_role"] | null
+          old_role: Database["public"]["Enums"]["app_role"] | null
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_role?: Database["public"]["Enums"]["app_role"] | null
+          old_role?: Database["public"]["Enums"]["app_role"] | null
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          ip_address?: string | null
+          new_role?: Database["public"]["Enums"]["app_role"] | null
+          old_role?: Database["public"]["Enums"]["app_role"] | null
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -833,6 +954,16 @@ export type Database = {
         Args: { ot_date: string }
         Returns: Database["public"]["Enums"]["day_type"]
       }
+      evaluate_ot_formula: {
+        Args: {
+          formula_text: string
+          p_basic: number
+          p_hours: number
+          p_hrp: number
+          p_orp: number
+        }
+        Returns: number
+      }
       generate_state_holidays: {
         Args: { in_state_code?: string; in_year: number }
         Returns: {
@@ -861,6 +992,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      lookup_email_by_employee_id: {
+        Args: { p_employee_id: string }
+        Returns: string
       }
       mark_expired_tokens: { Args: never; Returns: undefined }
     }

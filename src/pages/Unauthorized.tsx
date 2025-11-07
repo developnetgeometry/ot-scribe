@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,8 @@ import { ShieldAlert } from 'lucide-react';
 export default function Unauthorized() {
   const { roles, getDefaultRoute } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = (location.state as { from?: string; requiredRoles?: string[] } | null) || null;
 
   const handleGoToDashboard = () => {
     const dashboardPath = getDefaultRoute();
@@ -26,6 +28,16 @@ export default function Unauthorized() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {state?.from && (
+            <div className="text-center text-xs text-muted-foreground">
+              Requested page: <span className="font-medium text-foreground">{state.from}</span>
+            </div>
+          )}
+          {state?.requiredRoles && (
+            <div className="text-center text-xs text-muted-foreground">
+              Required role{state.requiredRoles.length > 1 ? 's' : ''}: <span className="font-medium text-foreground">{state.requiredRoles.join(', ')}</span>
+            </div>
+          )}
           <div className="text-center text-sm text-muted-foreground">
             Your current role{roles.length > 1 ? 's' : ''}: <span className="font-semibold text-foreground">{roles.join(', ')}</span>
           </div>

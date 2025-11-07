@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 import { AppRole } from '@/types/otms';
@@ -10,9 +10,15 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { user, roles, profileStatus, isLoadingRoles, isLoadingProfile } = useAuth();
+  const location = useLocation();
 
   // Wait for server state (roles, profile) to load
   const isLoading = isLoadingRoles || isLoadingProfile;
+
+  // Precompute required roles array for diagnostics
+  const requiredRoles = requiredRole
+    ? (Array.isArray(requiredRole) ? requiredRole : [requiredRole])
+    : undefined;
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -28,13 +34,23 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/setup-password" replace />;
   }
 
-  // Check role-based access if required
-  if (requiredRole) {
-    const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    const hasRequiredRole = requiredRoles.some(role => roles.includes(role));
+  // Admin bypass: admins can access all routes
+  if (roles.includes('admin')) {
+    return <>{children}</>;
+  }
 
+  // Check role-based access if required (for non-admins)
+  if (requiredRoles && requiredRoles.length > 0) {
+    const hasRequiredRole = requiredRoles.some((role) => roles.includes(role));
     if (!hasRequiredRole) {
-      return <Navigate to="/unauthorized" replace />;
+      // Pass context for better diagnostics
+      return (
+        <Navigate
+          to="/unauthorized"
+          replace
+          state={{ from: location.pathname, requiredRoles }}
+        />
+      );
     }
   }
 

@@ -6,22 +6,27 @@ import { Profile, AppRole } from '@/types/otms';
 interface UpdateEmployeeData {
   id: string;
   full_name?: string;
-  email?: string;
+  employee_id?: string;
   ic_no?: string | null;
   phone_no?: string | null;
+  email?: string;
+  company_id?: string | null;
   department_id?: string | null;
+  position_id?: string | null;
+  position?: string | null;
   basic_salary?: number;
   epf_no?: string | null;
   socso_no?: string | null;
   income_tax_no?: string | null;
   employment_type?: string | null;
-  position?: string | null;
+  designation?: string | null;
   supervisor_id?: string | null;
   joining_date?: string | null;
   work_location?: string | null;
   state?: string | null;
   status?: string;
   is_ot_eligible?: boolean;
+  require_ot_attachment?: boolean;
   role?: AppRole;
 }
 
@@ -36,16 +41,16 @@ export function useUpdateEmployee() {
 
       // Whitelist of valid profiles table columns
       const allowedColumns = [
-        'full_name', 'email', 'ic_no', 'phone_no', 'department_id', 
-        'basic_salary', 'epf_no', 'socso_no', 'income_tax_no', 
-        'employment_type', 'position', 'supervisor_id', 'joining_date', 
-        'work_location', 'state', 'status', 'is_ot_eligible', 
-        'designation', 'position_id'
+        'full_name', 'employee_id', 'ic_no', 'phone_no', 'email',
+        'company_id', 'department_id', 'position_id', 'position', 'basic_salary',
+        'epf_no', 'socso_no', 'income_tax_no', 'employment_type',
+        'designation', 'supervisor_id', 'joining_date', 'work_location',
+        'state', 'status', 'is_ot_eligible', 'require_ot_attachment'
       ];
 
       // Nullable fields that should convert empty strings to null
       const nullableFields = [
-        'ic_no', 'phone_no', 'department_id', 'epf_no', 'socso_no', 
+        'ic_no', 'phone_no', 'company_id', 'department_id', 'epf_no', 'socso_no', 
         'income_tax_no', 'employment_type', 'position', 'supervisor_id', 
         'joining_date', 'work_location', 'state', 'position_id'
       ];

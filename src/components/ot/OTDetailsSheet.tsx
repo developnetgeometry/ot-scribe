@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { ExternalLink, FileText, Pencil } from 'lucide-react';
+import { ExternalLink, FileText, Pencil, RefreshCw } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ export function OTDetailsSheet({ request, open, onOpenChange, onEdit }: OTDetail
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
-          {/* Status with Edit button */}
+          {/* Status with Edit/Resubmit button */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <p className="text-sm font-medium text-muted-foreground mb-2">Status</p>
@@ -46,6 +46,22 @@ export function OTDetailsSheet({ request, open, onOpenChange, onEdit }: OTDetail
               >
                 <Pencil className="h-4 w-4" />
                 Edit Request
+              </Button>
+            )}
+
+            {/* Resubmit button - only for rejected status */}
+            {request.status === 'rejected' && onEdit && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  onEdit(request);
+                  onOpenChange(false);
+                }}
+                className="gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Resubmit Request
               </Button>
             )}
           </div>

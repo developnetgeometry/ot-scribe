@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -6,16 +7,21 @@ import { OTApprovalTable } from '@/components/approvals/OTApprovalTable';
 import { useOTApproval } from '@/hooks/useOTApproval';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ApproveOT() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('hr_certified');
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   
   const { 
     requests, 
     isLoading, 
     approveRequest: approveRequestMutation, 
-    rejectRequest: rejectRequestMutation, 
+    rejectRequest: rejectRequestMutation,
+    isApproving,
+    isRejecting
   } = useOTApproval({ role: 'management', status: activeTab });
 
   const filteredRequests = requests?.filter(request => {
@@ -27,6 +33,44 @@ export default function ApproveOT() {
     const query = searchQuery.toLowerCase();
     return employeeName.includes(query) || employeeId.includes(query) || department.includes(query);
   }) || [];
+
+  // Smart tab selection based on request status
+  useEffect(() => {
+    const requestId = searchParams.get('request');
+    if (requestId) {
+      const fetchRequestStatus = async () => {
+        const { data } = await supabase
+          .from('ot_requests')
+          .select('status')
+          .eq('id', requestId)
+          .maybeSingle();
+        
+        if (data) {
+          const statusToTab: Record<string, string> = {
+            'hr_certified': 'hr_certified',
+            'management_approved': 'management_approved',
+            'rejected': 'rejected',
+          };
+          
+          const tab = statusToTab[data.status] || 'all';
+          setActiveTab(tab);
+        }
+      };
+      
+      fetchRequestStatus();
+    }
+  }, [searchParams]);
+
+  // Auto-open request from URL parameter
+  useEffect(() => {
+    const requestId = searchParams.get('request');
+    if (requestId && requests && requests.length > 0) {
+      setSelectedRequestId(requestId);
+      // Clear the parameter after opening
+      searchParams.delete('request');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, requests, setSearchParams, activeTab]);
 
   const handleApprove = async (requestIds: string[], remarks?: string) => {
     await approveRequestMutation({ requestIds, remarks });
@@ -47,7 +91,7 @@ export default function ApproveOT() {
         <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="hr_certified">
           <TabsList>
             <TabsTrigger value="hr_certified">Pending Management Review</TabsTrigger>
-            <TabsTrigger value="management_approved">Reviewed</TabsTrigger>
+            <TabsTrigger value="management_approved">Approved</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
             <TabsTrigger value="all">All</TabsTrigger>
           </TabsList>
@@ -71,7 +115,10 @@ export default function ApproveOT() {
                   role="management"
                   approveRequest={handleApprove}
                   rejectRequest={handleReject}
+                  isApproving={isApproving}
+                  isRejecting={isRejecting}
                   showActions={activeTab === 'hr_certified'}
+                  initialSelectedRequestId={selectedRequestId}
                 />
               </div>
             </Card>

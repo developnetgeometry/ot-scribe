@@ -5,6 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 interface UpdateRateFormulaData {
   id: string;
   formula_name?: string;
+  orp_definition?: string;
+  hrp_definition?: string;
   multiplier?: number;
   base_formula?: string;
   is_active?: boolean;

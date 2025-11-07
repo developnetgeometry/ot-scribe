@@ -8,6 +8,8 @@ interface RateFormula {
   id: string;
   formula_name: string;
   day_type: string;
+  orp_definition?: string;
+  hrp_definition?: string;
   multiplier: number;
   base_formula: string;
   is_active: boolean;
@@ -51,6 +53,18 @@ export function FormulaCard({ formula, onEdit, onDelete, onDuplicate }: FormulaC
       <p className="text-sm text-muted-foreground">
         {formatDayType(formula.day_type)} | {formula.employee_category}
       </p>
+
+      {/* ORP & HRP Definitions */}
+      <div className="space-y-1 text-sm">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground font-medium">ORP:</span>
+          <code className="text-xs bg-muted px-2 py-1 rounded">{formula.orp_definition || '(Basic / 26 / 8)'}</code>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground font-medium">HRP:</span>
+          <code className="text-xs bg-muted px-2 py-1 rounded">{formula.hrp_definition || '(Basic / 26 / 8)'}</code>
+        </div>
+      </div>
 
       {/* Formula Expression Box */}
       <div className="bg-[#F3F4F6] p-4 rounded-lg flex items-center gap-3">
