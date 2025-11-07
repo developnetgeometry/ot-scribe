@@ -42,7 +42,7 @@ export function useHRReportData(selectedMonth?: Date) {
         `)
         .gte('ot_date', startDate)
         .lte('ot_date', endDate)
-        .in('status', ['supervisor_verified', 'hr_certified', 'management_approved'])
+        .in('status', ['management_approved'])
         .order('ot_date', { ascending: false });
 
       if (error) throw error;
