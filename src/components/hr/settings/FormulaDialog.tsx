@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -29,8 +29,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useCreateRateFormula } from '@/hooks/hr/useCreateRateFormula';
 import { useUpdateRateFormula } from '@/hooks/hr/useUpdateRateFormula';
+import { validateFormulaSyntax, evaluateFormula } from '@/lib/formulaValidator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormDescription } from '@/components/ui/form';
 
 const formulaSchema = z.object({
@@ -57,6 +62,11 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
   const isEditing = !!formula;
   const createFormula = useCreateRateFormula();
   const updateFormula = useUpdateRateFormula();
+  
+  const [formulaValidation, setFormulaValidation] = useState<{ isValid: boolean; errors: string[] }>({ isValid: true, errors: [] });
+  const [previewBasicSalary, setPreviewBasicSalary] = useState<string>('3000');
+  const [previewHours, setPreviewHours] = useState<string>('4');
+  const [previewResult, setPreviewResult] = useState<any>(null);
 
   const form = useForm<FormulaFormValues>({
     resolver: zodResolver(formulaSchema),
@@ -133,7 +143,32 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
 
   const handleClose = () => {
     form.reset();
+    setFormulaValidation({ isValid: true, errors: [] });
+    setPreviewResult(null);
     onOpenChange(false);
+  };
+
+  const handleFormulaValidation = (value: string) => {
+    const validation = validateFormulaSyntax(value);
+    setFormulaValidation(validation);
+  };
+
+  const handlePreview = () => {
+    const baseFormula = form.getValues('base_formula');
+    const basicSalary = parseFloat(previewBasicSalary);
+    const hours = parseFloat(previewHours);
+
+    if (!basicSalary || !hours || basicSalary <= 0 || hours <= 0) {
+      setPreviewResult({ error: 'Please enter valid positive numbers for salary and hours' });
+      return;
+    }
+
+    try {
+      const result = evaluateFormula(baseFormula, basicSalary, hours);
+      setPreviewResult(result);
+    } catch (e: any) {
+      setPreviewResult({ error: e.message });
+    }
   };
 
   return (
@@ -288,26 +323,95 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
                   <FormLabel>Base Formula *</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="e.g., (Basic / 26 / 8), ORP, HRP"
+                      placeholder="e.g., HRP * Hours or IF(Hours <= 4, 0.5 * ORP, 1 * ORP)"
                       className="min-h-[100px]"
                       {...field}
+                      onBlur={(e) => {
+                        field.onBlur();
+                        handleFormulaValidation(e.target.value);
+                      }}
                     />
                   </FormControl>
                   <FormDescription className="text-xs">
-                    <strong>Available variables:</strong>
-                    <br />• <strong>ORP</strong>: {form.watch('orp_definition') || '(Basic / 26 / 8)'}
-                    <br />• <strong>HRP</strong>: {form.watch('hrp_definition') || '(Basic / 26 / 8)'}
-                    <br />• <strong>Basic</strong>: Employee's basic salary
-                    <br />• <strong>Hours</strong>: Total OT hours (auto-calculated)
-                    <br />
-                    <br /><strong>Example formulas:</strong>
-                    <br />• Simple: <code className="text-xs bg-muted px-1 py-0.5 rounded">ORP</code> or <code className="text-xs bg-muted px-1 py-0.5 rounded">2 × ORP</code>
-                    <br />• Conditional: <code className="text-xs bg-muted px-1 py-0.5 rounded">(1 × ORP) + (2 × HRP × (Hours - 8))</code>
+                    Allowed variables: Hours, ORP, HRP, Basic. Use IF(condition, true_value, false_value) for conditional logic.
                   </FormDescription>
+                  {!formulaValidation.isValid && (
+                    <Alert variant="destructive" className="mt-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        {formulaValidation.errors.map((err, idx) => (
+                          <div key={idx}>{err}</div>
+                        ))}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  {formulaValidation.isValid && field.value && (
+                    <Alert className="mt-2 border-green-500 bg-green-50 dark:bg-green-950">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="text-green-800 dark:text-green-200">
+                        Formula syntax is valid
+                      </AlertDescription>
+                    </Alert>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Formula Preview Section */}
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="text-sm">Formula Preview & Testing</CardTitle>
+                <CardDescription>Test your formula with sample values</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="preview-salary">Sample Basic Salary (RM)</Label>
+                    <Input
+                      id="preview-salary"
+                      type="number"
+                      value={previewBasicSalary}
+                      onChange={(e) => setPreviewBasicSalary(e.target.value)}
+                      placeholder="3000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="preview-hours">Sample Hours Worked</Label>
+                    <Input
+                      id="preview-hours"
+                      type="number"
+                      step="0.5"
+                      value={previewHours}
+                      onChange={(e) => setPreviewHours(e.target.value)}
+                      placeholder="4"
+                    />
+                  </div>
+                </div>
+                <Button type="button" variant="outline" onClick={handlePreview} className="w-full">
+                  Preview Result
+                </Button>
+                {previewResult && (
+                  <div className="mt-4">
+                    {previewResult.error ? (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{previewResult.error}</AlertDescription>
+                      </Alert>
+                    ) : (
+                      <Alert className="border-blue-500 bg-blue-50 dark:bg-blue-950">
+                        <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                        <AlertDescription>
+                          <div className="space-y-1 text-sm whitespace-pre-line font-mono text-blue-800 dark:text-blue-200">
+                            {previewResult.breakdown}
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleClose}>
