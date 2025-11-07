@@ -25,6 +25,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { NotificationBell } from '@/components/NotificationBell';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
@@ -40,7 +48,8 @@ import {
   Eye,
   User,
   LogOut,
-  Calendar
+  Calendar,
+  Home
 } from 'lucide-react';
 import { AppRole } from '@/types/otms';
 
@@ -130,11 +139,47 @@ function AppSidebar() {
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
   };
+
+  // Generate breadcrumb items from current path
+  const generateBreadcrumbs = () => {
+    const paths = location.pathname.split('/').filter(Boolean);
+    
+    const breadcrumbLabels: Record<string, string> = {
+      'admin': 'Admin',
+      'hr': 'HR',
+      'supervisor': 'Supervisor',
+      'employee': 'Employee',
+      'management': 'Management',
+      'dashboard': 'Dashboard',
+      'approve': 'Approve OT',
+      'verify': 'Verify OT',
+      'certify': 'Certify OT',
+      'employees': 'Employees',
+      'departments': 'Departments',
+      'ot-reports': 'OT Reports',
+      'report': 'Report',
+      'ot': 'OT',
+      'submit': 'Submit OT',
+      'history': 'OT History',
+      'settings': 'Settings',
+      'calendar': 'Calendar',
+      'profile': 'Profile',
+    };
+
+    return paths.map((path, index) => {
+      const fullPath = '/' + paths.slice(0, index + 1).join('/');
+      const label = breadcrumbLabels[path] || path.charAt(0).toUpperCase() + path.slice(1);
+      return { path: fullPath, label, isLast: index === paths.length - 1 };
+    });
+  };
+
+  const breadcrumbs = generateBreadcrumbs();
 
   return (
     <SidebarProvider>
@@ -142,7 +187,32 @@ export function AppLayout({ children }: AppLayoutProps) {
         <AppSidebar />
         <div className="flex-1 flex flex-col">
           <header className="h-16 border-b bg-card flex items-center justify-between px-6">
-            <SidebarTrigger />
+            <div className="flex items-center gap-4">
+              <SidebarTrigger />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink onClick={() => navigate('/')} className="flex items-center gap-1 cursor-pointer">
+                      <Home className="h-3.5 w-3.5" />
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  {breadcrumbs.map((crumb, index) => (
+                    <div key={crumb.path} className="flex items-center gap-2">
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        {crumb.isLast ? (
+                          <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink onClick={() => navigate(crumb.path)} className="cursor-pointer">
+                            {crumb.label}
+                          </BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                    </div>
+                  ))}
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
             <div className="flex items-center gap-4">
               <NotificationBell />
               <ThemeToggle />
