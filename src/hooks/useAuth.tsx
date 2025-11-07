@@ -198,8 +198,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         queryClient.removeQueries({ queryKey: authKeys.user(), exact: false });
       }
       
-      // Invalidate all auth queries for consistency
-      queryClient.invalidateQueries({ queryKey: authKeys.all });
+      // When signing in, refetch roles and profile with the new session
+      // Don't invalidate the session itself to avoid loading state issues
+      if (session?.user) {
+        queryClient.invalidateQueries({ queryKey: authKeys.user() });
+      }
     });
 
     return () => subscription.unsubscribe();
