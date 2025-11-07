@@ -1,4 +1,4 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.77.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -92,23 +92,53 @@ function evaluateFormulaSafe(formula: string, variables: Record<string, number>)
 }
 
 function convertIFToTernary(formula: string): string {
+  // Convert IF(condition, trueVal, falseVal) to (condition ? trueVal : falseVal)
+  // Process from innermost to outermost for nested IFs
   let result = formula;
-  let maxIterations = 20;
-
-  while (maxIterations-- > 0) {
-    // Match IF(condition, trueVal, falseVal) patterns
-    const ifMatch = result.match(/IF\s*\(([^()]+(?:\([^()]*\))*[^()]*)\)/i);
-    if (!ifMatch) break;
-
-    const args = splitIFArguments(ifMatch[1]);
-    if (args.length === 3) {
-      const ternary = `(${args[0]} ? ${args[1]} : ${args[2]})`;
-      result = result.replace(ifMatch[0], ternary);
-    } else {
-      throw new Error('IF statement must have exactly 3 arguments');
+  let hasChanges = true;
+  let maxIterations = 20; // Increased for deeply nested IFs
+  
+  // Keep converting innermost IFs until none remain
+  while (hasChanges && maxIterations-- > 0) {
+    hasChanges = false;
+    
+    // Find IF statements from the end (innermost first)
+    for (let i = result.length - 1; i >= 0; i--) {
+      if (result.substring(i, i + 2).toUpperCase() === 'IF' && 
+          result[i + 2] === '(' && 
+          (i === 0 || !/[A-Za-z0-9_]/.test(result[i - 1]))) {
+        
+        // Find matching closing parenthesis using depth tracking
+        let depth = 0;
+        let start = i + 2;
+        let end = -1;
+        
+        for (let j = start; j < result.length; j++) {
+          if (result[j] === '(') depth++;
+          if (result[j] === ')') {
+            depth--;
+            if (depth === 0) {
+              end = j;
+              break;
+            }
+          }
+        }
+        
+        if (end !== -1) {
+          const argsStr = result.substring(start + 1, end);
+          const args = splitIFArguments(argsStr);
+          
+          if (args.length === 3) {
+            const ternary = `(${args[0]} ? ${args[1]} : ${args[2]})`;
+            result = result.substring(0, i) + ternary + result.substring(end + 1);
+            hasChanges = true;
+            break; // Restart from the beginning after each conversion
+          }
+        }
+      }
     }
   }
-
+  
   return result;
 }
 
