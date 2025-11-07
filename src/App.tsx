@@ -90,7 +90,7 @@ const App = () => (
                 
                 {/* Management routes */}
                 <Route path="/management/approve" element={<ProtectedRoute requiredRole="management"><ManagementApproveOT /></ProtectedRoute>} />
-                <Route path="/management/review" element={<ProtectedRoute requiredRole="management"><ReviewOT /></ProtectedRoute>} />
+                <Route path="/management/report" element={<ProtectedRoute requiredRole="management"><ReviewOT /></ProtectedRoute>} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>

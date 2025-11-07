@@ -158,7 +158,7 @@ export default function ReviewOT() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Management Review</h1>
+          <h1 className="text-3xl font-bold">Management Report</h1>
           <p className="text-muted-foreground">Filter and export monthly overtime summaries by department and employee.</p>
         </div>
 

@@ -87,7 +87,7 @@ function AppSidebar() {
     
     // Management actions
     { path: '/management/approve', label: 'Approve OT', icon: CheckCircle, roles: ['management'] },
-    { path: '/management/review', label: 'Management Review', icon: Eye, roles: ['management'] },
+    { path: '/management/report', label: 'Management Report', icon: Eye, roles: ['management'] },
   ];
 
   const filteredItems = menuItems.filter(item => 
