@@ -91,6 +91,7 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
             <TableHead>Employee ID</TableHead>
             <TableHead>Full Name</TableHead>
             <TableHead>Email</TableHead>
+            <TableHead>Company</TableHead>
             <TableHead>Department</TableHead>
             <TableHead>Position</TableHead>
             <TableHead>Role</TableHead>
@@ -105,6 +106,16 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
               <TableCell className="font-mono text-sm">{employee.employee_id}</TableCell>
               <TableCell className="font-medium">{employee.full_name}</TableCell>
               <TableCell>{employee.email}</TableCell>
+              <TableCell>
+                {employee.company?.name ? (
+                  <span>{employee.company.name}</span>
+                ) : (
+                  <div className="flex items-center gap-1 text-amber-600">
+                    <AlertTriangle className="h-3 w-3" />
+                    <span className="text-sm">Not assigned</span>
+                  </div>
+                )}
+              </TableCell>
               <TableCell>
                 {employee.department?.name ? (
                   <span>{employee.department.name}</span>

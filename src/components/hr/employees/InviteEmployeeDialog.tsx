@@ -11,6 +11,7 @@ import { useInviteEmployee } from '@/hooks/hr/useInviteEmployee';
 import { useDepartments } from '@/hooks/hr/useDepartments';
 import { useEmployees } from '@/hooks/hr/useEmployees';
 import { usePositions } from '@/hooks/hr/usePositions';
+import { useCompanies } from '@/hooks/hr/useCompanies';
 
 const inviteSchema = z.object({
   email: z.string().trim().email('Invalid email address'),
@@ -18,6 +19,7 @@ const inviteSchema = z.object({
   employee_id: z.string().trim().min(1, 'Employee No is required').max(50),
   ic_no: z.string().trim().max(50).optional(),
   phone_no: z.string().trim().max(20).optional(),
+  company_id: z.string().uuid('Company is required'),
   position_id: z.string().uuid('Position is required'),
   department_id: z.string().uuid('Department is required'),
   basic_salary: z.number().min(1, 'Basic salary must be greater than 0'),
@@ -41,6 +43,7 @@ interface InviteEmployeeDialogProps {
 
 export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialogProps) {
   const { mutate: inviteEmployee, isPending } = useInviteEmployee();
+  const { data: companies = [] } = useCompanies();
   const { data: departments = [] } = useDepartments();
   const { data: employees = [] } = useEmployees();
   
@@ -77,6 +80,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
       phone_no: data.phone_no || null,
       position: positionTitle,
       position_id: data.position_id,
+      company_id: data.company_id,
       department_id: data.department_id,
       basic_salary: data.basic_salary,
       epf_no: data.epf_no || null,
@@ -167,7 +171,33 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               />
             </div>
 
-            {/* Row 3: Department & Position */}
+            {/* Row 3: Company (Full Width) */}
+            <FormField
+              control={form.control}
+              name="company_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Company" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Row 4: Department & Position */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -234,7 +264,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               />
             </div>
 
-            {/* Row 4: Phone No & Basic Salary */}
+            {/* Row 5: Phone No & Basic Salary */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -270,7 +300,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               />
             </div>
 
-            {/* Row 5: EPF & SOCSO */}
+            {/* Row 6: EPF & SOCSO */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -301,7 +331,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               />
             </div>
 
-            {/* Row 6: Income Tax & Employment Type */}
+            {/* Row 7: Income Tax & Employment Type */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -341,7 +371,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               />
             </div>
 
-            {/* Row 7: Joining Date & Work Location */}
+            {/* Row 8: Joining Date & Work Location */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -372,7 +402,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               />
             </div>
 
-            {/* Row 8: Reporting To (Full Width) */}
+            {/* Row 9: Reporting To (Full Width) */}
             <FormField
               control={form.control}
               name="supervisor_id"
@@ -400,7 +430,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               )}
             />
 
-            {/* Row 9: Role (Full Width) */}
+            {/* Row 10: Role (Full Width) */}
             <FormField
               control={form.control}
               name="role"
@@ -426,7 +456,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               )}
             />
 
-            {/* Row 10: OT Eligible */}
+            {/* Row 11: OT Eligible */}
             <FormField
               control={form.control}
               name="is_ot_eligible"

@@ -74,6 +74,7 @@ export interface Profile {
   email: string;
   ic_no: string | null;
   phone_no: string | null;
+  company_id: string | null;
   department_id: string | null;
   basic_salary: number;
   epf_no: string | null;
@@ -90,6 +91,7 @@ export interface Profile {
   status: string;
   is_ot_eligible: boolean;
   user_roles?: Array<{ role: AppRole }>;
+  company?: { id: string; name: string; code: string } | null;
   department?: { id: string; name: string; code: string } | null;
   position_obj?: Position | null;
   created_at: string;
