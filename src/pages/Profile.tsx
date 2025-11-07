@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Briefcase, MapPin, DollarSign, Shield } from 'lucide-react';
 import { format } from 'date-fns';
+import { InventoryQRCodeCard } from '@/components/profile/InventoryQRCodeCard';
 
 export default function Profile() {
   const { profile } = useAuth();
@@ -204,6 +205,9 @@ export default function Profile() {
             </CardContent>
           </Card>
         )}
+
+        {/* Inventory Room Access QR Code */}
+        <InventoryQRCodeCard profile={profile} />
       </div>
     </div>
   );
