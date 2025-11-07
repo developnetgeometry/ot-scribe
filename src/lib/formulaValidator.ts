@@ -148,19 +148,49 @@ function countTopLevelCommas(str: string): number {
 
 function convertIFToTernary(formula: string): string {
   // Convert IF(condition, trueVal, falseVal) to (condition ? trueVal : falseVal)
+  // Process from innermost to outermost for nested IFs
   let result = formula;
-  let maxIterations = 10; // Prevent infinite loops
+  let hasChanges = true;
+  let maxIterations = 20; // Increased for deeply nested IFs
   
-  while (maxIterations-- > 0) {
-    const ifMatch = result.match(/IF\s*\(([^()]*(?:\([^()]*\))*[^()]*)\)/i);
-    if (!ifMatch) break;
+  // Keep converting innermost IFs until none remain
+  while (hasChanges && maxIterations-- > 0) {
+    hasChanges = false;
     
-    const args = splitIFArguments(ifMatch[1]);
-    if (args.length === 3) {
-      const ternary = `(${args[0]} ? ${args[1]} : ${args[2]})`;
-      result = result.replace(ifMatch[0], ternary);
-    } else {
-      break;
+    // Find IF statements from the end (innermost first)
+    for (let i = result.length - 1; i >= 0; i--) {
+      if (result.substring(i, i + 2).toUpperCase() === 'IF' && 
+          result[i + 2] === '(' && 
+          (i === 0 || !/[A-Za-z0-9_]/.test(result[i - 1]))) {
+        
+        // Find matching closing parenthesis using depth tracking
+        let depth = 0;
+        let start = i + 2;
+        let end = -1;
+        
+        for (let j = start; j < result.length; j++) {
+          if (result[j] === '(') depth++;
+          if (result[j] === ')') {
+            depth--;
+            if (depth === 0) {
+              end = j;
+              break;
+            }
+          }
+        }
+        
+        if (end !== -1) {
+          const argsStr = result.substring(start + 1, end);
+          const args = splitIFArguments(argsStr);
+          
+          if (args.length === 3) {
+            const ternary = `(${args[0]} ? ${args[1]} : ${args[2]})`;
+            result = result.substring(0, i) + ternary + result.substring(end + 1);
+            hasChanges = true;
+            break; // Restart from the beginning after each conversion
+          }
+        }
+      }
     }
   }
   
