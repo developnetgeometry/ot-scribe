@@ -60,23 +60,6 @@ export default function Auth() {
     }
   };
 
-  const handleCreateTestUsers = async () => {
-    setIsSubmitting(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-test-users', {
-        body: {}
-      });
-
-      if (error) throw error;
-
-      toast.success('Test users created successfully! Check console for credentials.');
-      console.log('Test Users:', data);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create test users');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
@@ -129,19 +112,9 @@ export default function Auth() {
             </AlertDescription>
           </Alert>
 
-          <div className="mt-6">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleCreateTestUsers}
-              disabled={isSubmitting}
-            >
-              Create Test Users (Dev Only)
-            </Button>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              Forgot password? Contact HR for assistance.
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground mt-6 text-center">
+            Forgot password? Contact HR for assistance.
+          </p>
         </CardContent>
       </Card>
     </div>
