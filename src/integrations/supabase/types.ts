@@ -993,6 +993,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      lookup_email_by_employee_id: {
+        Args: { p_employee_id: string }
+        Returns: string
+      }
       mark_expired_tokens: { Args: never; Returns: undefined }
     }
     Enums: {

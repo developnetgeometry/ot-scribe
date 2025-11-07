@@ -32,12 +32,11 @@ export default function Auth() {
     setIsSubmitting(true);
 
     try {
-      // Look up email from employee_id
+      // Look up email from employee_id using secure function
       const { data, error: lookupError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('employee_id', employeeId.trim())
-        .single();
+        .rpc('lookup_email_by_employee_id', {
+          p_employee_id: employeeId.trim()
+        });
 
       if (lookupError || !data) {
         toast.error('Employee ID not found. Please check and try again.');
@@ -46,7 +45,7 @@ export default function Auth() {
       }
 
       // Use the email to sign in with Supabase Auth
-      const { error } = await signIn(data.email, password);
+      const { error } = await signIn(data, password);
 
       if (error) {
         toast.error(error.message || 'Unable to sign in. Please try again.');
