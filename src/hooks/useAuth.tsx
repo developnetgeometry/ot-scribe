@@ -144,10 +144,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign Out Mutation
   const signOutMutation = useMutation({
     mutationFn: async () => {
+      // 1) Clear local session first to stop auto-refresh loops
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch {
+        // ignore local scope sign-out errors
+      }
+
+      // 2) Attempt global sign-out; treat "no session" variants as success
       const { error } = await supabase.auth.signOut();
-      // Ignore "Session not found" errors - user is already logged out
-      if (error && !error.message.includes('session_not_found')) {
-        throw error;
+      if (error) {
+        const msg = (error.message || '').toLowerCase();
+        const name = (error as any).name || '';
+        const isIgnorable =
+          msg.includes('session_not_found') ||
+          msg.includes('auth session missing') ||
+          name === 'AuthSessionMissingError' ||
+          ((error as any).__isAuthError === true && (error as any).status === 400);
+
+        if (!isIgnorable) {
+          throw error;
+        }
+      }
+
+      // 3) Fallback: purge persisted auth keys for this project ref
+      try {
+        const ref = 'kamtarwxydftzpewcgzs';
+        localStorage.removeItem(`sb-${ref}-auth-token`);
+        localStorage.removeItem(`sb-${ref}-auth-token.0`);
+        localStorage.removeItem(`sb-${ref}-auth-token.1`);
+      } catch {
+        // ignore storage errors
       }
     },
     onSuccess: () => {
@@ -160,14 +187,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       console.log(`Auth state changed: ${event}`, { session: !!session });
-      
-      if (event === 'SIGNED_OUT' || !session) {
-        queryClient.invalidateQueries({ queryKey: authKeys.all });
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        queryClient.invalidateQueries({ queryKey: authKeys.all });
-      }
+      // Keep this synchronous to avoid deadlocks; don't call supabase here
+      queryClient.invalidateQueries({ queryKey: authKeys.all });
     });
 
     return () => subscription.unsubscribe();
