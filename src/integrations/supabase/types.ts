@@ -707,6 +707,7 @@ export type Database = {
           phone_no: string | null
           position: string | null
           position_id: string | null
+          require_ot_attachment: boolean
           socso_no: string | null
           state: string | null
           status: string | null
@@ -733,6 +734,7 @@ export type Database = {
           phone_no?: string | null
           position?: string | null
           position_id?: string | null
+          require_ot_attachment?: boolean
           socso_no?: string | null
           state?: string | null
           status?: string | null
@@ -759,6 +761,7 @@ export type Database = {
           phone_no?: string | null
           position?: string | null
           position_id?: string | null
+          require_ot_attachment?: boolean
           socso_no?: string | null
           state?: string | null
           status?: string | null

@@ -90,6 +90,7 @@ export interface Profile {
   state: string | null;
   status: string;
   is_ot_eligible: boolean;
+  require_ot_attachment?: boolean;
   user_roles?: Array<{ role: AppRole }>;
   company?: { id: string; name: string; code: string } | null;
   department?: { id: string; name: string; code: string } | null;

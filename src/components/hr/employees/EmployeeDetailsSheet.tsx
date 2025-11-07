@@ -529,6 +529,31 @@ export function EmployeeDetailsSheet({
                 </Badge>
               )}
             </div>
+
+            {/* Row 11: Require OT Attachment (Full Width) */}
+            <div className="grid gap-2 col-span-2">
+              <Label htmlFor="require_ot_attachment">Require OT Attachment</Label>
+              {isEditing ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="require_ot_attachment"
+                    checked={formData.require_ot_attachment ?? false}
+                    onChange={(e) =>
+                      setFormData({ ...formData, require_ot_attachment: e.target.checked })
+                    }
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    Require employee to attach files when submitting OT requests
+                  </span>
+                </div>
+              ) : (
+                <Badge variant={employee.require_ot_attachment ? 'default' : 'secondary'} className="w-fit">
+                  {employee.require_ot_attachment ? 'Required' : 'Optional'}
+                </Badge>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-2 justify-end">
