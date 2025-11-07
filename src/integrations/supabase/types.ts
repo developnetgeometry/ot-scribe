@@ -872,6 +872,16 @@ export type Database = {
         Args: { ot_date: string }
         Returns: Database["public"]["Enums"]["day_type"]
       }
+      evaluate_ot_formula: {
+        Args: {
+          formula_text: string
+          p_basic: number
+          p_hours: number
+          p_hrp: number
+          p_orp: number
+        }
+        Returns: number
+      }
       generate_state_holidays: {
         Args: { in_state_code?: string; in_year: number }
         Returns: {
