@@ -200,10 +200,18 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
+    if (isLoggingOut) return; // Prevent multiple clicks
+    
+    setIsLoggingOut(true);
+    try {
+      await signOut();
+    } finally {
+      // Always navigate, even if signOut had errors
+      navigate('/auth');
+    }
   };
 
   // Generate breadcrumb items from current path

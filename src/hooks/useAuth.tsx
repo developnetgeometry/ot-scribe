@@ -145,7 +145,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOutMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Ignore "Session not found" errors - user is already logged out
+      if (error && !error.message.includes('session_not_found')) {
+        throw error;
+      }
     },
     onSuccess: () => {
       // Clear all queries and reset auth state
@@ -204,8 +207,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       await signOutMutation.mutateAsync();
     } catch (error) {
-      console.error('Sign out error:', error);
-      toast.error('Error signing out');
+      // Only log and show errors that aren't session-not-found
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!errorMessage.includes('session_not_found')) {
+        console.error('Sign out error:', error);
+        toast.error('Error signing out');
+      }
+    } finally {
+      // Always clear state, even on error
+      queryClient.clear();
     }
   };
 
