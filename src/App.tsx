@@ -28,7 +28,7 @@ import Settings from "./pages/Settings";
 import HolidayCalendars from "./pages/hr/HolidayCalendars";
 import NewHolidayCalendar from "./pages/hr/NewHolidayCalendar";
 import EditHolidayCalendar from "./pages/hr/EditHolidayCalendar";
-import RecertifyOT from "./pages/hr/RecertifyOT";
+
 import Calendar from "./pages/Calendar";
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import HRDashboard from "./pages/hr/HRDashboard";
@@ -80,7 +80,6 @@ const App = () => (
                 
                 {/* HR routes */}
                 <Route path="/hr/approve" element={<ProtectedRoute requiredRole="hr"><ApproveOT /></ProtectedRoute>} />
-                <Route path="/hr/recertify" element={<ProtectedRoute requiredRole="hr"><RecertifyOT /></ProtectedRoute>} />
                 <Route path="/hr/employees" element={<ProtectedRoute requiredRole="hr"><Employees /></ProtectedRoute>} />
                 <Route path="/hr/departments" element={<ProtectedRoute requiredRole="hr"><Departments /></ProtectedRoute>} />
                 <Route path="/hr/calendar" element={<ProtectedRoute requiredRole="hr"><HolidayCalendars /></ProtectedRoute>} />

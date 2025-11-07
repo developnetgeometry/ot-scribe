@@ -6,14 +6,30 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { OTApprovalTable } from '@/components/approvals/OTApprovalTable';
 import { useOTApproval } from '@/hooks/useOTApproval';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { usePendingRecertifications, useRecertifyOTActions } from '@/hooks/hr/useRecertifyOT';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { format } from 'date-fns';
 
 export default function ApproveOT() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('supervisor_verified');
+  const [activeTab, setActiveTab] = useState(() => {
+    const tabParam = searchParams.get('tab');
+    return tabParam || 'supervisor_verified';
+  });
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [recertifySelectedRequest, setRecertifySelectedRequest] = useState<any>(null);
+  const [recertifyAction, setRecertifyAction] = useState<'recertify' | 'decline' | null>(null);
+  const [recertifyRemarks, setRecertifyRemarks] = useState('');
+  const [recertifyDialogOpen, setRecertifyDialogOpen] = useState(false);
   
   const { 
     requests, 
@@ -22,7 +38,10 @@ export default function ApproveOT() {
     rejectRequest: rejectRequestMutation,
     isApproving,
     isRejecting
-  } = useOTApproval({ role: 'hr', status: activeTab });
+  } = useOTApproval({ role: 'hr', status: activeTab === 'pending_hr_recertification' ? 'supervisor_verified' : activeTab });
+
+  const { data: recertifyRequests = [], isLoading: isLoadingRecertify } = usePendingRecertifications();
+  const { recertify, decline } = useRecertifyOTActions();
 
   const filteredRequests = requests?.filter(request => {
     if (!searchQuery) return true;
@@ -50,6 +69,7 @@ export default function ApproveOT() {
             'supervisor_verified': 'supervisor_verified',
             'hr_certified': 'hr_certified',
             'rejected': 'rejected',
+            'pending_hr_recertification': 'pending_hr_recertification',
           };
           
           const tab = statusToTab[data.status] || 'all';
@@ -80,6 +100,28 @@ export default function ApproveOT() {
     await rejectRequestMutation({ requestIds, remarks });
   };
 
+  const handleRecertifyAction = (request: any, actionType: 'recertify' | 'decline') => {
+    setRecertifySelectedRequest(request);
+    setRecertifyAction(actionType);
+    setRecertifyRemarks('');
+    setRecertifyDialogOpen(true);
+  };
+
+  const handleRecertifySubmit = async () => {
+    if (!recertifySelectedRequest || !recertifyAction || !recertifyRemarks.trim()) return;
+
+    if (recertifyAction === 'recertify') {
+      await recertify.mutateAsync({ requestId: recertifySelectedRequest.id, remarks: recertifyRemarks });
+    } else {
+      await decline.mutateAsync({ requestId: recertifySelectedRequest.id, remarks: recertifyRemarks });
+    }
+
+    setRecertifyDialogOpen(false);
+    setRecertifySelectedRequest(null);
+    setRecertifyAction(null);
+    setRecertifyRemarks('');
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -94,36 +136,181 @@ export default function ApproveOT() {
             <TabsTrigger value="hr_certified">Certified</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
             <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="pending_hr_recertification">
+              Recertify {recertifyRequests.length > 0 && `(${recertifyRequests.length})`}
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value={activeTab} className="mt-6">
-            <Card className="p-6">
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by employee, department..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+          {activeTab === 'pending_hr_recertification' ? (
+            <TabsContent value="pending_hr_recertification" className="mt-6">
+              <Card className="p-6">
+                <div className="space-y-4">
+                  <Alert>
+                    <AlertDescription>
+                      These OT requests were rejected by Management. You can either:
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        <li><strong>Recertify</strong>: Send back to Management for review with your justification</li>
+                        <li><strong>Decline</strong>: Send back to employee for corrections</li>
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+
+                  {isLoadingRecertify ? (
+                    <div className="space-y-2">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
+                    </div>
+                  ) : recertifyRequests.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No pending recertification requests
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Employee</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Day Type</TableHead>
+                          <TableHead>Hours</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Management Remarks</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recertifyRequests.map((request: any) => {
+                          const profile = request.profiles;
+                          const department = profile?.departments;
+                          return (
+                            <TableRow key={request.id}>
+                              <TableCell>
+                                <div className="font-medium">{profile?.full_name}</div>
+                                <div className="text-sm text-muted-foreground">{profile?.employee_id}</div>
+                                <div className="text-xs text-muted-foreground">{department?.name}</div>
+                              </TableCell>
+                              <TableCell>{format(new Date(request.ot_date), 'dd MMM yyyy')}</TableCell>
+                              <TableCell className="capitalize">{request.day_type?.replace('_', ' ')}</TableCell>
+                              <TableCell>{request.total_hours}h</TableCell>
+                              <TableCell>RM {request.ot_amount?.toFixed(2)}</TableCell>
+                              <TableCell>
+                                <div className="text-sm max-w-xs">
+                                  {request.management_remarks || '-'}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() => handleRecertifyAction(request, 'recertify')}
+                                    disabled={recertify.isPending || decline.isPending}
+                                  >
+                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    Recertify
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleRecertifyAction(request, 'decline')}
+                                    disabled={recertify.isPending || decline.isPending}
+                                  >
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    Decline
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              </Card>
+            </TabsContent>
+          ) : (
+            <TabsContent value={activeTab} className="mt-6">
+              <Card className="p-6">
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by employee, department..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+
+                  <OTApprovalTable 
+                    requests={filteredRequests} 
+                    isLoading={isLoading}
+                    role="hr"
+                    approveRequest={handleApprove}
+                    rejectRequest={handleReject}
+                    isApproving={isApproving}
+                    isRejecting={isRejecting}
+                    showActions={activeTab === 'supervisor_verified'}
+                    initialSelectedRequestId={selectedRequestId}
                   />
                 </div>
-
-                <OTApprovalTable 
-                  requests={filteredRequests} 
-                  isLoading={isLoading}
-                  role="hr"
-                  approveRequest={handleApprove}
-                  rejectRequest={handleReject}
-                  isApproving={isApproving}
-                  isRejecting={isRejecting}
-                  showActions={activeTab === 'supervisor_verified'}
-                  initialSelectedRequestId={selectedRequestId}
-                />
-              </div>
-            </Card>
-          </TabsContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
+
+        <Dialog open={recertifyDialogOpen} onOpenChange={setRecertifyDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {recertifyAction === 'recertify' ? 'Recertify OT Request' : 'Decline OT Request'}
+              </DialogTitle>
+              <DialogDescription>
+                {recertifyAction === 'recertify' 
+                  ? 'You are recertifying this request to send it back to Management for review. Please provide your justification.'
+                  : 'You are declining this request to send it back to the employee for corrections. Please explain what needs to be fixed.'}
+              </DialogDescription>
+            </DialogHeader>
+
+            {recertifySelectedRequest && (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Management Rejection Reason:</Label>
+                  <div className="mt-1 p-3 bg-muted rounded-md text-sm">
+                    {recertifySelectedRequest.management_remarks || 'No remarks provided'}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="recertify-remarks">Your Remarks *</Label>
+                  <Textarea
+                    id="recertify-remarks"
+                    placeholder={recertifyAction === 'recertify' 
+                      ? 'Explain why this should be recertified...'
+                      : 'Explain what the employee needs to correct...'}
+                    value={recertifyRemarks}
+                    onChange={(e) => setRecertifyRemarks(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRecertifyDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleRecertifySubmit}
+                disabled={!recertifyRemarks.trim() || recertify.isPending || decline.isPending}
+                variant={recertifyAction === 'recertify' ? 'default' : 'destructive'}
+              >
+                {recertifyAction === 'recertify' ? 'Recertify' : 'Decline'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
