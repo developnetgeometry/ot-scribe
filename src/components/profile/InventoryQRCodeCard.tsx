@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { QrCode, RefreshCw, Clock, AlertCircle } from 'lucide-react';
-import { QRCodeSVG } from 'react-qr-code';
+import QRCodeSVG from 'react-qr-code';
 import { useInventoryQRCode } from '@/hooks/useInventoryQRCode';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -56,7 +56,6 @@ export function InventoryQRCodeCard({ profile }: InventoryQRCodeCardProps) {
                     value={qrData}
                     size={256}
                     level="H"
-                    includeMargin
                   />
                 </div>
                 
