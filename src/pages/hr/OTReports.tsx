@@ -105,6 +105,8 @@ export default function OTReports() {
     }
 
     try {
+      const uniqueCompanies = new Set(filteredData.map(emp => emp.company_id));
+      
       await generateHRReportPDF({
         companyInfo: {
           name: companyProfile.name,
@@ -119,6 +121,7 @@ export default function OTReports() {
           totalHours: stats.totalHours,
           totalCost: stats.totalCost,
           totalEmployees: filteredData.length,
+          totalCompanies: uniqueCompanies.size,
         },
         employees: filteredData,
       });

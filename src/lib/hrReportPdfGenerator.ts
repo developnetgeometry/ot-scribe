@@ -15,12 +15,16 @@ interface HRReportData {
     totalHours: number;
     totalCost: number;
     totalEmployees: number;
+    totalCompanies: number;
   };
   employees: Array<{
     employee_no: string;
     employee_name: string;
     department: string;
     position: string;
+    company_id: string;
+    company_name: string;
+    company_code: string;
     total_ot_hours: number;
     amount: number;
   }>;
@@ -146,7 +150,7 @@ export async function generateHRReportPDF(data: HRReportData): Promise<void> {
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...textLight);
-  doc.text(`Total Employees: ${data.summary.totalEmployees} | Pending Review: ${data.summary.pendingReview}`, 
+  doc.text(`Total Employees: ${data.summary.totalEmployees} | Companies: ${data.summary.totalCompanies} | Pending Review: ${data.summary.pendingReview}`, 
     pageWidth / 2, yPos + 5, { align: 'center' });
 
   yPos += 15;
@@ -159,42 +163,95 @@ export async function generateHRReportPDF(data: HRReportData): Promise<void> {
 
   yPos += 8;
 
-  // Table
-  autoTable(doc, {
-    startY: yPos,
-    head: [['Employee No', 'Name', 'Department', 'Position', 'OT Hours', 'Amount (RM)']],
-    body: data.employees.map(emp => [
-      emp.employee_no,
-      emp.employee_name,
-      emp.department,
-      emp.position,
-      emp.total_ot_hours.toFixed(2),
-      emp.amount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    ]),
-    theme: 'striped',
-    headStyles: {
-      fillColor: primaryColor,
-      textColor: [255, 255, 255],
-      fontSize: 9,
-      fontStyle: 'bold',
-      halign: 'left'
-    },
-    bodyStyles: {
-      fontSize: 8,
-      textColor: textDark,
-    },
-    alternateRowStyles: {
-      fillColor: [249, 250, 251]
-    },
-    columnStyles: {
-      0: { cellWidth: 25 },
-      1: { cellWidth: 40 },
-      2: { cellWidth: 35 },
-      3: { cellWidth: 35 },
-      4: { cellWidth: 20, halign: 'right' },
-      5: { cellWidth: 30, halign: 'right' }
-    },
-    margin: { left: margin, right: margin },
+  // Group employees by company
+  const employeesByCompany = new Map<string, typeof data.employees>();
+  data.employees.forEach(emp => {
+    const companyKey = emp.company_id;
+    if (!employeesByCompany.has(companyKey)) {
+      employeesByCompany.set(companyKey, []);
+    }
+    employeesByCompany.get(companyKey)!.push(emp);
+  });
+
+  // Sort companies by name
+  const sortedCompanies = Array.from(employeesByCompany.entries())
+    .sort((a, b) => a[1][0].company_name.localeCompare(b[1][0].company_name));
+
+  // For each company, create a section
+  sortedCompanies.forEach(([companyId, companyEmployees], index) => {
+    const companyName = companyEmployees[0].company_name;
+    const companyCode = companyEmployees[0].company_code;
+    
+    // Company header with subtle background
+    doc.setFillColor(240, 247, 255); // Light blue background
+    doc.roundedRect(margin, yPos - 2, pageWidth - 2 * margin, 10, 2, 2, 'F');
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryColor);
+    doc.text(`${companyName} (${companyCode})`, margin + 5, yPos + 5);
+    
+    yPos += 13;
+    
+    // Company employee table
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Employee No', 'Name', 'Department', 'Position', 'OT Hours', 'Amount (RM)']],
+      body: companyEmployees.map(emp => [
+        emp.employee_no,
+        emp.employee_name,
+        emp.department,
+        emp.position,
+        emp.total_ot_hours.toFixed(2),
+        emp.amount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      ]),
+      theme: 'striped',
+      headStyles: {
+        fillColor: primaryColor,
+        textColor: [255, 255, 255],
+        fontSize: 9,
+        fontStyle: 'bold',
+        halign: 'left'
+      },
+      bodyStyles: {
+        fontSize: 8,
+        textColor: textDark,
+      },
+      alternateRowStyles: {
+        fillColor: [249, 250, 251]
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 20, halign: 'right' },
+        5: { cellWidth: 30, halign: 'right' }
+      },
+      margin: { left: margin, right: margin },
+    });
+    
+    // Calculate company subtotals
+    const companyTotalHours = companyEmployees.reduce((sum, e) => sum + e.total_ot_hours, 0);
+    const companyTotalCost = companyEmployees.reduce((sum, e) => sum + e.amount, 0);
+    
+    // Display subtotal row
+    yPos = (doc as any).lastAutoTable.finalY + 3;
+    
+    doc.setFillColor(245, 245, 245);
+    doc.rect(margin, yPos, pageWidth - 2 * margin, 8, 'F');
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...textDark);
+    doc.text(
+      `${companyName} Subtotal: ${companyTotalHours.toFixed(2)} hours | RM ${companyTotalCost.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      pageWidth - margin - 5,
+      yPos + 5,
+      { align: 'right' }
+    );
+    
+    yPos += 15; // Space before next company
   });
 
   // ===== FOOTER =====

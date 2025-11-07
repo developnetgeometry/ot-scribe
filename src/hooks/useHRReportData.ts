@@ -8,6 +8,9 @@ interface EmployeeOTSummary {
   employee_name: string;
   department: string;
   position: string;
+  company_id: string;
+  company_name: string;
+  company_code: string;
   total_ot_hours: number;
   amount: number;
   monthly_total: number;
@@ -36,8 +39,10 @@ export function useHRReportData(selectedMonth?: Date) {
             full_name,
             department_id,
             position_id,
+            company_id,
             departments!profiles_department_id_fkey(name, code),
-            positions!profiles_position_id_fkey(title)
+            positions!profiles_position_id_fkey(title),
+            companies!profiles_company_id_fkey(name, code)
           )
         `)
         .gte('ot_date', startDate)
@@ -76,6 +81,9 @@ function aggregateByEmployee(requests: any[]): EmployeeOTSummary[] {
         employee_name: profile?.full_name || 'Unknown',
         department: profile?.departments?.name || 'N/A',
         position: profile?.positions?.title || 'N/A',
+        company_id: profile?.company_id || 'unknown',
+        company_name: profile?.companies?.name || 'Unknown Company',
+        company_code: profile?.companies?.code || 'N/A',
         total_ot_hours: 0,
         amount: 0,
         monthly_total: 0
