@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Auth() {
-  const [email, setEmail] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -31,19 +31,34 @@ export default function Auth() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      // Look up email from employee_id
+      const { data, error: lookupError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('employee_id', employeeId.trim())
+        .single();
 
-    if (error) {
-      // Use the user-friendly error message from signIn
-      toast.error(error.message || 'Unable to sign in. Please try again.');
+      if (lookupError || !data) {
+        toast.error('Employee ID not found. Please check and try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Use the email to sign in with Supabase Auth
+      const { error } = await signIn(data.email, password);
+
+      if (error) {
+        toast.error(error.message || 'Unable to sign in. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      toast.success('Welcome back!');
+    } catch (err: any) {
+      toast.error(err.message || 'Unable to sign in. Please try again.');
       setIsSubmitting(false);
-      return;
     }
-
-    // Success - React Query will handle loading server state
-    // The useEffect will handle navigation when data is ready
-    toast.success('Welcome back!');
-    // Keep isSubmitting true - navigation will reset the page
   };
 
   const handleCreateTestUsers = async () => {
@@ -70,19 +85,19 @@ export default function Auth() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">OTMS Login</CardTitle>
           <CardDescription>
-            Enter your credentials to access the Overtime Management System
+            Enter your Employee ID and password to access the Overtime Management System
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="employeeId">Employee ID</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="employee@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="employeeId"
+                type="text"
+                placeholder="e.g., EMP001"
+                value={employeeId}
+                onChange={(e) => setEmployeeId(e.target.value)}
                 required
                 disabled={isSubmitting}
               />
@@ -107,7 +122,7 @@ export default function Auth() {
             <Info className="h-4 w-4" />
             <AlertTitle>New Employee?</AlertTitle>
             <AlertDescription>
-              Your temporary password is: <strong className="font-semibold">Temp@12345</strong>
+              Use your Employee ID and temporary password: <strong className="font-semibold">Temp@12345</strong>
               <br />
               <span className="text-xs text-muted-foreground">
                 You'll be required to change it on first login.
