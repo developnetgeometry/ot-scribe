@@ -26,6 +26,7 @@ interface UpdateEmployeeData {
   state?: string | null;
   status?: string;
   is_ot_eligible?: boolean;
+  require_ot_attachment?: boolean;
   role?: AppRole;
 }
 
@@ -44,7 +45,7 @@ export function useUpdateEmployee() {
         'company_id', 'department_id', 'position_id', 'position', 'basic_salary',
         'epf_no', 'socso_no', 'income_tax_no', 'employment_type',
         'designation', 'supervisor_id', 'joining_date', 'work_location',
-        'state', 'status', 'is_ot_eligible'
+        'state', 'status', 'is_ot_eligible', 'require_ot_attachment'
       ];
 
       // Nullable fields that should convert empty strings to null
