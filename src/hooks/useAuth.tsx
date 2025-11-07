@@ -189,7 +189,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       console.log(`Auth state changed: ${event}`, { session: !!session });
-      // Keep this synchronous to avoid deadlocks; don't call supabase here
+      
+      // Synchronously update session cache to make UI react instantly
+      queryClient.setQueryData(authKeys.session(), session);
+      
+      // If no session, immediately clear user-scoped caches (roles/profile)
+      if (!session?.user) {
+        queryClient.removeQueries({ queryKey: authKeys.user(), exact: false });
+      }
+      
+      // Invalidate all auth queries for consistency
       queryClient.invalidateQueries({ queryKey: authKeys.all });
     });
 
@@ -237,7 +246,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         toast.error('Error signing out');
       }
     } finally {
-      // Always clear state, even on error
+      // Optimistically nullify session and clear user-scoped caches
+      queryClient.setQueryData(authKeys.session(), null);
+      queryClient.removeQueries({ queryKey: authKeys.user(), exact: false });
+      // Then fully clear everything
       queryClient.clear();
     }
   };
