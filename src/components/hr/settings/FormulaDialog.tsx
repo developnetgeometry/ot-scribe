@@ -40,7 +40,6 @@ const formulaSchema = z.object({
   hrp_definition: z.string().min(1, 'HRP definition is required'),
   multiplier: z.coerce.number().min(0, 'Multiplier must be positive'),
   base_formula: z.string().min(1, 'Base formula is required'),
-  employee_category: z.string().min(1, 'Employee category is required'),
   is_active: z.boolean().default(true),
   effective_from: z.string().min(1, 'Effective date is required'),
 });
@@ -68,7 +67,6 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
       hrp_definition: '(Basic / 26 / 8)',
       multiplier: 1.5,
       base_formula: 'ORP',
-      employee_category: 'All',
       is_active: true,
       effective_from: new Date().toISOString().split('T')[0],
     },
@@ -83,7 +81,6 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
         hrp_definition: formula.hrp_definition || '(Basic / 26 / 8)',
         multiplier: formula.multiplier,
         base_formula: formula.base_formula,
-        employee_category: formula.employee_category || 'All',
         is_active: formula.is_active,
         effective_from: formula.effective_from,
       });
@@ -95,7 +92,6 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
         hrp_definition: '(Basic / 26 / 8)',
         multiplier: 1.5,
         base_formula: 'ORP',
-        employee_category: 'All',
         is_active: true,
         effective_from: new Date().toISOString().split('T')[0],
       });
@@ -122,7 +118,6 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
           hrp_definition: data.hrp_definition,
           multiplier: data.multiplier,
           base_formula: data.base_formula,
-          employee_category: data.employee_category,
           is_active: data.is_active,
           effective_from: data.effective_from,
         },
@@ -202,20 +197,6 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
                     <FormLabel>Multiplier *</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.1" placeholder="1.5" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="employee_category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Employee Category *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="All" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
