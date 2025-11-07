@@ -61,10 +61,10 @@ function AppSidebar() {
   const menuItems = [
     // Role-specific dashboards
     { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
-    { path: '/hr/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['hr'] },
+    { path: '/hr/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['hr', 'admin'] },
     { path: '/supervisor/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['supervisor'] },
     { path: '/employee/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['employee'] },
-    { path: '/management/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['management'] },
+    { path: '/management/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['management', 'admin'] },
     
     // Shared - Calendar (all users)
     { path: '/calendar', label: 'Calendar', icon: Calendar, roles: ['admin', 'hr', 'supervisor', 'employee', 'management'] },
@@ -80,14 +80,14 @@ function AppSidebar() {
     { path: '/supervisor/verify', label: 'Verify OT', icon: CheckCircle, roles: ['supervisor'] },
     
     // HR actions
-    { path: '/hr/approve', label: 'Certify OT', icon: CheckCircle, roles: ['hr'] },
-    { path: '/hr/employees', label: 'Employees', icon: Users, roles: ['hr'] },
-    { path: '/hr/departments', label: 'Departments', icon: Building2, roles: ['hr'] },
-    { path: '/hr/ot-reports', label: 'OT Reports', icon: FileText, roles: ['hr'] },
+    { path: '/hr/approve', label: 'Certify OT', icon: CheckCircle, roles: ['hr', 'admin'] },
+    { path: '/hr/employees', label: 'Employees', icon: Users, roles: ['hr', 'admin'] },
+    { path: '/hr/departments', label: 'Departments', icon: Building2, roles: ['hr', 'admin'] },
+    { path: '/hr/ot-reports', label: 'OT Reports', icon: FileText, roles: ['hr', 'admin'] },
     
     // Management actions
-    { path: '/management/approve', label: 'Approve OT', icon: CheckCircle, roles: ['management'] },
-    { path: '/management/report', label: 'Management Report', icon: Eye, roles: ['management'] },
+    { path: '/management/approve', label: 'Approve OT', icon: CheckCircle, roles: ['management', 'admin'] },
+    { path: '/management/report', label: 'Management Report', icon: Eye, roles: ['management', 'admin'] },
   ];
 
   const filteredItems = menuItems.filter(item => 

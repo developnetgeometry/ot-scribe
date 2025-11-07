@@ -60,10 +60,10 @@ const App = () => (
                 
                 {/* Role-specific dashboards */}
                 <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/hr/dashboard" element={<ProtectedRoute requiredRole="hr"><HRDashboard /></ProtectedRoute>} />
+                <Route path="/hr/dashboard" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HRDashboard /></ProtectedRoute>} />
                 <Route path="/supervisor/dashboard" element={<ProtectedRoute requiredRole="supervisor"><SupervisorDashboard /></ProtectedRoute>} />
                 <Route path="/employee/dashboard" element={<ProtectedRoute requiredRole="employee"><EmployeeDashboard /></ProtectedRoute>} />
-                <Route path="/management/dashboard" element={<ProtectedRoute requiredRole="management"><ManagementDashboard /></ProtectedRoute>} />
+                <Route path="/management/dashboard" element={<ProtectedRoute requiredRole={['management', 'admin']}><ManagementDashboard /></ProtectedRoute>} />
                 
                 {/* Fallback dashboard */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -81,18 +81,18 @@ const App = () => (
                 <Route path="/supervisor/verify" element={<ProtectedRoute requiredRole="supervisor"><VerifyOT /></ProtectedRoute>} />
                 
                 {/* HR routes */}
-                <Route path="/hr/approve" element={<ProtectedRoute requiredRole="hr"><ApproveOT /></ProtectedRoute>} />
-                <Route path="/hr/employees" element={<ProtectedRoute requiredRole="hr"><Employees /></ProtectedRoute>} />
-                <Route path="/hr/departments" element={<ProtectedRoute requiredRole="hr"><Departments /></ProtectedRoute>} />
-                <Route path="/hr/calendar" element={<ProtectedRoute requiredRole="hr"><HolidayCalendars /></ProtectedRoute>} />
-                <Route path="/hr/calendar/new" element={<ProtectedRoute requiredRole="hr"><NewHolidayCalendar /></ProtectedRoute>} />
-                <Route path="/hr/calendar/:id/edit" element={<ProtectedRoute requiredRole="hr"><EditHolidayCalendar /></ProtectedRoute>} />
-                <Route path="/hr/settings" element={<ProtectedRoute requiredRole="hr"><HRSettings /></ProtectedRoute>} />
-                <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole="hr"><OTReports /></ProtectedRoute>} />
+                <Route path="/hr/approve" element={<ProtectedRoute requiredRole={['hr', 'admin']}><ApproveOT /></ProtectedRoute>} />
+                <Route path="/hr/employees" element={<ProtectedRoute requiredRole={['hr', 'admin']}><Employees /></ProtectedRoute>} />
+                <Route path="/hr/departments" element={<ProtectedRoute requiredRole={['hr', 'admin']}><Departments /></ProtectedRoute>} />
+                <Route path="/hr/calendar" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HolidayCalendars /></ProtectedRoute>} />
+                <Route path="/hr/calendar/new" element={<ProtectedRoute requiredRole={['hr', 'admin']}><NewHolidayCalendar /></ProtectedRoute>} />
+                <Route path="/hr/calendar/:id/edit" element={<ProtectedRoute requiredRole={['hr', 'admin']}><EditHolidayCalendar /></ProtectedRoute>} />
+                <Route path="/hr/settings" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HRSettings /></ProtectedRoute>} />
+                <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole={['hr', 'admin']}><OTReports /></ProtectedRoute>} />
                 
                 {/* Management routes */}
-                <Route path="/management/approve" element={<ProtectedRoute requiredRole="management"><ManagementApproveOT /></ProtectedRoute>} />
-                <Route path="/management/report" element={<ProtectedRoute requiredRole="management"><ReviewOT /></ProtectedRoute>} />
+                <Route path="/management/approve" element={<ProtectedRoute requiredRole={['management', 'admin']}><ManagementApproveOT /></ProtectedRoute>} />
+                <Route path="/management/report" element={<ProtectedRoute requiredRole={['management', 'admin']}><ReviewOT /></ProtectedRoute>} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
