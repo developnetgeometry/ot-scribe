@@ -60,11 +60,11 @@ function AppSidebar() {
 
   const menuItems = [
     // Role-specific dashboards
-    { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
-    { path: '/hr/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['hr', 'admin'] },
-    { path: '/supervisor/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['supervisor'] },
-    { path: '/employee/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['employee'] },
-    { path: '/management/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['management', 'admin'] },
+    { path: '/admin/dashboard', label: 'Admin Dashboard', icon: LayoutDashboard, roles: ['admin'] },
+    { path: '/hr/dashboard', label: 'HR Dashboard', icon: LayoutDashboard, roles: ['hr', 'admin'] },
+    { path: '/supervisor/dashboard', label: 'Supervisor Dashboard', icon: LayoutDashboard, roles: ['supervisor'] },
+    { path: '/employee/dashboard', label: 'Employee Dashboard', icon: LayoutDashboard, roles: ['employee'] },
+    { path: '/management/dashboard', label: 'Management Dashboard', icon: LayoutDashboard, roles: ['management', 'admin'] },
     
     // Shared - Calendar (all users)
     { path: '/calendar', label: 'Calendar', icon: Calendar, roles: ['admin', 'hr', 'supervisor', 'employee', 'management'] },
