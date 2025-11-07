@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import SetPassword from "./pages/SetPassword";
 import SetupPassword from "./pages/SetupPassword";
 import ChangePassword from "./pages/ChangePassword";
+import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import SubmitOT from "./pages/SubmitOT";
 import OTHistory from "./pages/OTHistory";
@@ -70,6 +71,7 @@ const App = () => (
                 {/* Shared routes - all authenticated users */}
                 <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 
                 {/* Employee routes */}
                 <Route path="/ot/submit" element={<ProtectedRoute requiredRole="employee"><SubmitOT /></ProtectedRoute>} />
