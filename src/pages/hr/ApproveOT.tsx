@@ -331,7 +331,19 @@ export default function ApproveOT() {
         </Dialog>
 
         <OTApprovalDetailsSheet
-          request={recertifyDetailsRequest}
+          request={recertifyDetailsRequest ? {
+            ...recertifyDetailsRequest,
+            sessions: [{
+              id: recertifyDetailsRequest.id,
+              start_time: recertifyDetailsRequest.start_time,
+              end_time: recertifyDetailsRequest.end_time,
+              total_hours: recertifyDetailsRequest.total_hours,
+              reason: recertifyDetailsRequest.reason,
+              attachment_urls: recertifyDetailsRequest.attachment_urls,
+              status: recertifyDetailsRequest.status,
+              ot_amount: recertifyDetailsRequest.ot_amount,
+            }]
+          } : null}
           open={!!recertifyDetailsRequest}
           onOpenChange={(open) => !open && setRecertifyDetailsRequest(null)}
           role="hr"
