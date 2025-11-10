@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
 const MOBILE_BREAKPOINT = 768;
+const TABLET_BREAKPOINT = 1024;
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined);
@@ -16,4 +17,31 @@ export function useIsMobile() {
   }, []);
 
   return !!isMobile;
+}
+
+export function useIsTablet() {
+  const [isTablet, setIsTablet] = useState<boolean | undefined>(undefined);
+
+  useEffect(() => {
+    const checkTablet = () => {
+      const width = window.innerWidth;
+      setIsTablet(width >= MOBILE_BREAKPOINT && width < TABLET_BREAKPOINT);
+    };
+    
+    const mql = window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT}px) and (max-width: ${TABLET_BREAKPOINT - 1}px)`);
+    mql.addEventListener("change", checkTablet);
+    checkTablet();
+    return () => mql.removeEventListener("change", checkTablet);
+  }, []);
+
+  return !!isTablet;
+}
+
+export function useDeviceType() {
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  
+  if (isMobile) return 'mobile';
+  if (isTablet) return 'tablet';
+  return 'desktop';
 }

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- Monochrome checkmark badge for approval notifications -->
+  <circle cx="36" cy="36" r="36" fill="#10b981"/>
+  <path
+    d="M 20 36 L 30 46 L 52 24"
+    stroke="#ffffff"
+    stroke-width="6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+</svg>

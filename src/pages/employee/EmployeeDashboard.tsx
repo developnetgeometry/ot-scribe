@@ -73,16 +73,16 @@ export default function EmployeeDashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 bg-muted/30 -m-6 p-6">
+      <div className="space-y-4 md:space-y-6 bg-muted/30 -m-4 md:-m-6 p-4 md:p-6">
         <div>
-          <h1 className="text-3xl font-bold">Employee Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold">Employee Dashboard</h1>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
             {fullName ? `Welcome back, ${fullName}!` : 'Welcome back!'} Here's your OT overview for this month.
           </p>
         </div>
 
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {loading ? (
             <>
               <Skeleton className="h-32 rounded-2xl" />
@@ -117,8 +117,8 @@ export default function EmployeeDashboard() {
         </div>
 
         <div>
-          <h2 className="text-2xl font-bold mb-4">Monthly OT Overview</h2>
-          <div className="grid gap-6 md:grid-cols-2">
+          <h2 className="text-xl md:text-2xl font-bold mb-4">Monthly OT Overview</h2>
+          <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2">
             <EmployeeOTWeeklyChart />
             <EmployeeOTStatusChart />
           </div>

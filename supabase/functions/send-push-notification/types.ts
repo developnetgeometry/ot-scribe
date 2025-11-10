@@ -15,6 +15,7 @@ export interface NotificationPayload {
   icon?: string;
   badge?: string;
   data?: NotificationData;
+  notification_type?: 'ot_requests_new' | 'ot_requests_approved' | 'ot_requests_rejected';
 }
 
 /**
@@ -70,4 +71,14 @@ export interface ErrorResponse {
   success: false;
   error: string;
   details?: any;
+}
+
+/**
+ * User notification preferences stored in profiles table
+ */
+export interface NotificationPreferences {
+  ot_requests_new: boolean;
+  ot_requests_approved: boolean;
+  ot_requests_rejected: boolean;
+  all_disabled: boolean;
 }

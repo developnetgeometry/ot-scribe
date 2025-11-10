@@ -1,10 +1,13 @@
 import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ResubmissionBadge } from './ResubmissionBadge';
+import { useIsMobile, useIsTablet, useDeviceType } from '@/hooks/use-mobile';
 import { OTRequest, OTStatus, DayType } from '@/types/otms';
 import { formatCurrency, formatHours, getDayTypeColor, getDayTypeLabel, formatTimeRange } from '@/lib/otCalculations';
+import { Clock, Calendar, User } from 'lucide-react';
 
 interface OTSession {
   id: string;
@@ -125,6 +128,10 @@ function groupRequestsByDate(requests: OTRequest[]): GroupedOTRequest[] {
 
 export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps) {
   const groupedRequests = groupRequestsByDate(requests);
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  const deviceType = useDeviceType();
+  
   if (requests.length === 0) {
     return (
       <div className="text-center py-12">
@@ -133,6 +140,113 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
     );
   }
 
+  // Mobile card layout
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        {groupedRequests.map((grouped) => (
+          <Card key={grouped.date} className="shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{format(new Date(grouped.date), 'dd MMM yyyy')}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-lg font-bold text-primary">
+                    {formatHours(grouped.totalHours)}h
+                  </span>
+                </div>
+              </div>
+              {grouped.profiles && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-3 w-3" />
+                  <span>{grouped.profiles.full_name}</span>
+                </div>
+              )}
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                {grouped.sessions.map((session) => (
+                  <div key={session.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3 w-3 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                          {formatTimeRange(session.startTime, session.endTime)}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatHours(session.hours)} hours
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onViewDetails(session.request)}
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      <StatusBadge status={session.status} />
+                    </button>
+                  </div>
+                ))}
+                {grouped.resubmissionInfo && (
+                  <div className="mt-2">
+                    <ResubmissionBadge 
+                      resubmissionCount={grouped.resubmissionInfo.count} 
+                      isResubmission={grouped.resubmissionInfo.isResubmission} 
+                    />
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  // Tablet layout - hybrid card-table approach
+  if (isTablet) {
+    return (
+      <div className="space-y-3">
+        {groupedRequests.map((grouped) => (
+          <Card key={grouped.date} className="overflow-hidden">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-3 gap-4 items-start">
+                <div>
+                  <div className="font-medium text-sm">{grouped.profiles?.full_name || 'Unknown'}</div>
+                  <div className="text-xs text-muted-foreground">{grouped.profiles?.employee_id || '-'}</div>
+                </div>
+                <div className="text-sm">
+                  <div className="font-medium">{format(new Date(grouped.date), 'dd MMM yyyy')}</div>
+                  <Badge variant="outline" className={`text-xs ${getDayTypeColor(grouped.dayType)}`}>
+                    {getDayTypeLabel(grouped.dayType)}
+                  </Badge>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-sm">{formatHours(grouped.totalHours)} hrs</div>
+                  <div className="flex justify-end">
+                    <StatusBadge status={grouped.statuses[0]} />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t">
+                <div className="text-xs space-y-1">
+                  {grouped.sessions.map((session) => (
+                    <div key={session.id} className="flex justify-between">
+                      <span>{formatTimeRange(session.startTime, session.endTime)}</span>
+                      <span className="text-muted-foreground">{formatHours(session.hours)}h</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  // Desktop table layout
   return (
     <div className="border rounded-lg overflow-hidden">
       <Table>

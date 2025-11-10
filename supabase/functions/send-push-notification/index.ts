@@ -16,7 +16,8 @@ import type {
   PushResult,
   PushSubscriptionRecord,
   WebPushSubscription,
-  ErrorResponse
+  ErrorResponse,
+  NotificationPreferences
 } from './types.ts'
 
 // CORS headers for internal API calls
@@ -181,6 +182,19 @@ async function sendPushNotification(payload: NotificationPayload): Promise<PushR
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+  // Check user notification preferences before sending
+  const shouldSend = await shouldSendNotification(supabase, payload.user_id, payload.notification_type)
+
+  if (!shouldSend) {
+    console.log(`[Push] Notification blocked by user preferences for user: ${payload.user_id}, type: ${payload.notification_type}`)
+    return {
+      success: 0,
+      failed: 0,
+      expired: 0,
+      message: 'Notification blocked by user preferences'
+    }
+  }
+
   // Query all active subscriptions for the user
   console.log(`[Push] Querying subscriptions for user: ${payload.user_id}`)
 
@@ -263,6 +277,82 @@ async function sendPushNotification(payload: NotificationPayload): Promise<PushR
 
   console.log(`[Push] Final result:`, result)
   return result
+}
+
+/**
+ * Checks if a notification should be sent based on user preferences
+ * @param supabase - Supabase client instance
+ * @param userId - Target user ID
+ * @param notificationType - Type of notification (e.g., 'ot_requests_new')
+ * @returns true if notification should be sent, false otherwise
+ */
+async function shouldSendNotification(
+  supabase: any,
+  userId: string,
+  notificationType?: string
+): Promise<boolean> {
+  try {
+    // If no notification type specified, allow by default (backwards compatible)
+    if (!notificationType) {
+      console.log('[Push] No notification_type specified, allowing notification')
+      return true
+    }
+
+    // Fetch user preferences from profiles table
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('notification_preferences')
+      .eq('id', userId)
+      .single()
+
+    if (error) {
+      console.error('[Push] Error fetching notification preferences:', {
+        userId,
+        notificationType,
+        error: error.message,
+        code: error.code,
+        details: error.details
+      })
+      // On error, allow notification (fail open)
+      return true
+    }
+
+    const preferences = profile?.notification_preferences as NotificationPreferences | null
+
+    // If no preferences set, allow all notifications (default behavior)
+    if (!preferences) {
+      console.log('[Push] No preferences found, allowing notification')
+      return true
+    }
+
+    // Check global disable flag first
+    if (preferences.all_disabled === true) {
+      console.log('[Push] All notifications disabled for user')
+      return false
+    }
+
+    // Check specific notification type preference
+    const preferenceKey = notificationType as keyof NotificationPreferences
+    if (preferenceKey in preferences) {
+      const isEnabled = preferences[preferenceKey]
+      console.log(`[Push] Preference for ${notificationType}: ${isEnabled}`)
+      return isEnabled !== false // Default to true if not explicitly false
+    }
+
+    // Unknown notification type, allow by default
+    console.log(`[Push] Unknown notification type '${notificationType}', allowing notification`)
+    return true
+
+  } catch (err) {
+    console.error('[Push] Unexpected error checking preferences:', {
+      userId,
+      notificationType,
+      error: err instanceof Error ? err.message : 'Unknown error',
+      stack: err instanceof Error ? err.stack : undefined
+    })
+    // On unexpected error, allow notification (fail open)
+    return true
+  }
 }
 
 /**

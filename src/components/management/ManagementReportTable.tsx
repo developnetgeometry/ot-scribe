@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
-import { ArrowUpDown, ArrowUp, ArrowDown, FileDown } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, FileDown, User, Building, Clock, DollarSign } from 'lucide-react';
 import { generatePayslipPDF } from '@/lib/payslipPdfGenerator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile, useIsTablet, useDeviceType } from '@/hooks/use-mobile';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 interface EmployeeOTSummary {
@@ -30,6 +32,9 @@ type SortDirection = 'asc' | 'desc';
 export function ManagementReportTable({ data, isLoading, selectedMonth }: ManagementReportTableProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>('employee_no');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  const deviceType = useDeviceType();
 
   const handleDownloadOTSlip = async (employeeNo: string) => {
     try {
@@ -174,6 +179,150 @@ export function ManagementReportTable({ data, isLoading, selectedMonth }: Manage
     return (
       <div className="flex items-center justify-center py-8 border rounded-lg">
         <p className="text-muted-foreground">No overtime data for the selected period</p>
+      </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        {/* Mobile Cards */}
+        {sortedData.map((row, index) => (
+          <Card key={`${row.employee_no}-${index}`} className="p-4">
+            <CardContent className="p-0 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <User className="h-4 w-4 text-blue-600" />
+                  <span className="font-semibold">{row.employee_name}</span>
+                </div>
+                <span className="text-sm bg-muted px-2 py-1 rounded">
+                  {row.employee_no}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center space-x-2">
+                  <Building className="h-4 w-4 text-gray-500" />
+                  <span>{row.department}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-muted-foreground">Position:</span>
+                  <div className="font-medium">{row.position}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <div>
+                    <div className="text-muted-foreground">OT Hours</div>
+                    <div className="font-semibold text-primary">
+                      {formatHours(row.total_ot_hours)}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 justify-end">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                  <div className="text-right">
+                    <div className="text-muted-foreground">Total</div>
+                    <div className="font-semibold text-green-600">
+                      {formatCurrency(row.monthly_total)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => handleDownloadOTSlip(row.employee_no)}
+                >
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Download OT Slip
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+
+        {/* Mobile Summary */}
+        <Card className="bg-muted/30">
+          <CardContent className="p-4">
+            <div className="text-center space-y-2">
+              <h3 className="font-semibold">Summary - All Employees</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="text-muted-foreground">Total Hours</div>
+                  <div className="font-bold text-primary text-lg">
+                    {formatHours(totalHours)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Total Cost</div>
+                  <div className="font-bold text-green-600 text-lg">
+                    {formatCurrency(totalCost)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Tablet layout - compact cards with essential info
+  if (isTablet) {
+    return (
+      <div className="space-y-3">
+        {sortedData.map((row, index) => (
+          <Card key={`${row.employee_no}-${index}`} className="p-3">
+            <CardContent className="p-0">
+              <div className="grid grid-cols-4 gap-3 items-center text-sm">
+                <div>
+                  <div className="font-semibold">{row.employee_name}</div>
+                  <div className="text-xs text-muted-foreground">{row.employee_no}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Dept</div>
+                  <div className="truncate">{row.department}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-muted-foreground">Hours</div>
+                  <div className="font-semibold text-primary">{formatHours(row.total_ot_hours)}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground">Total</div>
+                  <div className="font-semibold text-green-600">{formatCurrency(row.monthly_total)}</div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-1 h-6 text-xs"
+                    onClick={() => handleDownloadOTSlip(row.employee_no)}
+                  >
+                    <FileDown className="h-3 w-3 mr-1" />
+                    Slip
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        
+        {/* Tablet Summary */}
+        <Card className="bg-muted/30 mt-4">
+          <CardContent className="p-3">
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-semibold">Total - All Employees</span>
+              <div className="text-right">
+                <div className="font-bold text-primary">{formatHours(totalHours)} hrs</div>
+                <div className="font-bold text-green-600">{formatCurrency(totalCost)}</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

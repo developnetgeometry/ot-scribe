@@ -5,13 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useNotificationPermission } from '@/hooks/useNotificationPermission';
 import { usePushSubscription } from '@/hooks/usePushSubscription';
+import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { useAuth } from '@/hooks/useAuth';
 import { ENABLE_PUSH_NOTIFICATIONS } from '@/config/features';
-import { Bell, BellOff, Check, Loader2, AlertCircle } from 'lucide-react';
+import { Bell, BellOff, Check, Loader2, AlertCircle, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { NOTIFICATION_TYPES } from '@/types/notifications';
+import { Separator } from '@/components/ui/separator';
 
 export const NotificationSettings = () => {
   const { permission, requestPermission, isSupported } = useNotificationPermission();
   const { isSubscribed, isLoading, error, subscribe, unsubscribe } = usePushSubscription();
+  const { preferences, isLoading: isLoadingPreferences, updatePreference } = useNotificationPreferences();
+  const { roles } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Feature flag check: hide component if push notifications not enabled
@@ -80,6 +86,70 @@ export const NotificationSettings = () => {
       }
     }
   };
+
+  // Handler for global disable all notifications
+  const handleDisableAllNotifications = async (disabled: boolean) => {
+    setIsProcessing(true);
+    try {
+      // Update preference first
+      const preferenceUpdated = await updatePreference('all_disabled', disabled);
+
+      if (!preferenceUpdated) {
+        setIsProcessing(false);
+        return;
+      }
+
+      if (disabled) {
+        // Unsubscribe from push notifications
+        const unsubscribeResult = await unsubscribe();
+
+        if (unsubscribeResult) {
+          toast.success('All notifications disabled', {
+            description: 'You will not receive any push notifications.'
+          });
+        }
+      } else {
+        // Re-subscribe using existing permission
+        if (permission === 'granted') {
+          const subscribeResult = await subscribe();
+
+          if (subscribeResult) {
+            toast.success('Notifications re-enabled', {
+              description: 'Your notification preferences have been restored.'
+            });
+          }
+        } else {
+          // Permission not granted, just update preference
+          toast.success('Notifications re-enabled', {
+            description: 'Enable push notifications to start receiving alerts.'
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error toggling all notifications:', err);
+      toast.error('Failed to update notification settings', {
+        description: 'An unexpected error occurred.'
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Handler for individual preference toggles
+  const handlePreferenceToggle = async (key: keyof typeof preferences, value: boolean) => {
+    const success = await updatePreference(key, value);
+
+    if (success) {
+      toast.success('Preference updated', {
+        description: 'Your notification settings have been saved.'
+      });
+    }
+  };
+
+  // Filter notification types based on user roles
+  const availableNotificationTypes = NOTIFICATION_TYPES.filter(type =>
+    type.roles.some(role => roles.includes(role as any))
+  );
 
   if (!isSupported) {
     return (
@@ -224,6 +294,64 @@ export const NotificationSettings = () => {
               Get notified when your OT requests are approved, rejected, or require action.
             </p>
           </div>
+        )}
+
+        {/* Notification Preferences Section - Only show when subscribed */}
+        {permission === 'granted' && isSubscribed && !preferences.all_disabled && (
+          <>
+            <Separator className="my-4" />
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Settings2 className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-sm font-semibold">Notification Preferences</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Choose which types of notifications you want to receive
+              </p>
+
+              {/* Individual Notification Type Toggles */}
+              <div className="space-y-3">
+                {availableNotificationTypes.map((notificationType) => (
+                  <div
+                    key={notificationType.key}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
+                    <div className="space-y-0.5 flex-1 mr-4">
+                      <p className="text-sm font-medium">{notificationType.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {notificationType.description}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={preferences[notificationType.key]}
+                      onCheckedChange={(checked) =>
+                        handlePreferenceToggle(notificationType.key, checked)
+                      }
+                      disabled={isProcessing || isLoadingPreferences}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Global Disable All Toggle */}
+              <Separator className="my-3" />
+
+              <div className="flex items-center justify-between rounded-lg border border-destructive/50 bg-destructive/5 p-3">
+                <div className="space-y-0.5 flex-1 mr-4">
+                  <p className="text-sm font-medium text-destructive">Disable All Notifications</p>
+                  <p className="text-xs text-muted-foreground">
+                    Completely unsubscribe from all push notifications
+                  </p>
+                </div>
+                <Switch
+                  checked={preferences.all_disabled}
+                  onCheckedChange={handleDisableAllNotifications}
+                  disabled={isProcessing || isLoadingPreferences}
+                />
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

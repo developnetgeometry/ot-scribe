@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile, useIsTablet, useDeviceType } from '@/hooks/use-mobile';
 import {
   Sidebar,
   SidebarContent,
@@ -128,6 +129,9 @@ function AppSidebar() {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, signOut } = useAuth();
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  const deviceType = useDeviceType();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -140,9 +144,13 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="h-16 border-b bg-card flex items-center justify-between px-6">
+          <header className={`
+            ${deviceType === 'mobile' ? 'h-14' : deviceType === 'tablet' ? 'h-15' : 'h-16'} 
+            border-b bg-card flex items-center justify-between 
+            ${deviceType === 'mobile' ? 'px-4' : deviceType === 'tablet' ? 'px-5' : 'px-6'}
+          `}>
             <SidebarTrigger />
-            <div className="flex items-center gap-4">
+            <div className={`flex items-center ${deviceType === 'mobile' ? 'gap-2' : deviceType === 'tablet' ? 'gap-3' : 'gap-4'}`}>
               <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -151,8 +159,16 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <span className="hidden sm:inline">{user?.email}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className={deviceType !== 'desktop' ? 'w-48' : ''}>
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  {deviceType === 'mobile' && user?.email && (
+                    <>
+                      <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                        {user.email}
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
@@ -162,7 +178,10 @@ export function AppLayout({ children }: AppLayoutProps) {
               </DropdownMenu>
             </div>
           </header>
-          <main className="flex-1 p-6 overflow-auto">
+          <main className={`
+            flex-1 overflow-auto
+            ${deviceType === 'mobile' ? 'p-4' : deviceType === 'tablet' ? 'p-5' : 'p-6'}
+          `}>
             <InstallBanner />
             {children}
           </main>
