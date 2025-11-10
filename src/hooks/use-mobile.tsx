@@ -38,10 +38,23 @@ export function useIsTablet() {
 }
 
 export function useDeviceType() {
-  const isMobile = useIsMobile();
-  const isTablet = useIsTablet();
-  
-  if (isMobile) return 'mobile';
-  if (isTablet) return 'tablet';
-  return 'desktop';
+  const [deviceType, setDeviceType] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+
+  useEffect(() => {
+    const determineDeviceType = () => {
+      const width = window.innerWidth;
+      if (width < MOBILE_BREAKPOINT) {
+        setDeviceType('mobile');
+      } else if (width >= MOBILE_BREAKPOINT && width < TABLET_BREAKPOINT) {
+        setDeviceType('tablet');
+      } else {
+        setDeviceType('desktop');
+      }
+    };
+    window.addEventListener('resize', determineDeviceType);
+    determineDeviceType();
+    return () => window.removeEventListener('resize', determineDeviceType);
+  }, []);
+
+  return deviceType;
 }
