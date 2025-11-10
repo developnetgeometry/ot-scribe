@@ -105,7 +105,7 @@ export function evaluateFormula(
     let breakdown = `Basic: RM ${basicSalary.toFixed(2)}\nORP: RM ${orp.toFixed(2)}\nHRP: RM ${hrp.toFixed(2)}\nHours: ${hours}`;
     
     if (multiplier) {
-      breakdown += `\nFinal OT Amount: RM ${finalOTAmount.toFixed(2)} (HRP × Hours × Multiplier)`;
+      breakdown += `\nFinal OT Amount: RM ${finalOTAmount.toFixed(2)}`;
     } else {
       breakdown += `\nOT Amount: RM ${finalOTAmount.toFixed(2)}`;
     }
