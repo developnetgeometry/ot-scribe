@@ -91,11 +91,13 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
             <TableHead>Employee ID</TableHead>
             <TableHead>Full Name</TableHead>
             <TableHead>Email</TableHead>
+            <TableHead>Company</TableHead>
             <TableHead>Department</TableHead>
             <TableHead>Position</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>OT Eligible</TableHead>
+            <TableHead>Attachment Req.</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -105,6 +107,16 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
               <TableCell className="font-mono text-sm">{employee.employee_id}</TableCell>
               <TableCell className="font-medium">{employee.full_name}</TableCell>
               <TableCell>{employee.email}</TableCell>
+              <TableCell>
+                {employee.company?.name ? (
+                  <span>{employee.company.name}</span>
+                ) : (
+                  <div className="flex items-center gap-1 text-amber-600">
+                    <AlertTriangle className="h-3 w-3" />
+                    <span className="text-sm">Not assigned</span>
+                  </div>
+                )}
+              </TableCell>
               <TableCell>
                 {employee.department?.name ? (
                   <span>{employee.department.name}</span>
@@ -150,6 +162,15 @@ export function EmployeeTable({ employees, isLoading, searchQuery, statusFilter 
                   onCheckedChange={(checked) => handleToggleOTEligibility(employee, checked)}
                   disabled={updateEmployee.isPending}
                 />
+              </TableCell>
+              <TableCell>
+                {employee.require_ot_attachment ? (
+                  <Badge variant="secondary" className="text-xs">
+                    Required
+                  </Badge>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Optional</span>
+                )}
               </TableCell>
               <TableCell>
                 <div className="flex gap-2">

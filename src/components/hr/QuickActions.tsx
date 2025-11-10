@@ -20,7 +20,7 @@ export function QuickActions() {
         </Button>
         {pendingRecerts.length > 0 && (
           <Button 
-            onClick={() => navigate('/hr/recertify')} 
+            onClick={() => navigate('/hr/approve?tab=pending_hr_recertification')} 
             variant="default"
             className="gap-2 h-auto py-4 relative"
           >

@@ -5,6 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 interface CreateRateFormulaData {
   formula_name: string;
   day_type: 'weekday' | 'saturday' | 'sunday' | 'public_holiday';
+  orp_definition: string;
+  hrp_definition: string;
   multiplier: number;
   base_formula: string;
   is_active?: boolean;

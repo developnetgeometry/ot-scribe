@@ -1,4 +1,6 @@
 import { AppLayout } from '@/components/AppLayout';
+import { Card } from '@/components/ui/card';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { PWAInstallSection } from '@/components/pwa/PWAInstallSection';
 import { NotificationSettings } from '@/components/pwa/NotificationSettings';
 import { HRSettingsSection } from '@/components/settings/HRSettingsSection';
@@ -25,6 +27,26 @@ export default function Settings() {
           <h1 className="text-3xl font-bold">Settings</h1>
           <p className="text-muted-foreground">Manage your app preferences and settings</p>
         </div>
+
+        <Card className="p-6">
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold">Appearance</h2>
+              <p className="text-sm text-muted-foreground">
+                Customize how the application looks on your device
+              </p>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Theme</p>
+                <p className="text-sm text-muted-foreground">
+                  Choose your preferred color theme
+                </p>
+              </div>
+              <ThemeToggle />
+            </div>
+          </div>
+        </Card>
 
         <PWAInstallSection />
 

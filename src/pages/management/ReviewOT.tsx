@@ -36,8 +36,7 @@ export default function ReviewOT() {
   const stats = data?.stats || {
     pendingReview: 0,
     totalHours: 0,
-    totalCost: 0,
-    withViolations: 0
+    totalCost: 0
   };
 
   const filteredData = aggregatedData.filter(item => {
@@ -83,7 +82,7 @@ export default function ReviewOT() {
     
     toast({
       title: 'Report exported',
-      description: 'CSV file has been downloaded successfully.'
+      description: 'Excel file has been downloaded successfully.'
     });
   };
 
@@ -127,8 +126,7 @@ export default function ReviewOT() {
         statistics: {
           totalEmployees: filteredData.length,
           totalHours: stats.totalHours,
-          totalCost: stats.totalCost,
-          withViolations: stats.withViolations
+          totalCost: stats.totalCost
         },
         employees: filteredData.map(emp => ({
           employeeNo: emp.employee_no,
@@ -136,8 +134,7 @@ export default function ReviewOT() {
           department: emp.department,
           position: emp.position,
           otHours: emp.total_ot_hours,
-          otAmount: emp.monthly_total,
-          hasViolations: emp.has_violations
+          otAmount: emp.monthly_total
         }))
       };
 
@@ -161,11 +158,11 @@ export default function ReviewOT() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Management Review</h1>
+          <h1 className="text-3xl font-bold">Management Report</h1>
           <p className="text-muted-foreground">Filter and export monthly overtime summaries by department and employee.</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           <EnhancedDashboardCard
             title="Pending Review"
             value={stats.pendingReview}
@@ -183,12 +180,6 @@ export default function ReviewOT() {
             value={formatCurrency(stats.totalCost)}
             icon={DollarSign}
             variant="success"
-          />
-          <EnhancedDashboardCard
-            title="With Violations"
-            value={stats.withViolations}
-            icon={AlertTriangle}
-            variant="warning"
           />
         </div>
 
@@ -265,7 +256,7 @@ export default function ReviewOT() {
                   disabled={isLoading || filteredData.length === 0}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                  Export Excel
                 </Button>
                 <Button 
                   onClick={handleExportPDF}

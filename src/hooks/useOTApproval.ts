@@ -72,6 +72,9 @@ function groupOTRequestsByEmployee(requests: any[]): GroupedOTRequest[] {
       start_time: request.start_time,
       end_time: request.end_time,
       total_hours: request.total_hours,
+      status: request.status,
+      reason: request.reason,
+      attachment_urls: request.attachment_urls,
     });
     group.total_hours += request.total_hours;
     group.request_ids.push(request.id);

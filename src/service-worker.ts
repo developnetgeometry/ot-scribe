@@ -75,7 +75,7 @@ self.addEventListener('push', (event: PushEvent) => {
   }
 
   // Configure notification options
-  const options: NotificationOptions = {
+  const options: any = {
     body: notificationData.body,
     icon: notificationData.icon,
     badge: notificationData.badge,

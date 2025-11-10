@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Filter, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function OTHistory() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedRequest, setSelectedRequest] = useState<OTRequest | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -26,6 +27,21 @@ export default function OTHistory() {
   const [editRequest, setEditRequest] = useState<OTRequest | null>(null);
 
   const { data: requests = [], isLoading } = useOTRequests({ status: statusFilter });
+
+  // Auto-open request from URL parameter
+  useEffect(() => {
+    const requestId = searchParams.get('request');
+    if (requestId && requests.length > 0) {
+      const request = requests.find(r => r.id === requestId);
+      if (request) {
+        setSelectedRequest(request);
+        setSheetOpen(true);
+        // Clear the parameter after opening
+        searchParams.delete('request');
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [searchParams, requests, setSearchParams]);
 
   const handleViewDetails = (request: OTRequest) => {
     setSelectedRequest(request);
@@ -38,8 +54,14 @@ export default function OTHistory() {
   };
 
   const handleEdit = (request: OTRequest) => {
-    setEditRequest(request);
-    setEditDialogOpen(true);
+    if (request.status === 'rejected') {
+      // Rejected requests should use resubmit flow
+      handleResubmit(request);
+    } else {
+      // Pending requests use edit flow
+      setEditRequest(request);
+      setEditDialogOpen(true);
+    }
   };
 
   const handleExportCSV = () => {
@@ -118,7 +140,7 @@ export default function OTHistory() {
                 </Select>
                 <Button variant="outline" size="sm" onClick={handleExportCSV}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export CSV
+                  Export Excel
                 </Button>
               </div>
             </div>
@@ -147,37 +169,41 @@ export default function OTHistory() {
         />
 
         <Dialog open={resubmitDialogOpen} onOpenChange={setResubmitDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Resubmit OT Request</DialogTitle>
             </DialogHeader>
-            {resubmitRequest && (
-              <ResubmitOTForm
-                request={resubmitRequest}
-                onSuccess={() => {
-                  setResubmitDialogOpen(false);
-                  setResubmitRequest(null);
-                }}
-              />
-            )}
+            <div className="overflow-y-auto flex-1 pr-2">
+              {resubmitRequest && (
+                <ResubmitOTForm
+                  request={resubmitRequest}
+                  onSuccess={() => {
+                    setResubmitDialogOpen(false);
+                    setResubmitRequest(null);
+                  }}
+                />
+              )}
+            </div>
           </DialogContent>
         </Dialog>
 
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Edit OT Request</DialogTitle>
             </DialogHeader>
-            {editRequest && (
-              <EditOTForm
-                request={editRequest}
-                onSuccess={() => {
-                  setEditDialogOpen(false);
-                  setEditRequest(null);
-                }}
-                onCancel={() => setEditDialogOpen(false)}
-              />
-            )}
+            <div className="overflow-y-auto flex-1 pr-2">
+              {editRequest && (
+                <EditOTForm
+                  request={editRequest}
+                  onSuccess={() => {
+                    setEditDialogOpen(false);
+                    setEditRequest(null);
+                  }}
+                  onCancel={() => setEditDialogOpen(false)}
+                />
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       </div>

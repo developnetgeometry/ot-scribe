@@ -7,30 +7,49 @@ export function useDeleteEmployee() {
 
   return useMutation({
     mutationFn: async (employeeId: string) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(
-        `https://kamtarwxydftzpewcgzs.supabase.co/functions/v1/delete-employee`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ employeeId }),
+      // Ensure we have a valid session; try to refresh if missing
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        try {
+          const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError || !refreshed.session) {
+            await supabase.auth.signOut();
+            throw new Error('Your session has expired. Please sign in again.');
+          }
+        } catch {
+          await supabase.auth.signOut();
+          throw new Error('Your session has expired. Please sign in again.');
         }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to delete employee');
       }
 
-      return response.json();
+      const invokeDelete = async () =>
+        await supabase.functions.invoke('delete-employee', {
+          body: { employeeId },
+        });
+
+      let { data, error } = await invokeDelete();
+
+      // If unauthorized, try refreshing and retry once
+      if (error && (error as any)?.status === 401) {
+        const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+        if (!refreshError && refreshed.session) {
+          ({ data, error } = await invokeDelete());
+        }
+      }
+
+      if (error) {
+        const message = (error as any)?.message || (error as any)?.error || 'Failed to delete employee';
+        if ((error as any)?.status === 401) {
+          await supabase.auth.signOut();
+          throw new Error('Your session expired. Please sign in again.');
+        }
+        if ((error as any)?.status === 403) {
+          throw new Error('You do not have permission to delete employees.');
+        }
+        throw new Error(message);
+      }
+
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hr-employees'] });

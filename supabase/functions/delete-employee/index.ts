@@ -32,10 +32,19 @@ Deno.serve(async (req) => {
       }
     )
 
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
+    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization') || ''
+    const match = authHeader.match(/^Bearer\s+(.+)$/i)
+    const token = match?.[1]
+    
+    if (!token) {
+      console.error('Missing or malformed Authorization header')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
     
     if (userError || !user) {
       console.error('Authentication error:', userError)
@@ -85,21 +94,70 @@ Deno.serve(async (req) => {
     }
 
     console.log('Deleting employee:', employeeId)
+
+    // Pre-cleanup: remove references that could block deletion
+    try {
+      // Remove roles (will also log via trigger)
+      const { error: urErr } = await supabaseAdmin
+        .from('user_roles')
+        .delete()
+        .eq('user_id', employeeId)
+      if (urErr) console.warn('Pre-cleanup user_roles failed:', urErr)
+
+      // Remove push subscriptions
+      const { error: psErr } = await supabaseAdmin
+        .from('push_subscriptions')
+        .delete()
+        .eq('user_id', employeeId)
+      if (psErr) console.warn('Pre-cleanup push_subscriptions failed:', psErr)
+
+      // Detach as supervisor in profiles and requests
+      const { error: profDetachErr } = await supabaseAdmin
+        .from('profiles')
+        .update({ supervisor_id: null })
+        .eq('supervisor_id', employeeId)
+      if (profDetachErr) console.warn('Pre-cleanup profiles(supervisor_id) failed:', profDetachErr)
+
+      const { error: reqDetachErr } = await supabaseAdmin
+        .from('ot_requests')
+        .update({ supervisor_id: null })
+        .eq('supervisor_id', employeeId)
+      if (reqDetachErr) console.warn('Pre-cleanup ot_requests(supervisor_id) failed:', reqDetachErr)
+    } catch (pcErr) {
+      console.warn('Pre-cleanup step error (non-fatal):', pcErr)
+    }
+
+    // Try hard delete in Auth
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(employeeId)
 
     if (deleteError) {
       console.error('Delete error:', deleteError)
-      
-      // If user is already deleted, treat as success
-      if (deleteError.message?.includes('User not found') || deleteError.status === 404) {
-        console.log('User already deleted, treating as success')
+
+      // Fallback: Soft-deactivate the user so the UI can proceed without 500s
+      console.log('Falling back to soft delete (deactivate user)')
+      try {
+        // Mark profile inactive
+        const { error: profErr } = await supabaseAdmin
+          .from('profiles')
+          .update({ status: 'inactive' })
+          .eq('id', employeeId)
+        if (profErr) console.warn('Soft delete: update profile status failed:', profErr)
+
+        // Ensure no roles remain
+        const { error: rolesErr } = await supabaseAdmin
+          .from('user_roles')
+          .delete()
+          .eq('user_id', employeeId)
+        if (rolesErr) console.warn('Soft delete: remove roles failed:', rolesErr)
+
         return new Response(
-          JSON.stringify({ message: 'Employee already deleted' }),
+          JSON.stringify({ message: 'User deactivated (auth deletion failed)' }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
+      } catch (softErr) {
+        console.error('Soft delete failed:', softErr)
+        throw deleteError
       }
-      
-      throw deleteError
     }
 
     console.log('Employee deleted successfully:', employeeId)
