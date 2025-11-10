@@ -292,7 +292,7 @@ export function OTApprovalDetailsSheet({
                 <p className="text-muted-foreground text-xs mb-2">
                   Session Calculation
                 </p>
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">ORP</p>
                     <p className="font-medium">{formatCurrency(request.orp || 0)}</p>
@@ -300,10 +300,6 @@ export function OTApprovalDetailsSheet({
                   <div>
                     <p className="text-muted-foreground">HRP</p>
                     <p className="font-medium">{formatCurrency(request.hrp || 0)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">OT Amount</p>
-                    <p className="font-medium text-lg">{formatCurrency(request.ot_amount || 0)}</p>
                   </div>
                 </div>
               </div>
