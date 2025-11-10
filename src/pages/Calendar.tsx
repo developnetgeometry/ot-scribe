@@ -21,7 +21,7 @@ export default function Calendar() {
 
   const publicHolidays = holidays?.filter(h => 
     !h.description.toLowerCase().includes('weekly off') && 
-    !h.state_code
+    (!h.state_code || h.state_code === 'ALL')
   ).map(h => parseISO(h.holiday_date)) || [];
 
   const weeklyHolidays = holidays?.filter(h => 
