@@ -198,19 +198,17 @@ export default function ApproveOT() {
                               </TableCell>
                               <TableCell className="text-muted-foreground">{profile?.employee_id}</TableCell>
                               <TableCell>{format(new Date(request.ot_date), 'dd MMM yyyy')}</TableCell>
-                              <TableCell>
-                                {sessions.length > 0 ? (
-                                  <div className="space-y-1">
-                                    {sessions.map((session: any, idx: number) => (
-                                      <div key={idx} className="text-sm">
-                                        {format(new Date(`2000-01-01T${session.start_time}`), 'h:mm a')} - {format(new Date(`2000-01-01T${session.end_time}`), 'h:mm a')} ({session.hours}h)
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <span className="text-sm text-muted-foreground">{request.total_hours}h total</span>
-                                )}
-                              </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {request.start_time && request.end_time ? (
+                      <span>
+                        {format(new Date(`2000-01-01T${request.start_time}`), 'h:mm a')} - {format(new Date(`2000-01-01T${request.end_time}`), 'h:mm a')} ({request.total_hours}h)
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">{request.total_hours}h total</span>
+                    )}
+                  </div>
+                </TableCell>
                               <TableCell className="font-medium">{request.total_hours}h</TableCell>
                               <TableCell>
                                 <div className="text-sm max-w-xs">
