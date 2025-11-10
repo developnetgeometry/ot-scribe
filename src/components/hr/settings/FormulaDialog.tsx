@@ -76,7 +76,7 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
       orp_definition: '(Basic / 26 / 8)',
       hrp_definition: '(Basic / 26 / 8)',
       multiplier: 1.5,
-      base_formula: 'ORP',
+      base_formula: 'HRP * Hours',
       is_active: true,
       effective_from: new Date().toISOString().split('T')[0],
     },
