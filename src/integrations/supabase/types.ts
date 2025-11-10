@@ -704,6 +704,7 @@ export type Database = {
           income_tax_no: string | null
           is_ot_eligible: boolean
           joining_date: string | null
+          notification_preferences: Json | null
           phone_no: string | null
           position: string | null
           position_id: string | null
@@ -731,6 +732,7 @@ export type Database = {
           income_tax_no?: string | null
           is_ot_eligible?: boolean
           joining_date?: string | null
+          notification_preferences?: Json | null
           phone_no?: string | null
           position?: string | null
           position_id?: string | null
@@ -758,6 +760,7 @@ export type Database = {
           income_tax_no?: string | null
           is_ot_eligible?: boolean
           joining_date?: string | null
+          notification_preferences?: Json | null
           phone_no?: string | null
           position?: string | null
           position_id?: string | null
