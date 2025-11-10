@@ -275,22 +275,24 @@ export function OTApprovalDetailsSheet({
             <div className="space-y-3 bg-muted/50 p-4 rounded-lg">
               <h4 className="font-semibold text-sm">Calculation Details</h4>
               
-              {allDailySessions.length > request.sessions.length && (
-                <div className="grid grid-cols-3 gap-4 text-sm pb-3 border-b border-border/50">
-                  <div>
-                    <p className="text-muted-foreground text-xs">Daily Total Hours</p>
-                    <p className="font-semibold">{formatHours(dailyTotalHours)} hrs</p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="text-muted-foreground text-xs">Daily Total OT Amount</p>
-                    <p className="font-semibold text-lg">{formatCurrency(dailyTotalAmount)}</p>
-                  </div>
+              {/* Always show daily totals */}
+              <div className="grid grid-cols-3 gap-4 text-sm pb-3 border-b border-border/50">
+                <div>
+                  <p className="text-muted-foreground text-xs">Daily Total Hours</p>
+                  <p className="font-semibold">{formatHours(dailyTotalHours)} hrs</p>
                 </div>
-              )}
+                <div className="col-span-2">
+                  <p className="text-muted-foreground text-xs">Daily Total OT Amount</p>
+                  <p className="font-semibold text-lg">{formatCurrency(dailyTotalAmount)}</p>
+                </div>
+              </div>
               
               <div>
                 <p className="text-muted-foreground text-xs mb-2">
                   Session Calculation
+                  {allDailySessions.length > request.sessions.length && (
+                    <span className="text-muted-foreground"> (distributed across {allDailySessions.length} sessions)</span>
+                  )}
                 </p>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
