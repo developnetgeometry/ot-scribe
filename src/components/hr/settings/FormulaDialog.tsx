@@ -155,6 +155,7 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
 
   const handlePreview = () => {
     const baseFormula = form.getValues('base_formula');
+    const multiplier = form.getValues('multiplier');
     const basicSalary = parseFloat(previewBasicSalary);
     const hours = parseFloat(previewHours);
 
@@ -164,7 +165,7 @@ export function FormulaDialog({ open, onOpenChange, formula, onSuccess }: Formul
     }
 
     try {
-      const result = evaluateFormula(baseFormula, basicSalary, hours);
+      const result = evaluateFormula(baseFormula, basicSalary, hours, multiplier);
       setPreviewResult(result);
     } catch (e: any) {
       setPreviewResult({ error: e.message });
