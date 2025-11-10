@@ -36,6 +36,10 @@ export interface OTRequest {
   profiles?: {
     employee_id: string;
     full_name: string;
+    basic_salary?: number;
+    department?: {
+      name: string;
+    };
   };
 }
 

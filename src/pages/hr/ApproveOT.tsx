@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { OTApprovalTable } from '@/components/approvals/OTApprovalTable';
 import { OTApprovalDetailsSheet } from '@/components/approvals/OTApprovalDetailsSheet';
+import { OTApprovalDetailsSheet as RecertifyDetailsSheet } from '@/components/hr/approve/OTApprovalDetailsSheet';
 import { useOTApproval } from '@/hooks/useOTApproval';
 import { Input } from '@/components/ui/input';
 import { Search, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
@@ -43,7 +44,7 @@ export default function ApproveOT() {
   } = useOTApproval({ role: 'hr', status: activeTab === 'pending_hr_recertification' ? 'supervisor_verified' : activeTab });
 
   const { data: recertifyRequests = [], isLoading: isLoadingRecertify } = usePendingRecertifications();
-  const { recertify, decline } = useRecertifyOTActions();
+  const recertifyActions = useRecertifyOTActions();
 
   const filteredRequests = requests?.filter(request => {
     if (!searchQuery) return true;
@@ -113,9 +114,9 @@ export default function ApproveOT() {
     if (!recertifySelectedRequest || !recertifyAction || !recertifyRemarks.trim()) return;
 
     if (recertifyAction === 'recertify') {
-      await recertify.mutateAsync({ requestId: recertifySelectedRequest.id, remarks: recertifyRemarks });
+      await recertifyActions.recertify.mutateAsync({ requestId: recertifySelectedRequest.id, remarks: recertifyRemarks });
     } else {
-      await decline.mutateAsync({ requestId: recertifySelectedRequest.id, remarks: recertifyRemarks });
+      await recertifyActions.decline.mutateAsync({ requestId: recertifySelectedRequest.id, remarks: recertifyRemarks });
     }
 
     setRecertifyDialogOpen(false);
@@ -222,7 +223,7 @@ export default function ApproveOT() {
                                     size="sm"
                                     variant="default"
                                     onClick={() => handleRecertifyAction(request, 'recertify')}
-                                    disabled={recertify.isPending || decline.isPending}
+                                    disabled={recertifyActions.recertify.isPending || recertifyActions.decline.isPending}
                                   >
                                     <CheckCircle className="h-4 w-4 mr-1" />
                                     Recertify
@@ -231,7 +232,7 @@ export default function ApproveOT() {
                                     size="sm"
                                     variant="destructive"
                                     onClick={() => handleRecertifyAction(request, 'decline')}
-                                    disabled={recertify.isPending || decline.isPending}
+                                    disabled={recertifyActions.recertify.isPending || recertifyActions.decline.isPending}
                                   >
                                     <XCircle className="h-4 w-4 mr-1" />
                                     Decline
@@ -321,7 +322,7 @@ export default function ApproveOT() {
               </Button>
               <Button
                 onClick={handleRecertifySubmit}
-                disabled={!recertifyRemarks.trim() || recertify.isPending || decline.isPending}
+                disabled={!recertifyRemarks.trim() || recertifyActions.recertify.isPending || recertifyActions.decline.isPending}
                 variant={recertifyAction === 'recertify' ? 'default' : 'destructive'}
               >
                 {recertifyAction === 'recertify' ? 'Recertify' : 'Decline'}
@@ -330,23 +331,21 @@ export default function ApproveOT() {
           </DialogContent>
         </Dialog>
 
-        <OTApprovalDetailsSheet
-          request={recertifyDetailsRequest ? {
-            ...recertifyDetailsRequest,
-            sessions: [{
-              id: recertifyDetailsRequest.id,
-              start_time: recertifyDetailsRequest.start_time,
-              end_time: recertifyDetailsRequest.end_time,
-              total_hours: recertifyDetailsRequest.total_hours,
-              reason: recertifyDetailsRequest.reason,
-              attachment_urls: recertifyDetailsRequest.attachment_urls,
-              status: recertifyDetailsRequest.status,
-              ot_amount: recertifyDetailsRequest.ot_amount,
-            }]
-          } : null}
+        <RecertifyDetailsSheet
+          request={recertifyDetailsRequest}
           open={!!recertifyDetailsRequest}
           onOpenChange={(open) => !open && setRecertifyDetailsRequest(null)}
-          role="hr"
+          showRecertifyActions={true}
+          onRecertify={(requestId, remarks) => {
+            recertifyActions.recertify.mutate({ requestId, remarks });
+            setRecertifyDetailsRequest(null);
+          }}
+          onDecline={(requestId, remarks) => {
+            recertifyActions.decline.mutate({ requestId, remarks });
+            setRecertifyDetailsRequest(null);
+          }}
+          isRecertifying={recertifyActions.recertify.isPending}
+          isDeclining={recertifyActions.decline.isPending}
         />
       </div>
     </AppLayout>
