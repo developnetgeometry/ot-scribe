@@ -254,11 +254,6 @@ export function OTApprovalDetailsSheet({
                           </div>
                           <StatusBadge status={session.status} />
                         </div>
-                        {(role === 'hr' || role === 'management') && (
-                          <div className="text-xs text-muted-foreground">
-                            OT Amount: {formatCurrency(session.ot_amount || 0)}
-                          </div>
-                        )}
                       </div>
                     ))}
                     <div className="text-xs text-muted-foreground pt-2 border-t border-dashed">
@@ -295,9 +290,7 @@ export function OTApprovalDetailsSheet({
               
               <div>
                 <p className="text-muted-foreground text-xs mb-2">
-                  {allDailySessions.length > request.sessions.length 
-                    ? `Viewing ${request.sessions.length} of ${allDailySessions.length} Sessions (${formatHours(request.total_hours)} of ${formatHours(dailyTotalHours)} hrs)` 
-                    : 'Session Calculation'}
+                  Session Calculation
                 </p>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
@@ -309,17 +302,8 @@ export function OTApprovalDetailsSheet({
                     <p className="font-medium">{formatCurrency(request.hrp || 0)}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">
-                      {allDailySessions.length > request.sessions.length 
-                        ? 'Sessions Total' 
-                        : 'OT Amount'}
-                    </p>
+                    <p className="text-muted-foreground">OT Amount</p>
                     <p className="font-medium text-lg">{formatCurrency(request.ot_amount || 0)}</p>
-                    {allDailySessions.length > request.sessions.length && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        ({((request.ot_amount || 0) / dailyTotalAmount * 100).toFixed(1)}% of daily total)
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
