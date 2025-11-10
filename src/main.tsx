@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { registerSW } from 'virtual:pwa-register';
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -9,18 +10,25 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>
 );
 
-// Register service worker (enabled in both dev and production for testing)
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').then(
-    (registration) => {
-      console.log('SW registered:', registration);
-    },
-    (error) => {
-      console.error('SW registration failed:', error);
-    }
-  );
+// Register service worker using Vite PWA plugin
+// This handles both dev and production modes correctly
+const updateSW = registerSW({
+  onNeedRefresh() {
+    console.log('[PWA] New version available, refreshing...');
+  },
+  onOfflineReady() {
+    console.log('[PWA] App ready to work offline');
+  },
+  onRegistered(registration) {
+    console.log('[PWA] Service worker registered:', registration);
+  },
+  onRegisterError(error) {
+    console.error('[PWA] Service worker registration failed:', error);
+  },
+});
 
-  // Listen for navigation messages from service worker (fallback for browsers without client.navigate())
+// Listen for navigation messages from service worker (fallback for browsers without client.navigate())
+if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'NAVIGATE_TO') {
       const targetUrl = event.data.url;
