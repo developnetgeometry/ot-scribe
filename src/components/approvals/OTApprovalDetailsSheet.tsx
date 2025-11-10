@@ -135,7 +135,7 @@ export function OTApprovalDetailsSheet({
                 <p>
                   This employee has <strong>{allDailySessions.length} sessions</strong> totaling{' '}
                   <strong>{formatHours(dailyTotalHours)} hours</strong> on this day.
-                  OT amount (RM {formatCurrency(dailyTotalAmount)}) is calculated for the entire day
+                  OT amount ({formatCurrency(dailyTotalAmount)}) is calculated for the entire day
                   and distributed proportionally across all sessions.
                 </p>
               </AlertDescription>
