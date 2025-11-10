@@ -172,7 +172,7 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
 
   // Handle 'view' action or notification body click
   // Extract and validate target URL from notification data (AC: 5)
-  const rawUrl = event.notification.data?.url || event.notification.data?.targetUrl || '/';
+  const rawUrl = event.notification.data?.targetUrl || '/';
   const targetUrl = validateAndSanitizeUrl(rawUrl);
 
   console.log('[SW] Opening PWA to:', targetUrl);
