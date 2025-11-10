@@ -9,8 +9,8 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>
 );
 
-// Register service worker in production only
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// Register service worker (enabled in both dev and production for testing)
+if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').then(
     (registration) => {
       console.log('SW registered:', registration);
