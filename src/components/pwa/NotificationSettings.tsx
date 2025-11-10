@@ -8,17 +8,20 @@ import { usePushSubscription } from '@/hooks/usePushSubscription';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { useAuth } from '@/hooks/useAuth';
 import { ENABLE_PUSH_NOTIFICATIONS } from '@/config/features';
-import { Bell, BellOff, Check, Loader2, AlertCircle, Settings2 } from 'lucide-react';
+import { Bell, BellOff, Check, Loader2, AlertCircle, Settings2, TestTube } from 'lucide-react';
 import { toast } from 'sonner';
 import { NOTIFICATION_TYPES } from '@/types/notifications';
 import { Separator } from '@/components/ui/separator';
+// import { supabase } from '@/integrations/supabase/client';
 
 export const NotificationSettings = () => {
   const { permission, requestPermission, isSupported } = useNotificationPermission();
   const { isSubscribed, isLoading, error, subscribe, unsubscribe } = usePushSubscription();
   const { preferences, isLoading: isLoadingPreferences, updatePreference } = useNotificationPreferences();
-  const { roles } = useAuth();
+  const { roles, user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
+  // const [isSendingTest, setIsSendingTest] = useState(false);
+  // const [isCheckingDB, setIsCheckingDB] = useState(false);
 
   // Feature flag check: hide component if push notifications not enabled
   if (!ENABLE_PUSH_NOTIFICATIONS) return null;
@@ -145,6 +148,103 @@ export const NotificationSettings = () => {
       });
     }
   };
+
+  // ============================================================================
+  // TESTING & DIAGNOSTICS (COMMENTED OUT FOR PRODUCTION)
+  // ============================================================================
+  // Uncomment these functions for testing push notifications in development
+
+  // // Handler for checking database subscriptions
+  // const handleCheckDatabaseSubscriptions = async () => {
+  //   if (!user?.id) {
+  //     toast.error('User not authenticated');
+  //     return;
+  //   }
+  //
+  //   setIsCheckingDB(true);
+  //   try {
+  //     const { data, error } = await supabase
+  //       .from('push_subscriptions')
+  //       .select('*')
+  //       .eq('user_id', user.id)
+  //       .eq('is_active', true);
+  //
+  //     if (error) {
+  //       console.error('Database check error:', error);
+  //       toast.error('Failed to check database', {
+  //         description: error.message
+  //       });
+  //     } else {
+  //       console.log('Active subscriptions in database:', data);
+  //       toast.info(`Found ${data?.length || 0} subscription(s)`, {
+  //         description: data?.length === 0
+  //           ? 'Try toggling notifications off and on to re-subscribe'
+  //           : 'Subscriptions found and active'
+  //       });
+  //     }
+  //   } catch (err) {
+  //     console.error('Unexpected error checking database:', err);
+  //     toast.error('Failed to check database');
+  //   } finally {
+  //     setIsCheckingDB(false);
+  //   }
+  // };
+  //
+  // // Handler for sending test notification
+  // const handleSendTestNotification = async () => {
+  //   if (!user?.id) {
+  //     toast.error('User not authenticated');
+  //     return;
+  //   }
+  //
+  //   setIsSendingTest(true);
+  //   try {
+  //     console.log('Sending test notification for user:', user.id);
+  //
+  //     const { data, error } = await supabase.functions.invoke('send-push-notification', {
+  //       body: {
+  //         user_id: user.id,
+  //         title: 'Test Notification',
+  //         body: 'This is a test push notification from OTMS. If you see this, push notifications are working correctly!',
+  //         icon: '/icons/icon-192x192.png',
+  //         data: {
+  //           targetUrl: '/employee/dashboard',
+  //           type: 'test_notification'
+  //         }
+  //         // Note: notification_type intentionally omitted for test - bypasses preference checks
+  //       }
+  //     });
+  //
+  //     if (error) {
+  //       console.error('Test notification error:', error);
+  //       toast.error('Failed to send test notification', {
+  //         description: error.message || 'Please check the console for details.'
+  //       });
+  //     } else {
+  //       console.log('Test notification result:', data);
+  //
+  //       if (data.success === 0) {
+  //         toast.warning('No active subscriptions found', {
+  //           description: 'You may need to re-subscribe to push notifications. Try toggling notifications off and on again.'
+  //         });
+  //       } else {
+  //         toast.success('Test notification sent!', {
+  //           description: `Sent to ${data.success} device(s). Check your device for the notification.`
+  //         });
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.error('Unexpected error sending test notification:', err);
+  //     toast.error('Failed to send test notification', {
+  //       description: 'An unexpected error occurred.'
+  //     });
+  //   } finally {
+  //     setIsSendingTest(false);
+  //   }
+  // };
+  // ============================================================================
+  // END TESTING & DIAGNOSTICS
+  // ============================================================================
 
   // Filter notification types based on user roles
   const availableNotificationTypes = NOTIFICATION_TYPES.filter(type =>
@@ -295,6 +395,63 @@ export const NotificationSettings = () => {
             </p>
           </div>
         )}
+
+        {/* ===== TESTING UI (COMMENTED OUT FOR PRODUCTION) ===== */}
+        {/* Uncomment this section for testing push notifications in development */}
+        {/* {permission === 'granted' && isSubscribed && (
+          <>
+            <Separator className="my-4" />
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <TestTube className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-sm font-semibold">Test Notifications</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Send a test notification to verify that push notifications are working correctly
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSendTestNotification}
+                  disabled={isSendingTest || isProcessing}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {isSendingTest ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <TestTube className="h-4 w-4 mr-2" />
+                      Send Test
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleCheckDatabaseSubscriptions}
+                  disabled={isCheckingDB || isProcessing}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {isCheckingDB ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Checking...
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      Check DB
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </>
+        )} */}
+        {/* ===== END TESTING UI ===== */}
 
         {/* Notification Preferences Section - Only show when subscribed */}
         {permission === 'granted' && isSubscribed && !preferences.all_disabled && (

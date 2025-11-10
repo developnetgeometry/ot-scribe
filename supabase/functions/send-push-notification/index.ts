@@ -10,7 +10,8 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.77.0'
-import webpush from 'https://esm.sh/web-push@3.6.7'
+// Using npm:web-push-deno-edge which is a maintained Deno-compatible version
+import * as webpush from 'npm:web-push@3.6.7'
 import type {
   NotificationPayload,
   PushResult,
@@ -23,14 +24,21 @@ import type {
 // CORS headers for internal API calls
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
+  'Access-Control-Max-Age': '86400',
 }
 
 Deno.serve(async (req) => {
+  console.log(`[Request] ${req.method} ${req.url}`)
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    console.log('[CORS] Handling preflight request')
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
+    })
   }
 
   // Only allow POST requests
@@ -158,7 +166,7 @@ function sanitizePayload(payload: NotificationPayload): NotificationPayload {
  * Sends push notification to all active subscriptions for a user
  */
 async function sendPushNotification(payload: NotificationPayload): Promise<PushResult> {
-  // Configure VAPID authentication
+  // Get VAPID configuration from environment
   const vapidSubject = Deno.env.get('VAPID_SUBJECT') || 'mailto:admin@otms.com'
   const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY')
   const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY')
@@ -167,6 +175,13 @@ async function sendPushNotification(payload: NotificationPayload): Promise<PushR
     throw new Error('VAPID keys not configured in environment variables')
   }
 
+  console.log('[Push] VAPID configured:', {
+    subject: vapidSubject,
+    hasPublicKey: !!vapidPublicKey,
+    hasPrivateKey: !!vapidPrivateKey
+  })
+
+  // Configure VAPID with web-push library
   webpush.setVapidDetails(
     vapidSubject,
     vapidPublicKey,
@@ -225,7 +240,9 @@ async function sendPushNotification(payload: NotificationPayload): Promise<PushR
 
   // Send notifications to all subscriptions in parallel
   const results = await Promise.allSettled(
-    subscriptions.map((sub: PushSubscriptionRecord) => sendToSubscription(sub, payload))
+    subscriptions.map((sub: PushSubscriptionRecord) =>
+      sendToSubscription(sub, payload)
+    )
   )
 
   // Process results and track expired subscriptions
@@ -388,9 +405,18 @@ async function sendToSubscription(
     vibrate: [200, 100, 200]
   }
 
-  // Send notification via web-push library
-  await webpush.sendNotification(
-    pushSubscription,
-    JSON.stringify(notificationOptions)
-  )
+  console.log('[Push] Sending to endpoint:', subscription.endpoint.substring(0, 50) + '...')
+
+  try {
+    // Send notification via npm:web-push (Deno will handle Node compatibility)
+    await webpush.sendNotification(
+      pushSubscription,
+      JSON.stringify(notificationOptions)
+    )
+
+    console.log('[Push] Notification sent successfully to subscription:', subscription.id)
+  } catch (error) {
+    console.error('[Push] Error sending to subscription:', subscription.id, error)
+    throw error // Re-throw to be caught by Promise.allSettled
+  }
 }
