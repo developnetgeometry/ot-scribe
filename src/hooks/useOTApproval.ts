@@ -32,6 +32,9 @@ function groupOTRequestsByEmployee(requests: any[]): GroupedOTRequest[] {
         request_ids: [],
         start_time: '',
         end_time: '',
+        ot_amount: 0, // Initialize to 0 - will sum proportional amounts from each session
+        orp: request.orp || 0,
+        hrp: request.hrp || 0,
       });
       
       // Add debug warning if profile data is missing

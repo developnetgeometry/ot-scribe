@@ -924,6 +924,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_daily_ot_distribution: {
+        Args: {
+          p_day_type: Database["public"]["Enums"]["day_type"]
+          p_employee_id: string
+          p_ot_date: string
+        }
+        Returns: {
+          daily_ot_amount: number
+          request_id: string
+          session_hours: number
+          session_hrp: number
+          session_orp: number
+          session_ot_amount: number
+          total_daily_hours: number
+        }[]
+      }
       calculate_ot_amount: {
         Args: {
           basic_salary: number
