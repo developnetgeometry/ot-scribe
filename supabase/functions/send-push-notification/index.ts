@@ -149,7 +149,8 @@ function sanitizePayload(payload: NotificationPayload): NotificationPayload {
     data: payload.data ? {
       ...payload.data,
       targetUrl: payload.data.targetUrl?.substring(0, 500) || '/'
-    } : undefined
+    } : undefined,
+    notification_type: payload.notification_type
   }
 }
 
