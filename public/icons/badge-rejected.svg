@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <!-- Monochrome X badge for rejection notifications -->
+  <circle cx="36" cy="36" r="36" fill="#ef4444"/>
+  <path
+    d="M 24 24 L 48 48 M 48 24 L 24 48"
+    stroke="#ffffff"
+    stroke-width="6"
+    stroke-linecap="round"
+    fill="none"
+  />
+</svg>

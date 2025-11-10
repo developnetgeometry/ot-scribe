@@ -3,6 +3,32 @@ import { supabase } from '@/integrations/supabase/client';
 import { OTRequest, OTStatus, AppRole, GroupedOTRequest } from '@/types/otms';
 import { toast } from 'sonner';
 
+/**
+ * Send employee notification via Edge Function
+ * Wrapped in try-catch to ensure notification failures don't break approval/rejection workflow
+ */
+async function sendEmployeeNotification(requestId: string, notificationType: 'approved' | 'rejected'): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    console.warn('No active session for sending employee notification');
+    return;
+  }
+
+  const response = await supabase.functions.invoke('send-employee-ot-notification', {
+    body: {
+      requestId,
+      notificationType
+    }
+  });
+
+  if (response.error) {
+    throw new Error(`Notification error: ${response.error.message}`);
+  }
+
+  console.log('Employee notification sent:', response.data);
+}
+
 type ApprovalRole = 'supervisor' | 'hr' | 'management';
 
 interface UseOTApprovalOptions {
@@ -244,6 +270,14 @@ export function useOTApproval(options: UseOTApprovalOptions) {
         .in('id', requestIds);
 
       if (error) throw error;
+
+      // Send approval notifications to employees asynchronously (don't block approval workflow)
+      requestIds.forEach(requestId => {
+        sendEmployeeNotification(requestId, 'approved').catch((notifError) => {
+          console.error('Failed to send employee approval notification:', notifError);
+          // Don't throw - notification failure should not prevent approval
+        });
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
@@ -288,6 +322,14 @@ export function useOTApproval(options: UseOTApprovalOptions) {
         .in('id', requestIds);
 
       if (error) throw error;
+
+      // Send rejection notifications to employees asynchronously (don't block rejection workflow)
+      requestIds.forEach(requestId => {
+        sendEmployeeNotification(requestId, 'rejected').catch((notifError) => {
+          console.error('Failed to send employee rejection notification:', notifError);
+          // Don't throw - notification failure should not prevent rejection
+        });
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });

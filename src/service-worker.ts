@@ -103,10 +103,56 @@ self.addEventListener('push', (event: PushEvent) => {
 });
 
 /**
- * Notification Click Event Listener (INACTIVE INFRASTRUCTURE)
+ * Validates and sanitizes target URL for navigation
  *
- * Handles user interactions with displayed notifications.
- * Routes user to appropriate page based on notification data.
+ * Ensures URL is safe for navigation and belongs to same origin.
+ * Handles both relative and absolute URLs.
+ *
+ * @param url - Target URL from notification data
+ * @returns Validated URL string or default fallback
+ */
+function validateAndSanitizeUrl(url: string | undefined): string {
+  // Default fallback
+  const defaultUrl = '/';
+
+  if (!url || typeof url !== 'string') {
+    console.warn('[SW] Invalid URL provided, using default:', defaultUrl);
+    return defaultUrl;
+  }
+
+  try {
+    // Handle relative URLs
+    if (url.startsWith('/')) {
+      // Relative URL is safe, just ensure no double slashes
+      return url.replace(/\/+/g, '/');
+    }
+
+    // Handle absolute URLs - must be same origin
+    const targetUrl = new URL(url, self.location.origin);
+
+    if (targetUrl.origin !== self.location.origin) {
+      console.warn('[SW] External URL blocked for security:', url);
+      return defaultUrl;
+    }
+
+    // Return pathname + search + hash to ensure same-origin navigation
+    return targetUrl.pathname + targetUrl.search + targetUrl.hash;
+  } catch (error) {
+    console.error('[SW] Error parsing URL:', error);
+    return defaultUrl;
+  }
+}
+
+/**
+ * Intelligent PWA Notification Click Handler
+ *
+ * Handles notification clicks with PWA-first routing:
+ * 1. Prioritizes existing PWA windows over opening new ones
+ * 2. Uses client.navigate() when available, postMessage fallback
+ * 3. Validates URLs to prevent navigation to external/malicious sites
+ * 4. Implements browser compatibility fallbacks
+ *
+ * Notification Click Event Listener (INACTIVE INFRASTRUCTURE)
  * Currently inactive in MVP - infrastructure only.
  */
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
@@ -115,7 +161,7 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
     hasData: !!event.notification.data
   });
 
-  // Close the notification
+  // Close the notification (AC: 7)
   event.notification.close();
 
   // Handle 'dismiss' action - just close, no further action
@@ -125,49 +171,111 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   }
 
   // Handle 'view' action or notification body click
-  // Extract target URL from notification data
-  const urlToOpen = event.notification.data?.url || '/';
+  // Extract and validate target URL from notification data (AC: 5)
+  const rawUrl = event.notification.data?.targetUrl || '/';
+  const targetUrl = validateAndSanitizeUrl(rawUrl);
 
-  console.log('[SW] Opening app to:', urlToOpen);
+  console.log('[SW] Opening PWA to:', targetUrl);
 
-  // Open or focus app window
+  // Handle notification click with intelligent PWA routing
   event.waitUntil(
-    clients.matchAll({
-      type: 'window',
-      includeUncontrolled: true
-    })
-      .then(async (clientList) => {
-        // Check if there's already a window open with the target URL
-        for (const client of clientList) {
-          if (client.url.includes(urlToOpen) && 'focus' in client) {
-            console.log('[SW] Focusing existing window');
-            await client.focus();
-            return;
-          }
-        }
-
-        // Check if there's any window open to the app
-        for (const client of clientList) {
-          if (client.url.includes(self.location.origin) && 'focus' in client) {
-            console.log('[SW] Focusing existing app window and navigating');
-            await client.focus();
-            // Send a message to the client to navigate (client-side routing should handle this)
-            client.postMessage({ type: 'navigate', url: urlToOpen });
-            return;
-          }
-        }
-
-        // No existing window found, open new one
-        if (clients.openWindow) {
-          console.log('[SW] Opening new window');
-          await clients.openWindow(urlToOpen);
-        }
-      })
+    handleNotificationClick(targetUrl)
       .catch((error) => {
         console.error('[SW] Error handling notification click:', error);
+        // Ultimate fallback - try to open window anyway
+        if (clients.openWindow) {
+          return clients.openWindow(targetUrl);
+        }
       })
   );
 });
+
+/**
+ * Handles notification click with intelligent PWA window management
+ *
+ * Strategy:
+ * 1. Check for existing PWA windows (AC: 2)
+ * 2. If found: Focus and navigate existing window (AC: 3)
+ * 3. If not found: Open new PWA window (AC: 4)
+ * 4. Use navigate() API when available, postMessage fallback (AC: 8)
+ *
+ * @param targetUrl - Validated URL to navigate to
+ */
+async function handleNotificationClick(targetUrl: string): Promise<WindowClient | void> {
+  // Feature detection for Clients API (AC: 8)
+  if (!('clients' in self)) {
+    console.warn('[SW] Clients API not available, using fallback');
+    // Fallback for very old browsers
+    if ('openWindow' in clients) {
+      return clients.openWindow(targetUrl);
+    }
+    return;
+  }
+
+  try {
+    // Find all window clients (AC: 2)
+    const clientList = await clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    });
+
+    console.log('[SW] Found client windows:', clientList.length);
+
+    // Filter for PWA windows (same origin) (AC: 6)
+    const pwaClients = clientList.filter(client => {
+      try {
+        const clientUrl = new URL(client.url);
+        return clientUrl.origin === self.location.origin;
+      } catch {
+        return false;
+      }
+    });
+
+    console.log('[SW] PWA windows found:', pwaClients.length);
+
+    // If PWA window exists: Focus and navigate (AC: 3)
+    if (pwaClients.length > 0) {
+      const client = pwaClients[0];
+
+      console.log('[SW] Focusing existing PWA window');
+
+      // Focus the window first
+      const focusedClient = await client.focus();
+
+      // Navigate using client.navigate() if available (modern browsers)
+      if ('navigate' in focusedClient && typeof focusedClient.navigate === 'function') {
+        console.log('[SW] Navigating using client.navigate()');
+        return focusedClient.navigate(targetUrl);
+      } else {
+        // Fallback: Use postMessage for older browsers (Safari) (AC: 8)
+        console.log('[SW] Using postMessage fallback for navigation');
+        focusedClient.postMessage({
+          type: 'NAVIGATE_TO',
+          url: targetUrl
+        });
+        return focusedClient;
+      }
+    }
+
+    // No PWA window exists: Open new window (AC: 4)
+    if ('openWindow' in clients && typeof clients.openWindow === 'function') {
+      console.log('[SW] Opening new PWA window');
+      const newClient = await clients.openWindow(targetUrl);
+
+      if (newClient) {
+        return newClient;
+      } else {
+        console.warn('[SW] Failed to open new window (may be blocked by browser)');
+      }
+    } else {
+      // Very old browser without openWindow support (AC: 8)
+      console.warn('[SW] clients.openWindow not supported');
+    }
+  } catch (error) {
+    console.error('[SW] Error in handleNotificationClick:', error);
+    throw error; // Re-throw to be caught by outer handler
+  }
+}
 
 /**
  * Service Worker Activation Event

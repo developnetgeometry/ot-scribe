@@ -76,15 +76,15 @@ export default function HRDashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-8">
+      <div className="space-y-6 md:space-y-8">
         <div>
-          <h1 className="text-3xl font-bold">HR Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold">HR Dashboard</h1>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
             {fullName ? `Welcome back, ${fullName}!` : 'Welcome back!'} Here's your organization overview.
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {loading ? (
             <>
               <Skeleton className="h-32" />
@@ -127,8 +127,8 @@ export default function HRDashboard() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-4">Overview Charts</h2>
-          <div className="grid gap-6 md:grid-cols-2">
+          <h2 className="text-lg md:text-xl font-semibold mb-4">Overview Charts</h2>
+          <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2">
             <OTTrendChart />
             <DepartmentOTChart />
           </div>

@@ -85,7 +85,7 @@ export default function SupervisorDashboard() {
         </div>
 
         {/* KPI Cards Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {loading ? (
             <>
               <Skeleton className="h-32" />
@@ -133,7 +133,7 @@ export default function SupervisorDashboard() {
           <p className="text-muted-foreground text-sm mb-4">
             Visualize your team's overtime activities and verification trends.
           </p>
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2">
             <SupervisorOTTrendChart />
             <OTVerificationBreakdownChart />
           </div>

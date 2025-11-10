@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from 'recharts';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { DollarSign } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface DepartmentCost {
@@ -15,6 +17,7 @@ const COLORS = ['#5F26B4', '#8B5CF6', '#C084FC', '#DDD6FE'];
 export function OTCostChart() {
   const [data, setData] = useState<DepartmentCost[]>([]);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchCostData();
@@ -98,28 +101,57 @@ export function OTCostChart() {
         <CardDescription>By Department (Current Month)</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {data.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        {isMobile ? (
+          <div className="space-y-3">
+            {data.map((item, index) => {
+              const total = data.reduce((sum, d) => sum + d.value, 0);
+              const percentage = total > 0 ? (item.value / total) * 100 : 0;
+              return (
+                <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div 
+                      className="w-4 h-4 rounded-full" 
+                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    ></div>
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      <span className="font-medium text-sm">{item.name}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">${item.value.toLocaleString()}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {percentage.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <ChartContainer config={chartConfig} className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {data.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile, useIsTablet, useDeviceType } from '@/hooks/use-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface WeeklyData {
@@ -12,6 +13,9 @@ interface WeeklyData {
 
 export function EmployeeOTWeeklyChart() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  const deviceType = useDeviceType();
   const [data, setData] = useState<WeeklyData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,6 +81,77 @@ export function EmployeeOTWeeklyChart() {
         </CardHeader>
         <CardContent>
           <Skeleton className="h-[260px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Mobile card view for simple data
+  if (isMobile) {
+    return (
+      <Card className="shadow-md rounded-xl">
+        <CardHeader>
+          <CardTitle className="text-lg">Weekly OT Hours</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3">
+            {data.map((item, index) => (
+              <div key={index} className="text-center p-3 bg-muted/30 rounded-lg">
+                <div className="text-sm text-muted-foreground">{item.week}</div>
+                <div className="text-lg font-bold text-primary">{item.hours}h</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 pt-4 border-t">
+            <div className="text-sm text-muted-foreground">Total: <span className="font-semibold text-foreground">{data.reduce((sum, item) => sum + item.hours, 0).toFixed(1)}h</span></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Tablet layout - hybrid approach with compact chart
+  if (isTablet) {
+    return (
+      <Card className="shadow-md rounded-xl">
+        <CardHeader>
+          <CardTitle>Weekly OT Hours</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis 
+                dataKey="week" 
+                className="text-xs"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+              />
+              <YAxis 
+                className="text-xs"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '6px',
+                  fontSize: '12px'
+                }}
+              />
+              <Bar 
+                dataKey="hours" 
+                fill="hsl(var(--primary))" 
+                radius={[2, 2, 0, 0]}
+                name="Hours"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="mt-3 pt-3 border-t flex justify-between text-sm">
+            <span className="text-muted-foreground">Total Hours</span>
+            <span className="font-semibold text-primary">
+              {data.reduce((sum, item) => sum + item.hours, 0).toFixed(1)}h
+            </span>
+          </div>
         </CardContent>
       </Card>
     );

@@ -19,4 +19,18 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
       console.error('SW registration failed:', error);
     }
   );
+
+  // Listen for navigation messages from service worker (fallback for browsers without client.navigate())
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'NAVIGATE_TO') {
+      const targetUrl = event.data.url;
+      console.log('[App] Received navigation message from SW:', targetUrl);
+
+      // Use React Router's navigation by updating window.location
+      // This ensures proper routing in PWA context
+      if (targetUrl && typeof targetUrl === 'string') {
+        window.location.href = targetUrl;
+      }
+    }
+  });
 }
