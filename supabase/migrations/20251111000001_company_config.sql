@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS company_config (
     selected_state IN (
       'JHR', 'KDH', 'KTN', 'MLK', 'NSN',
       'PHG', 'PNG', 'PRK', 'PLS', 'SBH',
-      'SWK', 'SGR', 'TRG', 'WPKL', 'WPPJ', 'WPLB'
+      'SWK', 'SGR', 'TRG', 'WPKL', 'WPPJ', 'WPLB', 'KUL', 'LBN', 'PJY'
     )
   )
 );
