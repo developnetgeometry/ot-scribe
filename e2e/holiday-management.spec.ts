@@ -29,7 +29,7 @@ test.describe('Holiday Management System', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to holiday management page
     // Note: This assumes authentication is handled or skipped in test environment
-    await page.goto('/admin/holiday-management');
+    await page.goto('/hr/holidays');
 
     // Wait for page to load
     await page.waitForLoadState('networkidle');
