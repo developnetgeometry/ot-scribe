@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS holiday_overrides (
   name TEXT NOT NULL,
   type TEXT CHECK (type IN ('company', 'emergency', 'government')) NOT NULL DEFAULT 'company',
   description TEXT,
-  created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
 
