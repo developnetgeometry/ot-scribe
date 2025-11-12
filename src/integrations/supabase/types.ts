@@ -94,6 +94,30 @@ export type Database = {
         }
         Relationships: []
       }
+      company_config: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          selected_state: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          selected_state: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          selected_state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       company_profile: {
         Row: {
           address: string
@@ -124,77 +148,6 @@ export type Database = {
           phone?: string
           registration_no?: string
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      company_config: {
-        Row: {
-          id: string
-          company_id: string
-          selected_state: string
-          updated_at: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          selected_state: string
-          updated_at?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          selected_state?: string
-          updated_at?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "company_config_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      malaysian_holidays: {
-        Row: {
-          id: string
-          date: string
-          name: string
-          state: string
-          type: string
-          source: string
-          year: number
-          scraped_at: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          date: string
-          name: string
-          state: string
-          type: string
-          source: string
-          year: number
-          scraped_at?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          date?: string
-          name?: string
-          state?: string
-          type?: string
-          source?: string
-          year?: number
-          scraped_at?: string
-          created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -290,6 +243,42 @@ export type Database = {
         }
         Relationships: []
       }
+      holiday_overrides: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          created_by: string
+          date: string
+          description: string | null
+          id: string
+          name: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          created_by: string
+          date: string
+          description?: string | null
+          id?: string
+          name: string
+          type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          created_by?: string
+          date?: string
+          description?: string | null
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       inventory_access_tokens: {
         Row: {
           created_at: string | null
@@ -320,6 +309,45 @@ export type Database = {
           token?: string
           used_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      malaysian_holidays: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          name: string
+          scraped_at: string | null
+          source: string
+          state: string
+          type: string
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+          name: string
+          scraped_at?: string | null
+          source: string
+          state: string
+          type: string
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          name?: string
+          scraped_at?: string | null
+          source?: string
+          state?: string
+          type?: string
+          updated_at?: string | null
+          year?: number
         }
         Relationships: []
       }
