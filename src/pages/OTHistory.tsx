@@ -92,15 +92,15 @@ export default function OTHistory() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">OT Request History</h1>
-              <p className="text-muted-foreground">View and track your overtime requests</p>
+              <h1 className="text-2xl md:text-3xl font-bold">OT Request History</h1>
+              <p className="text-muted-foreground text-sm md:text-base">View and track your overtime requests</p>
             </div>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function OTHistory() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <CardTitle>All Requests</CardTitle>
                 <CardDescription>Complete history of your OT submissions</CardDescription>

@@ -94,7 +94,7 @@ export default function ManagementDashboard() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {loading ? (
             <>
               <Skeleton className="h-32" />
@@ -141,7 +141,7 @@ export default function ManagementDashboard() {
           <p className="text-sm text-muted-foreground mb-4">
             Visual summary of organizational overtime and expenditure performance
           </p>
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2">
             <OTTrendChart />
             <OTCostChart />
           </div>

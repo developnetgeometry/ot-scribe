@@ -10,15 +10,15 @@
  *
  * Controls visibility of push notification UI (Settings page section)
  *
- * MVP: Set to FALSE (infrastructure only, not active)
- * Future: Set to TRUE when ready to activate push notifications
+ * ACTIVE: Push notification subscription flow enabled (Story 3.2)
+ * Users can grant permission and subscribe to push notifications
  *
  * Dependencies:
- * - Service worker push handlers (Story 2.2)
- * - Push subscription API (Story 2.3)
- * - Backend push sending infrastructure (future)
+ * - Service worker push handlers (Story 2.2) ✓
+ * - Push subscription API (Story 2.3) ✓
+ * - VAPID keys configured (Story 3.1) ✓
  */
-export const ENABLE_PUSH_NOTIFICATIONS = false;
+export const ENABLE_PUSH_NOTIFICATIONS = true;
 
 // Future feature flags can be added here
 // export const ENABLE_OFFLINE_MODE = false;

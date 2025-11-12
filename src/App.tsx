@@ -29,6 +29,7 @@ import Settings from "./pages/Settings";
 import HolidayCalendars from "./pages/hr/HolidayCalendars";
 import NewHolidayCalendar from "./pages/hr/NewHolidayCalendar";
 import EditHolidayCalendar from "./pages/hr/EditHolidayCalendar";
+import { HolidayManagement } from "./components/admin/HolidayManagement";
 
 import Calendar from "./pages/Calendar";
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
@@ -87,6 +88,7 @@ const App = () => (
                 <Route path="/hr/calendar" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HolidayCalendars /></ProtectedRoute>} />
                 <Route path="/hr/calendar/new" element={<ProtectedRoute requiredRole={['hr', 'admin']}><NewHolidayCalendar /></ProtectedRoute>} />
                 <Route path="/hr/calendar/:id/edit" element={<ProtectedRoute requiredRole={['hr', 'admin']}><EditHolidayCalendar /></ProtectedRoute>} />
+                <Route path="/hr/holidays" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HolidayManagement /></ProtectedRoute>} />
                 <Route path="/hr/settings" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HRSettings /></ProtectedRoute>} />
                 <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole={['hr', 'admin']}><OTReports /></ProtectedRoute>} />
                 

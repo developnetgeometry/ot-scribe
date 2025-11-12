@@ -12,6 +12,32 @@ interface OTSubmitData {
   attachment_urls: string[];
 }
 
+/**
+ * Send supervisor notification via Edge Function
+ * Wrapped in try-catch to ensure notification failures don't break OT submission
+ */
+async function sendSupervisorNotification(requestId: string, employeeId: string): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    console.warn('No active session for sending supervisor notification');
+    return;
+  }
+
+  const response = await supabase.functions.invoke('send-supervisor-ot-notification', {
+    body: {
+      requestId,
+      employeeId
+    }
+  });
+
+  if (response.error) {
+    throw new Error(`Notification error: ${response.error.message}`);
+  }
+
+  console.log('Supervisor notification sent:', response.data);
+}
+
 export function useOTSubmit() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -80,6 +106,13 @@ export function useOTSubmit() {
         .single();
 
       if (error) throw error;
+
+      // Send supervisor notification asynchronously (don't block OT submission)
+      sendSupervisorNotification(otRequest.id, user.id).catch((notifError) => {
+        console.error('Failed to send supervisor notification:', notifError);
+        // Don't throw - notification failure should not prevent OT submission
+      });
+
       return otRequest;
     },
     onSuccess: () => {

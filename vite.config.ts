@@ -28,7 +28,8 @@ export default defineConfig(({ mode }) => ({
         globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js']
       },
       devOptions: {
-        enabled: false // Disable SW in dev mode for faster iteration
+        enabled: true, // Enable SW in dev mode for push notification testing
+        type: 'module'
       }
     })
   ].filter(Boolean),

@@ -127,6 +127,77 @@ export type Database = {
         }
         Relationships: []
       }
+      company_config: {
+        Row: {
+          id: string
+          company_id: string
+          selected_state: string
+          updated_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          selected_state: string
+          updated_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          selected_state?: string
+          updated_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_config_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      malaysian_holidays: {
+        Row: {
+          id: string
+          date: string
+          name: string
+          state: string
+          type: string
+          source: string
+          year: number
+          scraped_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          date: string
+          name: string
+          state: string
+          type: string
+          source: string
+          year: number
+          scraped_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          date?: string
+          name?: string
+          state?: string
+          type?: string
+          source?: string
+          year?: number
+          scraped_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           code: string
