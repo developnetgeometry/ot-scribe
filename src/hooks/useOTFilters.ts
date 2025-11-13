@@ -1,23 +1,13 @@
 import { useState, useCallback } from 'react';
 import { startOfMonth, endOfMonth, subDays, startOfYear, subMonths } from 'date-fns';
-import { DayType } from '@/types/otms';
 
 export interface OTFilters {
-  status: string[];
   startDate?: string;
   endDate?: string;
   ticketNumber?: string;
-  dayType: DayType[];
-  minHours?: number;
-  maxHours?: number;
-  minAmount?: number;
-  maxAmount?: number;
 }
 
-const defaultFilters: OTFilters = {
-  status: [],
-  dayType: [],
-};
+const defaultFilters: OTFilters = {};
 
 export function useOTFilters() {
   const [filters, setFilters] = useState<OTFilters>(defaultFilters);
@@ -71,12 +61,8 @@ export function useOTFilters() {
 
   const getActiveFilterCount = useCallback(() => {
     let count = 0;
-    if (filters.status.length > 0) count++;
     if (filters.startDate || filters.endDate) count++;
     if (filters.ticketNumber) count++;
-    if (filters.dayType.length > 0) count++;
-    if (filters.minHours !== undefined || filters.maxHours !== undefined) count++;
-    if (filters.minAmount !== undefined || filters.maxAmount !== undefined) count++;
     return count;
   }, [filters]);
 

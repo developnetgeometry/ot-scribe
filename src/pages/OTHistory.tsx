@@ -31,15 +31,9 @@ export default function OTHistory() {
   const { filters, updateFilter, clearFilters, applyDatePreset, activeFilterCount } = useOTFilters();
 
   const { data: requests = [], isLoading } = useOTRequests({
-    status: filters.status,
     startDate: filters.startDate,
     endDate: filters.endDate,
     ticketNumber: filters.ticketNumber,
-    dayType: filters.dayType,
-    minHours: filters.minHours,
-    maxHours: filters.maxHours,
-    minAmount: filters.minAmount,
-    maxAmount: filters.maxAmount,
   });
 
   // Auto-open request from URL parameter
