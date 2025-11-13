@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -59,6 +60,20 @@ export function DepartmentDialog({ open, onOpenChange, department }: DepartmentD
       name: department?.name || '',
     },
   });
+
+  useEffect(() => {
+    if (open && department) {
+      form.reset({
+        code: department.code,
+        name: department.name,
+      });
+    } else if (open && !department) {
+      form.reset({
+        code: '',
+        name: '',
+      });
+    }
+  }, [department, open, form]);
 
   const onSubmit = async (data: DepartmentFormValues) => {
     if (department) {
