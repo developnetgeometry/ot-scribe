@@ -86,7 +86,9 @@ export function DepartmentDialog({ open, onOpenChange, department }: DepartmentD
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{department ? 'Edit Department' : 'Create Department'}</DialogTitle>
+          <DialogTitle>
+            {department ? `Edit Department (${department.name})` : 'Create Department'}
+          </DialogTitle>
           <DialogDescription>
             {department
               ? 'Update the department information below.'
