@@ -184,7 +184,7 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
                       onClick={() => onViewDetails(session.request)}
                       className="cursor-pointer hover:opacity-80 transition-opacity"
                     >
-                      <StatusBadge status={session.status} />
+                      <StatusBadge status={session.status} rejectionStage={session.request.rejection_stage} />
                     </button>
                   </div>
                 ))}
@@ -225,7 +225,7 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
                 <div className="text-right">
                   <div className="font-semibold text-sm">{formatHours(grouped.totalHours)} hrs</div>
                   <div className="flex justify-end">
-                    <StatusBadge status={grouped.statuses[0]} />
+                    <StatusBadge status={grouped.statuses[0]} rejectionStage={grouped.sessions[0]?.request?.rejection_stage} />
                   </div>
                 </div>
               </div>
@@ -284,7 +284,7 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
                         onClick={() => onViewDetails(session.request)}
                         className="cursor-pointer hover:opacity-80 transition-opacity"
                       >
-                        <StatusBadge status={session.status} />
+                        <StatusBadge status={session.status} rejectionStage={session.request.rejection_stage} />
                       </button>
                     </div>
                   ))}

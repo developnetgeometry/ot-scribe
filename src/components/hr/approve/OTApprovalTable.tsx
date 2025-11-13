@@ -72,7 +72,7 @@ export function OTApprovalTable({ requests, isLoading }: OTApprovalTableProps) {
                 <TableCell>{formatHours(request.total_hours)} hrs</TableCell>
                 <TableCell>{formatCurrency(request.ot_amount || 0)}</TableCell>
                 <TableCell>
-                  <StatusBadge status={request.status} />
+                  <StatusBadge status={request.status} rejectionStage={request.rejection_stage} />
                 </TableCell>
                 <TableCell>
                   <Button

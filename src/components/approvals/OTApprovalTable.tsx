@@ -156,7 +156,7 @@ export function OTApprovalTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <StatusBadge status={request.status} />
+                      <StatusBadge status={request.status} rejectionStage={request.rejection_stage} />
                       {request.threshold_violations && Object.keys(request.threshold_violations).length > 0 && (
                         <Badge variant="destructive" className="text-xs">
                           Violation

@@ -195,7 +195,7 @@ export function OTApprovalDetailsSheet({
                               ({formatHours(session.total_hours)} hours)
                             </span>
                           </div>
-                          {session.status && <StatusBadge status={session.status} />}
+                          {session.status && <StatusBadge status={session.status} rejectionStage={request.rejection_stage} />}
                         </div>
                         
                         {session.reason && (
@@ -252,7 +252,7 @@ export function OTApprovalDetailsSheet({
                               ({formatHours(session.total_hours)} hours)
                             </span>
                           </div>
-                          <StatusBadge status={session.status} />
+                          <StatusBadge status={session.status} rejectionStage={request.rejection_stage} />
                         </div>
                       </div>
                     ))}
@@ -266,7 +266,7 @@ export function OTApprovalDetailsSheet({
 
             <div className="flex items-center gap-2 text-sm">
               <span className="font-medium">Status:</span>
-              <StatusBadge status={request.status} />
+              <StatusBadge status={request.status} rejectionStage={request.rejection_stage} />
             </div>
           </div>
 

@@ -66,7 +66,7 @@ export function OTApprovalDetailsSheet({
               <div>
                 <Label className="text-muted-foreground">Status</Label>
                 <div className="mt-1">
-                  <StatusBadge status={request.status} />
+                  <StatusBadge status={request.status} rejectionStage={request.rejection_stage} />
                 </div>
               </div>
             </div>
