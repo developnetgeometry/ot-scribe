@@ -101,7 +101,7 @@ export function useOTSubmit() {
           day_type: data.day_type,
           reason: data.reason,
           attachment_urls: data.attachment_urls,
-        })
+        } as any)
         .select()
         .single();
 
