@@ -561,6 +561,7 @@ export type Database = {
           supervisor_remarks: string | null
           supervisor_verified_at: string | null
           threshold_violations: Json | null
+          ticket_number: string
           total_hours: number
           updated_at: string | null
         }
@@ -593,6 +594,7 @@ export type Database = {
           supervisor_remarks?: string | null
           supervisor_verified_at?: string | null
           threshold_violations?: Json | null
+          ticket_number: string
           total_hours: number
           updated_at?: string | null
         }
@@ -625,6 +627,7 @@ export type Database = {
           supervisor_remarks?: string | null
           supervisor_verified_at?: string | null
           threshold_violations?: Json | null
+          ticket_number?: string
           total_hours?: number
           updated_at?: string | null
         }
