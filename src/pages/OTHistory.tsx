@@ -3,15 +3,17 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Filter, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AppLayout } from '@/components/AppLayout';
 import { OTHistoryTable } from '@/components/ot/OTHistoryTable';
 import { OTDetailsSheet } from '@/components/ot/OTDetailsSheet';
 import { OTSummaryCards } from '@/components/ot/OTSummaryCards';
 import { ResubmitOTForm } from '@/components/ot/ResubmitOTForm';
 import { EditOTForm } from '@/components/ot/EditOTForm';
+import { OTFilterPanel } from '@/components/ot/OTFilterPanel';
 import { useOTRequests } from '@/hooks/useOTRequests';
+import { useOTFilters } from '@/hooks/useOTFilters';
 import { OTRequest } from '@/types/otms';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -19,14 +21,26 @@ export default function OTHistory() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedRequest, setSelectedRequest] = useState<OTRequest | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [resubmitDialogOpen, setResubmitDialogOpen] = useState(false);
   const [resubmitRequest, setResubmitRequest] = useState<OTRequest | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editRequest, setEditRequest] = useState<OTRequest | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  const { data: requests = [], isLoading } = useOTRequests({ status: statusFilter });
+  const { filters, updateFilter, clearFilters, applyDatePreset, activeFilterCount } = useOTFilters();
+
+  const { data: requests = [], isLoading } = useOTRequests({
+    status: filters.status,
+    startDate: filters.startDate,
+    endDate: filters.endDate,
+    ticketNumber: filters.ticketNumber,
+    dayType: filters.dayType,
+    minHours: filters.minHours,
+    maxHours: filters.maxHours,
+    minAmount: filters.minAmount,
+    maxAmount: filters.maxAmount,
+  });
 
   // Auto-open request from URL parameter
   useEffect(() => {
@@ -67,11 +81,13 @@ export default function OTHistory() {
   const handleExportCSV = () => {
     if (!requests.length) return;
 
-    const headers = ['Date', 'Day Type', 'Hours', 'Status', 'Reason'];
+    const headers = ['Ticket', 'Date', 'Day Type', 'Hours', 'Amount', 'Status', 'Reason'];
     const rows = requests.map(r => [
+      r.ticket_number,
       r.ot_date,
       r.day_type,
       r.total_hours,
+      r.ot_amount || 0,
       r.status,
       r.reason.replace(/,/g, ';'),
     ]);
@@ -84,8 +100,9 @@ export default function OTHistory() {
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
+    const filterSuffix = activeFilterCount > 0 ? '-filtered' : '';
     a.href = url;
-    a.download = `ot-history-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `ot-history${filterSuffix}-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
   };
 
@@ -120,37 +137,54 @@ export default function OTHistory() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <CardTitle>All Requests</CardTitle>
-                <CardDescription>Complete history of your OT submissions</CardDescription>
+                <CardDescription>
+                  {activeFilterCount > 0 
+                    ? `Filtered results (${requests.length} ${requests.length === 1 ? 'request' : 'requests'})`
+                    : 'Complete history of your OT submissions'
+                  }
+                </CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending_verification">Pending Verification</SelectItem>
-                    <SelectItem value="supervisor_verified">Supervisor Verified</SelectItem>
-                    <SelectItem value="hr_certified">HR Certified</SelectItem>
-                    <SelectItem value="management_approved">Management Approved</SelectItem>
-                    <SelectItem value="pending_hr_recertification">Pending HR Recertification</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                <Button 
+                  variant={filterOpen ? "default" : "outline"} 
+                  size="sm" 
+                  onClick={() => setFilterOpen(!filterOpen)}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={requests.length === 0}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export Excel
+                  Export
                 </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <Collapsible open={filterOpen} onOpenChange={setFilterOpen}>
+              <CollapsibleContent>
+                <OTFilterPanel
+                  filters={filters}
+                  updateFilter={updateFilter}
+                  clearFilters={clearFilters}
+                  applyDatePreset={applyDatePreset}
+                  activeFilterCount={activeFilterCount}
+                />
+              </CollapsibleContent>
+            </Collapsible>
+
             {isLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Skeleton key={i} className="h-16 w-full" />
                 ))}
+              </div>
+            ) : requests.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {activeFilterCount > 0 
+                  ? 'No OT requests match your filters. Try adjusting your search criteria.'
+                  : 'No OT requests found. Submit your first OT request to get started.'
+                }
               </div>
             ) : (
               <OTHistoryTable 

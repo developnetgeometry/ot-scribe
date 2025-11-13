@@ -3,9 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { OTRequest } from '@/types/otms';
 
 interface UseOTRequestsOptions {
-  status?: string;
+  status?: string | string[];
   startDate?: string;
   endDate?: string;
+  ticketNumber?: string;
+  dayType?: string[];
+  minHours?: number;
+  maxHours?: number;
+  minAmount?: number;
+  maxAmount?: number;
 }
 
 export function useOTRequests(options: UseOTRequestsOptions = {}) {
@@ -27,8 +33,12 @@ export function useOTRequests(options: UseOTRequestsOptions = {}) {
         .eq('employee_id', user.id)
         .order('ot_date', { ascending: false });
 
-      if (options.status && options.status !== 'all') {
-        query = query.eq('status', options.status as any);
+      if (options.status) {
+        if (Array.isArray(options.status) && options.status.length > 0) {
+          query = query.in('status', options.status as any);
+        } else if (typeof options.status === 'string' && options.status !== 'all') {
+          query = query.eq('status', options.status as any);
+        }
       }
 
       if (options.startDate) {
@@ -37,6 +47,30 @@ export function useOTRequests(options: UseOTRequestsOptions = {}) {
 
       if (options.endDate) {
         query = query.lte('ot_date', options.endDate);
+      }
+
+      if (options.ticketNumber) {
+        query = query.ilike('ticket_number', `%${options.ticketNumber}%`);
+      }
+
+      if (options.dayType && options.dayType.length > 0) {
+        query = query.in('day_type', options.dayType as any);
+      }
+
+      if (options.minHours !== undefined) {
+        query = query.gte('total_hours', options.minHours);
+      }
+
+      if (options.maxHours !== undefined) {
+        query = query.lte('total_hours', options.maxHours);
+      }
+
+      if (options.minAmount !== undefined) {
+        query = query.gte('ot_amount', options.minAmount);
+      }
+
+      if (options.maxAmount !== undefined) {
+        query = query.lte('ot_amount', options.maxAmount);
       }
 
       const { data, error } = await query;
