@@ -102,7 +102,7 @@ export function DepartmentDialog({ open, onOpenChange, department }: DepartmentD
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {department ? `Edit Department (${department.name})` : 'Create Department'}
+            {department ? 'Edit Department' : 'Create Department'}
           </DialogTitle>
           <DialogDescription>
             {department
