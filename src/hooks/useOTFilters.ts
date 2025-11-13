@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { startOfMonth, endOfMonth, subDays, startOfYear, subMonths } from 'date-fns';
+import { startOfMonth, endOfMonth, subDays, startOfYear, subMonths, format } from 'date-fns';
 
 export interface OTFilters {
   startDate?: string;
@@ -11,16 +11,22 @@ const defaultFilters: OTFilters = {};
 
 export function useOTFilters() {
   const [filters, setFilters] = useState<OTFilters>(defaultFilters);
+  const [selectedPreset, setSelectedPreset] = useState<string>('');
 
   const updateFilter = useCallback(<K extends keyof OTFilters>(
     key: K,
     value: OTFilters[K]
   ) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+    // Clear preset when manually changing dates
+    if (key === 'startDate' || key === 'endDate') {
+      setSelectedPreset('');
+    }
   }, []);
 
   const clearFilters = useCallback(() => {
     setFilters(defaultFilters);
+    setSelectedPreset('');
   }, []);
 
   const applyDatePreset = useCallback((preset: string) => {
@@ -57,6 +63,7 @@ export function useOTFilters() {
       startDate: start?.toISOString().split('T')[0],
       endDate: end?.toISOString().split('T')[0],
     }));
+    setSelectedPreset(preset);
   }, []);
 
   const getActiveFilterCount = useCallback(() => {
@@ -66,11 +73,44 @@ export function useOTFilters() {
     return count;
   }, [filters]);
 
+  const getDateRangeLabel = useCallback(() => {
+    const presetLabels: Record<string, string> = {
+      'today': 'Today',
+      'last7days': 'Last 7 Days',
+      'last30days': 'Last 30 Days',
+      'thisMonth': 'This Month',
+      'lastMonth': 'Last Month',
+      'thisYear': 'This Year',
+    };
+
+    if (selectedPreset && presetLabels[selectedPreset]) {
+      return presetLabels[selectedPreset];
+    }
+
+    if (filters.startDate && filters.endDate) {
+      const start = format(new Date(filters.startDate), 'MMM d');
+      const end = format(new Date(filters.endDate), 'MMM d, yyyy');
+      return `${start} - ${end}`;
+    }
+
+    if (filters.startDate) {
+      return `From ${format(new Date(filters.startDate), 'MMM d, yyyy')}`;
+    }
+
+    if (filters.endDate) {
+      return `Until ${format(new Date(filters.endDate), 'MMM d, yyyy')}`;
+    }
+
+    return '';
+  }, [filters, selectedPreset]);
+
   return {
     filters,
+    selectedPreset,
     updateFilter,
     clearFilters,
     applyDatePreset,
+    getDateRangeLabel,
     activeFilterCount: getActiveFilterCount(),
   };
 }

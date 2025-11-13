@@ -1,229 +1,149 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { X, Search, Calendar } from 'lucide-react';
 import { OTFilters } from '@/hooks/useOTFilters';
-import { ChevronDown, Search, X, Calendar } from 'lucide-react';
-import { useState } from 'react';
 
-interface OTFilterPanelProps {
+export interface OTFilterPanelProps {
   filters: OTFilters;
+  selectedPreset: string;
   updateFilter: <K extends keyof OTFilters>(key: K, value: OTFilters[K]) => void;
   clearFilters: () => void;
   applyDatePreset: (preset: string) => void;
   activeFilterCount: number;
+  onClose?: () => void;
 }
-
-const datePresets = [
-  { value: 'today', label: 'Today', icon: Calendar },
-  { value: 'last7days', label: 'Last 7 Days', icon: Calendar },
-  { value: 'last30days', label: 'Last 30 Days', icon: Calendar },
-  { value: 'thisMonth', label: 'This Month', icon: Calendar },
-  { value: 'lastMonth', label: 'Last Month', icon: Calendar },
-  { value: 'thisYear', label: 'This Year', icon: Calendar },
-];
 
 export function OTFilterPanel({
   filters,
+  selectedPreset,
   updateFilter,
   clearFilters,
   applyDatePreset,
   activeFilterCount,
+  onClose,
 }: OTFilterPanelProps) {
-  const [openSections, setOpenSections] = useState({
-    dateRange: true,
-  });
-
-  const toggleSection = (section: keyof typeof openSections) => {
-    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
-  };
-
-  const clearIndividualFilter = (filterKey: string) => {
-    switch (filterKey) {
-      case 'ticketNumber':
-        updateFilter('ticketNumber', undefined);
-        break;
-      case 'dateRange':
-        updateFilter('startDate', undefined);
-        updateFilter('endDate', undefined);
-        break;
-    }
-  };
-
-  const getActiveFilterBadges = () => {
-    const badges = [];
-    
-    if (filters.ticketNumber) {
-      badges.push({
-        key: 'ticketNumber',
-        label: `Ticket: ${filters.ticketNumber}`,
-        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-      });
-    }
-    
-    if (filters.startDate || filters.endDate) {
-      const dateLabel = filters.startDate && filters.endDate 
-        ? `${filters.startDate} to ${filters.endDate}`
-        : filters.startDate 
-        ? `From ${filters.startDate}`
-        : `Until ${filters.endDate}`;
-      badges.push({
-        key: 'dateRange',
-        label: dateLabel,
-        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-      });
-    }
-    
-    return badges;
-  };
-
-  const activeBadges = getActiveFilterBadges();
-
   return (
-    <div className="space-y-4 p-6 border border-border rounded-lg bg-card shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-lg">Filters</h3>
-          {activeFilterCount > 0 && (
-            <Badge variant="secondary" className="animate-fade-in">
-              {activeFilterCount}
-            </Badge>
-          )}
-        </div>
-        {activeFilterCount > 0 && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={clearFilters}
-            className="hover:bg-destructive/10 hover:text-destructive transition-colors"
-          >
-            <X className="h-4 w-4 mr-1" />
-            Clear All
-          </Button>
-        )}
-      </div>
-
-      {/* Active Filter Badges */}
-      {activeBadges.length > 0 && (
-        <div className="flex flex-wrap gap-2 animate-fade-in">
-          {activeBadges.map((badge, index) => (
-            <Badge
-              key={index}
-              variant="outline"
-              className={`pl-3 pr-2 py-1 gap-1 hover:bg-accent transition-colors ${badge.color}`}
-            >
-              <span className="text-xs">{badge.label}</span>
-              <button
-                className="h-4 w-4 p-0 hover:bg-transparent inline-flex items-center justify-center"
-                onClick={() => clearIndividualFilter(badge.key)}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      {/* Info message */}
-      <p className="text-sm text-muted-foreground text-center py-2">
-        Search by ticket number or filter by date range
-      </p>
-
+    <div className="w-80 p-4 space-y-4">
       {/* Ticket Number Search */}
-      <div className="space-y-2">
-        <Label htmlFor="ticketNumber" className="text-base font-medium flex items-center gap-2">
-          <Search className="h-5 w-5" />
+      <div className="space-y-1.5">
+        <Label htmlFor="ticketNumber" className="text-xs font-medium">
           Ticket Number
         </Label>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="ticketNumber"
-            placeholder="Search by ticket number..."
+            placeholder="Search ticket..."
             value={filters.ticketNumber || ''}
             onChange={(e) => updateFilter('ticketNumber', e.target.value || undefined)}
-            className="pl-9 pr-9 h-11"
+            className="pl-8 pr-8 h-9 text-sm"
           />
           {filters.ticketNumber && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-0.5 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
               onClick={() => updateFilter('ticketNumber', undefined)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
-              <X className="h-4 w-4" />
-            </button>
+              <X className="h-3 w-3" />
+            </Button>
           )}
         </div>
       </div>
 
-      {/* Date Range Filter */}
-      <Collapsible
-        open={openSections.dateRange}
-        onOpenChange={() => toggleSection('dateRange')}
-        className="border border-border rounded-lg overflow-hidden transition-all duration-200"
-        style={{
-          borderLeftWidth: openSections.dateRange ? '4px' : '1px',
-          borderLeftColor: openSections.dateRange ? 'hsl(var(--primary))' : undefined,
-        }}
-      >
-        <CollapsibleTrigger className="w-full px-4 py-3 flex items-center justify-between hover:bg-accent/50 transition-colors">
-          <span className="font-medium flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Date Range
-            {(filters.startDate || filters.endDate) && (
-              <Badge variant="secondary" className="ml-2">
-                Active
-              </Badge>
-            )}
-          </span>
-          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${openSections.dateRange ? 'rotate-180' : ''}`} />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="px-4 pb-4 pt-2 space-y-4 bg-secondary/10">
-          {/* Quick Date Presets */}
-          <div>
-            <Label className="text-sm font-medium mb-2 block">Quick Select</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {datePresets.map((preset) => (
-                <Button
-                  key={preset.value}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => applyDatePreset(preset.value)}
-                  className="justify-start gap-2 text-xs h-9"
-                >
-                  <preset.icon className="h-3 w-3" />
-                  {preset.label}
-                </Button>
-              ))}
-            </div>
-          </div>
+      {/* Date Range */}
+      <div className="space-y-1.5">
+        <Label className="text-xs font-medium">Date Range</Label>
+        <Select value={selectedPreset} onValueChange={applyDatePreset}>
+          <SelectTrigger className="h-9">
+            <SelectValue placeholder="Quick select..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="today">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>Today</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="last7days">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>Last 7 Days</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="last30days">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>Last 30 Days</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="thisMonth">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>This Month</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="lastMonth">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>Last Month</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="thisYear">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>This Year</span>
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
 
-          {/* Custom Date Range */}
-          <div className="space-y-3 pt-2 border-t">
-            <div className="space-y-2">
-              <Label htmlFor="startDate" className="text-sm">From Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={filters.startDate || ''}
-                onChange={(e) => updateFilter('startDate', e.target.value || undefined)}
-                className="h-10"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate" className="text-sm">To Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={filters.endDate || ''}
-                onChange={(e) => updateFilter('endDate', e.target.value || undefined)}
-                className="h-10"
-              />
-            </div>
+        {/* Custom Date Inputs */}
+        <div className="grid grid-cols-2 gap-2 pt-2">
+          <div className="space-y-1">
+            <Label htmlFor="startDate" className="text-xs text-muted-foreground">
+              From
+            </Label>
+            <Input
+              id="startDate"
+              type="date"
+              value={filters.startDate || ''}
+              onChange={(e) => updateFilter('startDate', e.target.value || undefined)}
+              className="h-9 text-xs"
+            />
           </div>
-        </CollapsibleContent>
-      </Collapsible>
+          <div className="space-y-1">
+            <Label htmlFor="endDate" className="text-xs text-muted-foreground">
+              To
+            </Label>
+            <Input
+              id="endDate"
+              type="date"
+              value={filters.endDate || ''}
+              onChange={(e) => updateFilter('endDate', e.target.value || undefined)}
+              className="h-9 text-xs"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center justify-between pt-2 border-t">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={clearFilters}
+          disabled={activeFilterCount === 0}
+        >
+          Reset
+        </Button>
+        <Button size="sm" onClick={onClose}>
+          Done
+        </Button>
+      </div>
     </div>
   );
 }

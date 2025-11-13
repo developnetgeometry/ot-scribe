@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Filter, Download } from 'lucide-react';
+import { ArrowLeft, Filter, Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { AppLayout } from '@/components/AppLayout';
 import { OTHistoryTable } from '@/components/ot/OTHistoryTable';
 import { OTDetailsSheet } from '@/components/ot/OTDetailsSheet';
@@ -14,11 +16,13 @@ import { EditOTForm } from '@/components/ot/EditOTForm';
 import { OTFilterPanel } from '@/components/ot/OTFilterPanel';
 import { useOTRequests } from '@/hooks/useOTRequests';
 import { useOTFilters } from '@/hooks/useOTFilters';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { OTRequest } from '@/types/otms';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function OTHistory() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedRequest, setSelectedRequest] = useState<OTRequest | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -28,7 +32,15 @@ export default function OTHistory() {
   const [editRequest, setEditRequest] = useState<OTRequest | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
 
-  const { filters, updateFilter, clearFilters, applyDatePreset, activeFilterCount } = useOTFilters();
+  const { 
+    filters, 
+    selectedPreset,
+    updateFilter, 
+    clearFilters, 
+    applyDatePreset,
+    getDateRangeLabel, 
+    activeFilterCount 
+  } = useOTFilters();
 
   const { data: requests = [], isLoading } = useOTRequests({
     startDate: filters.startDate,
@@ -138,15 +150,82 @@ export default function OTHistory() {
                   }
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant={filterOpen ? "default" : "outline"} 
-                  size="sm" 
-                  onClick={() => setFilterOpen(!filterOpen)}
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
-                </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {isMobile ? (
+                  <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Filter className="h-4 w-4 mr-2" />
+                        Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="h-[85vh]">
+                      <SheetHeader>
+                        <SheetTitle>Filters</SheetTitle>
+                      </SheetHeader>
+                      <div className="mt-4">
+                        <OTFilterPanel
+                          filters={filters}
+                          selectedPreset={selectedPreset}
+                          updateFilter={updateFilter}
+                          clearFilters={clearFilters}
+                          applyDatePreset={applyDatePreset}
+                          activeFilterCount={activeFilterCount}
+                          onClose={() => setFilterOpen(false)}
+                        />
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                ) : (
+                  <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Filter className="h-4 w-4 mr-2" />
+                        Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-auto p-0">
+                      <OTFilterPanel
+                        filters={filters}
+                        selectedPreset={selectedPreset}
+                        updateFilter={updateFilter}
+                        clearFilters={clearFilters}
+                        applyDatePreset={applyDatePreset}
+                        activeFilterCount={activeFilterCount}
+                        onClose={() => setFilterOpen(false)}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+
+                {/* Active filter badges */}
+                {filters.ticketNumber && (
+                  <Badge variant="secondary" className="gap-1.5">
+                    {filters.ticketNumber}
+                    <button
+                      onClick={() => updateFilter('ticketNumber', undefined)}
+                      className="hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+
+                {(filters.startDate || filters.endDate) && (
+                  <Badge variant="secondary" className="gap-1.5">
+                    {getDateRangeLabel()}
+                    <button
+                      onClick={() => {
+                        updateFilter('startDate', undefined);
+                        updateFilter('endDate', undefined);
+                      }}
+                      className="hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+
                 <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={requests.length === 0}>
                   <Download className="h-4 w-4 mr-2" />
                   Export
@@ -155,18 +234,6 @@ export default function OTHistory() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Collapsible open={filterOpen} onOpenChange={setFilterOpen}>
-              <CollapsibleContent>
-                <OTFilterPanel
-                  filters={filters}
-                  updateFilter={updateFilter}
-                  clearFilters={clearFilters}
-                  applyDatePreset={applyDatePreset}
-                  activeFilterCount={activeFilterCount}
-                />
-              </CollapsibleContent>
-            </Collapsible>
-
             {isLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3, 4, 5].map((i) => (
