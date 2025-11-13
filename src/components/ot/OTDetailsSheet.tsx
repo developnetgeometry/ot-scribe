@@ -21,8 +21,11 @@ export function OTDetailsSheet({ request, open, onOpenChange, onEdit }: OTDetail
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>OT Request Details</SheetTitle>
+        <SheetHeader className="space-y-3">
+          <div>
+            <div className="text-xs text-muted-foreground mb-1">Ticket Number</div>
+            <SheetTitle className="font-mono text-xl text-primary">{request.ticket_number}</SheetTitle>
+          </div>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">

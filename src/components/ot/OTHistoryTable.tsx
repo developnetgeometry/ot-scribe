@@ -149,6 +149,9 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="font-mono text-xs">
+                    {grouped.sessions[0]?.request?.ticket_number}
+                  </Badge>
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">{format(new Date(grouped.date), 'dd MMM yyyy')}</span>
                 </div>
@@ -252,6 +255,7 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Ticket #</TableHead>
             <TableHead>Employee</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Time Sessions</TableHead>
@@ -261,6 +265,11 @@ export function OTHistoryTable({ requests, onViewDetails }: OTHistoryTableProps)
         <TableBody>
           {groupedRequests.map((grouped) => (
             <TableRow key={grouped.date}>
+              <TableCell>
+                <span className="font-mono text-sm font-medium text-primary">
+                  {grouped.sessions[0]?.request?.ticket_number}
+                </span>
+              </TableCell>
               <TableCell>
                 <div className="flex flex-col">
                   <span className="font-medium">{grouped.profiles?.full_name || 'Unknown'}</span>

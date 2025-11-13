@@ -101,6 +101,7 @@ export function OTApprovalTable({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Ticket #</TableHead>
               <TableHead>Employee Name</TableHead>
               <TableHead>Employee ID</TableHead>
               <TableHead>Date</TableHead>
@@ -119,6 +120,11 @@ export function OTApprovalTable({
                   className="hover:bg-muted/50 transition-colors cursor-pointer"
                   onClick={() => setSelectedRequest(request)}
                 >
+                  <TableCell>
+                    <span className="font-mono text-sm font-medium text-primary">
+                      {request.ticket_number}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     <div 
                       className="font-semibold cursor-pointer hover:underline"

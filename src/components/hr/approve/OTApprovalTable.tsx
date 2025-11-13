@@ -50,6 +50,7 @@ export function OTApprovalTable({ requests, isLoading }: OTApprovalTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Ticket #</TableHead>
               <TableHead>Employee</TableHead>
               <TableHead>OT Date</TableHead>
               <TableHead>Day Type</TableHead>
@@ -62,6 +63,11 @@ export function OTApprovalTable({ requests, isLoading }: OTApprovalTableProps) {
           <TableBody>
             {requests.map((request) => (
               <TableRow key={request.id}>
+                <TableCell>
+                  <span className="font-mono text-sm font-medium text-primary">
+                    {request.ticket_number}
+                  </span>
+                </TableCell>
                 <TableCell>
                   <div>
                     <div className="font-medium">{request.employee_id}</div>
