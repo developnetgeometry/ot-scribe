@@ -330,7 +330,7 @@ async function sendNotificationToSupervisor(
 
   const body = `${formatDate(otRequest.ot_date)} - ${otRequest.total_hours} hours - ${reasonPreview}`
 
-  const targetUrl = `/supervisor/requests/${otRequest.id}`
+  const targetUrl = `/supervisor/verify?request=${otRequest.id}`
 
   const notificationPayload = {
     user_id: supervisor.id,
