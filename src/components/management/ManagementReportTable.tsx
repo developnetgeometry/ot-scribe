@@ -111,7 +111,8 @@ export function ManagementReportTable({ data, isLoading, selectedMonth }: Manage
         overtime: {
           amount: totalAmount,
           hours: totalHours
-        }
+        },
+        generatedDate: format(new Date(), 'dd/MM/yyyy HH:mm')
       };
 
       // Generate PDF
