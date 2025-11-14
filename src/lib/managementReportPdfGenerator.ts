@@ -259,9 +259,14 @@ export async function generateManagementSummaryPDF(data: ManagementSummaryData):
 
   // ===== FOOTER (matching payslip) =====
   const footerY = 280;
-  doc.setFontSize(9);
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...grayColor);
+  
+  // Generated date on left
+  doc.text(`Generated: ${data.generatedDate}`, leftMargin, footerY);
+  
+  // Computer-generated message centered
   const footerText = 'This is a computer-generated report.';
   doc.text(footerText, pageWidth / 2, footerY, { align: 'center' });
 
