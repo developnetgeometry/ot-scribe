@@ -4,11 +4,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, DollarSign, Clock, AlertTriangle, FileCheck, Download, FileText, Filter } from 'lucide-react';
+import { Search, DollarSign, Clock, Building2, Users, Download, FileText, Filter } from 'lucide-react';
 import { EnhancedDashboardCard } from '@/components/hr/EnhancedDashboardCard';
 import { ManagementReportTable } from '@/components/management/ManagementReportTable';
+import { CompanyReportCard } from '@/components/reports/CompanyReportCard';
 import { useManagementReportData } from '@/hooks/useManagementReportData';
 import { exportToCSV } from '@/lib/exportUtils';
+import { groupByCompany, calculateOverallStats } from '@/lib/companyReportUtils';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -33,11 +35,6 @@ export default function ReviewOT() {
   const { data, isLoading } = useManagementReportData(filterDate);
 
   const aggregatedData = data?.aggregated || [];
-  const stats = data?.stats || {
-    pendingReview: 0,
-    totalHours: 0,
-    totalCost: 0
-  };
 
   const filteredData = aggregatedData.filter(item => {
     if (!searchQuery) return true;
@@ -46,9 +43,14 @@ export default function ReviewOT() {
       item.employee_no.toLowerCase().includes(query) ||
       item.employee_name.toLowerCase().includes(query) ||
       item.department.toLowerCase().includes(query) ||
-      item.position.toLowerCase().includes(query)
+      item.position.toLowerCase().includes(query) ||
+      item.company_name.toLowerCase().includes(query) ||
+      item.company_code.toLowerCase().includes(query)
     );
   });
+
+  const companyGroups = useMemo(() => groupByCompany(filteredData), [filteredData]);
+  const overallStats = useMemo(() => calculateOverallStats(companyGroups), [companyGroups]);
 
   const handleExportCSV = () => {
     if (filteredData.length === 0) {
@@ -61,6 +63,8 @@ export default function ReviewOT() {
     }
 
     const headers = [
+      { key: 'company_name', label: 'Company' },
+      { key: 'company_code', label: 'Company Code' },
       { key: 'employee_no', label: 'Employee No.' },
       { key: 'employee_name', label: 'Name' },
       { key: 'department', label: 'Department' },
@@ -133,9 +137,9 @@ export default function ReviewOT() {
         },
         generatedDate: format(new Date(), 'dd/MM/yyyy HH:mm'),
         statistics: {
-          totalEmployees: filteredData.length,
-          totalHours: stats.totalHours,
-          totalCost: stats.totalCost
+          totalEmployees: overallStats.totalEmployees,
+          totalHours: overallStats.totalHours,
+          totalCost: overallStats.totalCost
         },
         employees: filteredData.map(emp => ({
           employeeNo: emp.employee_no,
@@ -171,24 +175,34 @@ export default function ReviewOT() {
           <p className="text-muted-foreground">Filter and export monthly overtime summaries by department and employee.</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <EnhancedDashboardCard
-            title="Pending Review"
-            value={stats.pendingReview}
-            icon={FileCheck}
+            title="Total Companies"
+            value={overallStats.totalCompanies}
+            icon={Building2}
             variant="primary"
+            subtitle="Companies in system"
+          />
+          <EnhancedDashboardCard
+            title="Total Employees"
+            value={overallStats.totalEmployees}
+            icon={Users}
+            variant="info"
+            subtitle="Employees with OT this month"
           />
           <EnhancedDashboardCard
             title="Total OT Hours"
-            value={formatHours(stats.totalHours)}
+            value={formatHours(overallStats.totalHours)}
             icon={Clock}
             variant="info"
+            subtitle="Total approved hours this month"
           />
           <EnhancedDashboardCard
             title="Total OT Cost"
-            value={formatCurrency(stats.totalCost)}
+            value={formatCurrency(overallStats.totalCost)}
             icon={DollarSign}
             variant="success"
+            subtitle="Total RM paid for overtime this month"
           />
         </div>
 
@@ -277,11 +291,30 @@ export default function ReviewOT() {
               </div>
             </div>
 
-          <ManagementReportTable 
-            data={filteredData}
-            isLoading={isLoading}
-            selectedMonth={filterDate}
-          />
+
+            <div className="space-y-4">
+              {companyGroups.map((company, index) => (
+                <CompanyReportCard
+                  key={company.companyId}
+                  companyName={company.companyName}
+                  companyCode={company.companyCode}
+                  stats={company.stats}
+                  defaultExpanded={index === 0}
+                >
+                  <ManagementReportTable 
+                    data={company.employees}
+                    isLoading={false}
+                    selectedMonth={filterDate}
+                  />
+                </CompanyReportCard>
+              ))}
+              
+              {companyGroups.length === 0 && !isLoading && (
+                <div className="text-center py-12 text-muted-foreground">
+                  No overtime data found for the selected period.
+                </div>
+              )}
+            </div>
           </div>
         </Card>
       </div>
