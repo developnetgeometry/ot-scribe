@@ -13,9 +13,6 @@ interface InviteEmployeeData {
   department_id: string;
   company_id: string;
   basic_salary: number;
-  epf_no: string | null;
-  socso_no: string | null;
-  income_tax_no: string | null;
   employment_type: string;
   joining_date: string;
   work_location: string;

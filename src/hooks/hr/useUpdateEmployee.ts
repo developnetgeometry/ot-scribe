@@ -15,9 +15,6 @@ interface UpdateEmployeeData {
   position_id?: string | null;
   position?: string | null;
   basic_salary?: number;
-  epf_no?: string | null;
-  socso_no?: string | null;
-  income_tax_no?: string | null;
   employment_type?: string | null;
   designation?: string | null;
   supervisor_id?: string | null;
@@ -43,15 +40,15 @@ export function useUpdateEmployee() {
       const allowedColumns = [
         'full_name', 'employee_id', 'ic_no', 'phone_no', 'email',
         'company_id', 'department_id', 'position_id', 'position', 'basic_salary',
-        'epf_no', 'socso_no', 'income_tax_no', 'employment_type',
+        'employment_type',
         'designation', 'supervisor_id', 'joining_date', 'work_location',
         'state', 'status', 'is_ot_eligible', 'require_ot_attachment'
       ];
 
       // Nullable fields that should convert empty strings to null
       const nullableFields = [
-        'ic_no', 'phone_no', 'company_id', 'department_id', 'epf_no', 'socso_no', 
-        'income_tax_no', 'employment_type', 'position', 'supervisor_id', 
+        'ic_no', 'phone_no', 'company_id', 'department_id',
+        'employment_type', 'position', 'supervisor_id',
         'joining_date', 'work_location', 'state', 'position_id'
       ];
 
