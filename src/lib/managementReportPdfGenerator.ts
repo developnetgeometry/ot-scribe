@@ -17,14 +17,25 @@ export interface ManagementSummaryData {
     totalEmployees: number;
     totalHours: number;
     totalCost: number;
+    totalCompanies: number;
   };
-  employees: Array<{
-    employeeNo: string;
-    name: string;
-    department: string;
-    position: string;
-    otHours: number;
-    otAmount: number;
+  companyGroups: Array<{
+    companyId: string;
+    companyName: string;
+    companyCode: string;
+    employees: Array<{
+      employeeNo: string;
+      name: string;
+      department: string;
+      position: string;
+      otHours: number;
+      otAmount: number;
+    }>;
+    stats: {
+      totalEmployees: number;
+      totalHours: number;
+      totalCost: number;
+    };
   }>;
 }
 
@@ -203,16 +214,16 @@ export async function generateManagementSummaryPDF(data: ManagementSummaryData):
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...grayColor);
-  doc.text(`Total Employees: ${data.statistics.totalEmployees}`, pageWidth / 2, yPos, { align: 'center' });
+  doc.text(`Total Employees: ${data.statistics.totalEmployees} | Companies: ${data.statistics.totalCompanies}`, pageWidth / 2, yPos, { align: 'center' });
 
   // ===== EMPLOYEE DATA SECTION =====
   yPos += 8;
   
-  // Section title (matching payslip earnings section) - centered
+  // Section title - centered
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...primaryColor);
-  doc.text('Employee Overtime Details', pageWidth / 2, yPos, { align: 'center' });
+  doc.text('Employee Overtime Details by Company', pageWidth / 2, yPos, { align: 'center' });
   
   yPos += 5;
   doc.setFontSize(11);
@@ -227,49 +238,110 @@ export async function generateManagementSummaryPDF(data: ManagementSummaryData):
   doc.setLineWidth(0.3);
   doc.line(lineStartX, yPos, lineEndX, yPos);
 
-  yPos += 5;
+  yPos += 8;
 
-  // Employee table using autoTable
-  const tableData = data.employees.map(emp => [
-    emp.employeeNo,
-    emp.name,
-    emp.department,
-    emp.position,
-    `${emp.otHours.toFixed(1)} hrs`,
-    `RM ${emp.otAmount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-  ]);
+  // Loop through each company group
+  const tableWidth = 155;
+  const tableStartX = (pageWidth - tableWidth) / 2;
 
-  autoTable(doc, {
-    startY: yPos,
-    head: [['Employee No.', 'Name', 'Department', 'Position', 'OT Hours', 'OT Amount']],
-    body: tableData,
-    theme: 'plain',
-    styles: {
-      fontSize: 9,
-      cellPadding: 3,
-      textColor: [34, 34, 34],
-      lineColor: [230, 230, 230],
-      lineWidth: 0.1,
-    },
-    headStyles: {
-      fillColor: [47, 182, 201],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-      halign: 'left',
-    },
-    columnStyles: {
-      0: { cellWidth: 25 },
-      1: { cellWidth: 40 },
-      2: { cellWidth: 30 },
-      3: { cellWidth: 30 },
-      4: { halign: 'right', cellWidth: 22 },
-      5: { halign: 'right', cellWidth: 25 },
-    },
-    alternateRowStyles: {
-      fillColor: [248, 248, 248],
-    },
-    margin: { left: leftMargin, right: rightMargin },
-  });
+  for (let i = 0; i < data.companyGroups.length; i++) {
+    const company = data.companyGroups[i];
+    
+    // Add page break if needed (except for first company)
+    if (i > 0 && yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    
+    // Company header
+    doc.setFillColor(...lightTealBg);
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(tableStartX, yPos - 2, tableWidth, 10, 2, 2, 'FD');
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryColor);
+    doc.text(
+      `${company.companyName} (${company.companyCode})`,
+      pageWidth / 2,
+      yPos + 5,
+      { align: 'center' }
+    );
+    
+    yPos += 12;
+    
+    // Company employee table
+    const tableData = company.employees.map(emp => [
+      emp.employeeNo,
+      emp.name,
+      emp.department,
+      emp.position,
+      `${emp.otHours.toFixed(1)} hrs`,
+      `RM ${emp.otAmount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    ]);
+    
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Employee No.', 'Name', 'Department', 'Position', 'OT Hours', 'OT Amount']],
+      body: tableData,
+      theme: 'plain',
+      styles: {
+        fontSize: 8,
+        cellPadding: 2.5,
+        textColor: [34, 34, 34],
+        lineColor: [230, 230, 230],
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [47, 182, 201],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        halign: 'left',
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 35 },
+        4: { halign: 'right', cellWidth: 20 },
+        5: { halign: 'right', cellWidth: 'auto' },
+      },
+      margin: { left: tableStartX, right: pageWidth - tableStartX - tableWidth },
+      didDrawPage: (data) => {
+        yPos = data.cursor?.y || yPos;
+      }
+    });
+    
+    yPos = (doc as any).lastAutoTable.finalY + 2;
+    
+    // Company subtotal bar
+    doc.setFillColor(248, 248, 248);
+    doc.rect(tableStartX, yPos, tableWidth, 8, 'F');
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...blackColor);
+    doc.text(
+      `${company.companyName} Total: ${company.stats.totalEmployees} employees`,
+      tableStartX + 5,
+      yPos + 5
+    );
+    doc.text(
+      `${company.stats.totalHours.toFixed(1)} hrs`,
+      tableStartX + 100,
+      yPos + 5,
+      { align: 'right' }
+    );
+    doc.text(
+      `RM ${company.stats.totalCost.toLocaleString('en-MY', { minimumFractionDigits: 2 })}`,
+      tableStartX + tableWidth - 5,
+      yPos + 5,
+      { align: 'right' }
+    );
+    
+    yPos += 15; // Gap before next company
+  }
 
   // ===== FOOTER (matching payslip) =====
   const footerY = 280;

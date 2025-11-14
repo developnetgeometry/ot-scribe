@@ -139,15 +139,22 @@ export default function ReviewOT() {
         statistics: {
           totalEmployees: overallStats.totalEmployees,
           totalHours: overallStats.totalHours,
-          totalCost: overallStats.totalCost
+          totalCost: overallStats.totalCost,
+          totalCompanies: companyGroups.length
         },
-        employees: filteredData.map(emp => ({
-          employeeNo: emp.employee_no,
-          name: emp.employee_name,
-          department: emp.department,
-          position: emp.position,
-          otHours: emp.total_ot_hours,
-          otAmount: emp.monthly_total
+        companyGroups: companyGroups.map(group => ({
+          companyId: group.companyId,
+          companyName: group.companyName,
+          companyCode: group.companyCode,
+          employees: group.employees.map(emp => ({
+            employeeNo: emp.employee_no,
+            name: emp.employee_name,
+            department: emp.department,
+            position: emp.position,
+            otHours: emp.total_ot_hours,
+            otAmount: emp.monthly_total
+          })),
+          stats: group.stats
         }))
       };
 
