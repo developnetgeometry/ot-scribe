@@ -66,28 +66,30 @@ export async function generateManagementSummaryPDF(data: ManagementSummaryData):
 
   // ===== HEADER SECTION (matching payslip) =====
   
-  // Company logo (left side)
+  // Company logo (centered)
   const logoSize = 35; // 35mm x 35mm
+  const headerContentWidth = logoSize + 15 + 112; // logo + gap + text area
+  const headerStartX = (pageWidth - headerContentWidth) / 2;
   
   if (data.company.logo_url) {
     const imageData = await loadImageFromUrl(data.company.logo_url);
     if (imageData) {
       try {
-        doc.addImage(imageData, 'PNG', leftMargin, yPos, logoSize, logoSize);
+        doc.addImage(imageData, 'PNG', headerStartX, yPos, logoSize, logoSize);
       } catch (error) {
         console.error('Failed to add image to PDF:', error);
-        drawLogoPlaceholder(doc, leftMargin, yPos, logoSize, data.company.name);
+        drawLogoPlaceholder(doc, headerStartX, yPos, logoSize, data.company.name);
       }
     } else {
-      drawLogoPlaceholder(doc, leftMargin, yPos, logoSize, data.company.name);
+      drawLogoPlaceholder(doc, headerStartX, yPos, logoSize, data.company.name);
     }
   } else {
-    drawLogoPlaceholder(doc, leftMargin, yPos, logoSize, data.company.name);
+    drawLogoPlaceholder(doc, headerStartX, yPos, logoSize, data.company.name);
   }
 
-  // Company info (right side)
-  const companyInfoX = leftMargin + logoSize + 15;
-  const maxTextWidth = pageWidth - companyInfoX - rightMargin; // ~112mm
+  // Company info (right side of logo)
+  const companyInfoX = headerStartX + logoSize + 15;
+  const maxTextWidth = 112; // Fixed width for text area
   
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
@@ -127,21 +129,28 @@ export async function generateManagementSummaryPDF(data: ManagementSummaryData):
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...blackColor);
-  doc.text('OVERTIME SUMMARY REPORT', leftMargin, yPos);
+  doc.text('OVERTIME SUMMARY REPORT', pageWidth / 2, yPos, { align: 'center' });
   
   yPos += 6;
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...grayColor);
-  doc.text('All Employees', leftMargin, yPos);
+  doc.text('All Employees', pageWidth / 2, yPos, { align: 'center' });
 
-  // Period (right aligned)
+  // Period (below title, centered)
+  yPos += 5;
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...grayColor);
-  doc.text('Period: ', pageWidth - rightMargin - 45, yPos);
+  const periodLabel = 'Period: ';
+  const periodLabelWidth = doc.getTextWidth(periodLabel);
+  const periodValueWidth = doc.getTextWidth(data.period.display);
+  const totalPeriodWidth = periodLabelWidth + periodValueWidth;
+  const periodStartX = (pageWidth - totalPeriodWidth) / 2;
+  
+  doc.text(periodLabel, periodStartX, yPos);
   doc.setTextColor(...blackColor);
-  doc.text(data.period.display, pageWidth - rightMargin, yPos, { align: 'right' });
+  doc.text(data.period.display, periodStartX + periodLabelWidth, yPos);
 
   // ===== SUMMARY STATISTICS BOXES (replaces NET PAY box) =====
   yPos += 10;
@@ -150,9 +159,11 @@ export async function generateManagementSummaryPDF(data: ManagementSummaryData):
   const boxWidth = 70;
   const boxHeight = 24;
   const boxGap = 8;
+  const totalBoxesWidth = (boxWidth * 2) + boxGap;
+  const boxesStartX = (pageWidth - totalBoxesWidth) / 2;
   
   // Left Box - Total Hours
-  const hoursBoxX = leftMargin;
+  const hoursBoxX = boxesStartX;
   doc.setFillColor(...lightTealBg);
   doc.setDrawColor(...primaryColor);
   doc.setLineWidth(1.5);
@@ -187,31 +198,34 @@ export async function generateManagementSummaryPDF(data: ManagementSummaryData):
   const costText = `RM ${data.statistics.totalCost.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   doc.text(costText, costBoxX + boxWidth / 2, boxStartY + 18, { align: 'center' });
 
-  // Additional stats below boxes
+  // Additional stats below boxes - centered
   yPos = boxStartY + boxHeight + 6;
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...grayColor);
-  doc.text(`Total Employees: ${data.statistics.totalEmployees}`, leftMargin, yPos);
+  doc.text(`Total Employees: ${data.statistics.totalEmployees}`, pageWidth / 2, yPos, { align: 'center' });
 
   // ===== EMPLOYEE DATA SECTION =====
   yPos += 8;
   
-  // Section title (matching payslip earnings section)
+  // Section title (matching payslip earnings section) - centered
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...primaryColor);
-  doc.text('Employee Overtime Details', leftMargin, yPos);
+  doc.text('Employee Overtime Details', pageWidth / 2, yPos, { align: 'center' });
   
+  yPos += 5;
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...grayColor);
-  doc.text(`For Period ${data.period.display}`, pageWidth - rightMargin, yPos, { align: 'right' });
+  doc.text(`For Period ${data.period.display}`, pageWidth / 2, yPos, { align: 'center' });
   
   yPos += 2;
+  const lineStartX = leftMargin + 15;
+  const lineEndX = pageWidth - rightMargin - 15;
   doc.setDrawColor(...borderColor);
   doc.setLineWidth(0.3);
-  doc.line(leftMargin, yPos, pageWidth - rightMargin, yPos);
+  doc.line(lineStartX, yPos, lineEndX, yPos);
 
   yPos += 5;
 
