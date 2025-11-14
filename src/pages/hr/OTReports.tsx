@@ -77,7 +77,16 @@ export default function OTReports() {
     }));
 
     const monthStr = format(filterDate, 'MMM_yyyy');
-    exportToCSV(formattedData, `HR_OT_Report_${monthStr}`, headers);
+    exportToCSV(
+      formattedData, 
+      `HR_OT_Report_${monthStr}`, 
+      headers,
+      {
+        reportName: 'HR Overtime Report',
+        period: format(filterDate, 'MMMM yyyy'),
+        generatedDate: format(new Date(), 'dd/MM/yyyy HH:mm')
+      }
+    );
     
     toast({
       title: 'Report exported',
@@ -116,6 +125,7 @@ export default function OTReports() {
           logoUrl: companyProfile.logo_url || undefined,
         },
         period: format(filterDate, 'MMMM yyyy'),
+        generatedDate: format(new Date(), 'dd/MM/yyyy HH:mm'),
         summary: {
           pendingReview: stats.pendingReview,
           totalHours: stats.totalHours,

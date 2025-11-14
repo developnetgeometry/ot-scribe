@@ -78,7 +78,16 @@ export default function ReviewOT() {
     }));
 
     const monthStr = format(filterDate, 'MMM_yyyy');
-    exportToCSV(formattedData, `Management_OT_Report_${monthStr}`, headers);
+    exportToCSV(
+      formattedData, 
+      `Management_OT_Report_${monthStr}`, 
+      headers,
+      {
+        reportName: 'Management Overtime Report',
+        period: format(filterDate, 'MMMM yyyy'),
+        generatedDate: format(new Date(), 'dd/MM/yyyy HH:mm')
+      }
+    );
     
     toast({
       title: 'Report exported',

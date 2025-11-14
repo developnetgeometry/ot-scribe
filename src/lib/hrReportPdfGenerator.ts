@@ -10,6 +10,7 @@ interface HRReportData {
     logoUrl?: string;
   };
   period: string;
+  generatedDate: string;
   summary: {
     pendingReview: number;
     totalHours: number;
@@ -257,8 +258,13 @@ export async function generateHRReportPDF(data: HRReportData): Promise<void> {
   // ===== FOOTER =====
   const finalY = (doc as any).lastAutoTable.finalY || yPos + 50;
   doc.setFontSize(8);
-  doc.setFont('helvetica', 'italic');
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(...textLight);
+  
+  // Generated date on left
+  doc.text(`Generated: ${data.generatedDate}`, margin, finalY + 15);
+  
+  // Computer-generated message centered
   doc.text('This is a computer-generated report. No signature is required.', 
     pageWidth / 2, finalY + 15, { align: 'center' });
 
