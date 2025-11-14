@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export default function ReviewOT() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState<string>('all');
   
   // Filter state
   const currentDate = new Date();
@@ -36,10 +37,33 @@ export default function ReviewOT() {
 
   const aggregatedData = data?.aggregated || [];
 
+  // Extract unique companies for filter
+  const uniqueCompanies = useMemo(() => {
+    const companies = new Map<string, { name: string; code: string }>();
+    aggregatedData.forEach(item => {
+      if (!companies.has(item.company_id)) {
+        companies.set(item.company_id, {
+          name: item.company_name,
+          code: item.company_code
+        });
+      }
+    });
+    return Array.from(companies.entries()).map(([id, info]) => ({
+      id,
+      name: info.name,
+      code: info.code
+    })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [aggregatedData]);
+
   const filteredData = aggregatedData.filter(item => {
-    if (!searchQuery) return true;
+    // Company filter
+    const matchesCompany = selectedCompany === 'all' || item.company_id === selectedCompany;
+    
+    // Search filter
+    if (!searchQuery) return matchesCompany;
+    
     const query = searchQuery.toLowerCase();
-    return (
+    const matchesSearch = (
       item.employee_no.toLowerCase().includes(query) ||
       item.employee_name.toLowerCase().includes(query) ||
       item.department.toLowerCase().includes(query) ||
@@ -47,10 +71,25 @@ export default function ReviewOT() {
       item.company_name.toLowerCase().includes(query) ||
       item.company_code.toLowerCase().includes(query)
     );
+    
+    return matchesCompany && matchesSearch;
   });
 
   const companyGroups = useMemo(() => groupByCompany(filteredData), [filteredData]);
-  const overallStats = useMemo(() => calculateOverallStats(companyGroups), [companyGroups]);
+  
+  const filteredStats = useMemo(() => {
+    const uniqueCompanies = new Set(filteredData.map(item => item.company_id)).size;
+    const totalEmployees = filteredData.length;
+    const totalHours = filteredData.reduce((sum, item) => sum + item.total_ot_hours, 0);
+    const totalCost = filteredData.reduce((sum, item) => sum + item.amount, 0);
+    
+    return {
+      totalCompanies: uniqueCompanies,
+      totalEmployees,
+      totalHours,
+      totalCost
+    };
+  }, [filteredData]);
 
   const handleExportCSV = () => {
     if (filteredData.length === 0) {
@@ -137,9 +176,9 @@ export default function ReviewOT() {
         },
         generatedDate: format(new Date(), 'dd/MM/yyyy HH:mm'),
         statistics: {
-          totalEmployees: overallStats.totalEmployees,
-          totalHours: overallStats.totalHours,
-          totalCost: overallStats.totalCost,
+          totalEmployees: filteredStats.totalEmployees,
+          totalHours: filteredStats.totalHours,
+          totalCost: filteredStats.totalCost,
           totalCompanies: companyGroups.length
         },
         companyGroups: companyGroups.map(group => ({
@@ -185,28 +224,28 @@ export default function ReviewOT() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <EnhancedDashboardCard
             title="Total Companies"
-            value={overallStats.totalCompanies}
+            value={filteredStats.totalCompanies}
             icon={Building2}
             variant="primary"
             subtitle="Companies in system"
           />
           <EnhancedDashboardCard
             title="Total Employees"
-            value={overallStats.totalEmployees}
+            value={filteredStats.totalEmployees}
             icon={Users}
             variant="info"
             subtitle="Employees with OT this month"
           />
           <EnhancedDashboardCard
             title="Total OT Hours"
-            value={formatHours(overallStats.totalHours)}
+            value={formatHours(filteredStats.totalHours)}
             icon={Clock}
             variant="info"
             subtitle="Total approved hours this month"
           />
           <EnhancedDashboardCard
             title="Total OT Cost"
-            value={formatCurrency(overallStats.totalCost)}
+            value={formatCurrency(filteredStats.totalCost)}
             icon={DollarSign}
             variant="success"
             subtitle="Total RM paid for overtime this month"
@@ -218,9 +257,9 @@ export default function ReviewOT() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <h2 className="text-lg font-semibold">Monthly OT Summary Report</h2>
               
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="w-[180px] border-input bg-background focus:border-ring focus:ring-ring">
+                  <SelectTrigger className="w-[140px] border-input bg-background focus:border-ring focus:ring-ring">
                     <SelectValue placeholder="Select Month" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover z-50 border shadow-lg">
@@ -240,7 +279,7 @@ export default function ReviewOT() {
                 </Select>
 
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-[120px] border-input bg-background focus:border-ring focus:ring-ring">
+                  <SelectTrigger className="w-[100px] border-input bg-background focus:border-ring focus:ring-ring">
                     <SelectValue placeholder="Select Year" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover z-50 border shadow-lg">
@@ -252,6 +291,20 @@ export default function ReviewOT() {
                         </SelectItem>
                       );
                     })}
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                  <SelectTrigger className="w-[240px] border-input bg-background focus:border-ring focus:ring-ring">
+                    <SelectValue placeholder="All Companies" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50 border shadow-lg">
+                    <SelectItem value="all">All Companies</SelectItem>
+                    {uniqueCompanies.map(company => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name} ({company.code})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
@@ -300,25 +353,15 @@ export default function ReviewOT() {
 
 
             <div className="space-y-4">
-              {companyGroups.map((company, index) => (
-                <CompanyReportCard
-                  key={company.companyId}
-                  companyName={company.companyName}
-                  companyCode={company.companyCode}
-                  stats={company.stats}
-                  defaultExpanded={index === 0}
-                >
-                  <ManagementReportTable 
-                    data={company.employees}
-                    isLoading={false}
-                    selectedMonth={filterDate}
-                  />
-                </CompanyReportCard>
-              ))}
+              <ManagementReportTable 
+                data={filteredData}
+                isLoading={isLoading}
+                selectedMonth={filterDate}
+              />
               
-              {companyGroups.length === 0 && !isLoading && (
+              {filteredData.length === 0 && !isLoading && (
                 <div className="text-center py-12 text-muted-foreground">
-                  No overtime data found for the selected period.
+                  No overtime data found for the selected filters.
                 </div>
               )}
             </div>
