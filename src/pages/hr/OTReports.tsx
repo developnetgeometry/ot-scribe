@@ -4,13 +4,15 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, DollarSign, Clock, AlertTriangle, FileCheck, Download, FileText, Filter } from 'lucide-react';
+import { Search, DollarSign, Clock, Building2, Users, Download, FileText, Filter } from 'lucide-react';
 import { EnhancedDashboardCard } from '@/components/hr/EnhancedDashboardCard';
 import { HRReportTable } from '@/components/hr/reports/HRReportTable';
+import { CompanyReportCard } from '@/components/reports/CompanyReportCard';
 import { useHRReportData } from '@/hooks/useHRReportData';
 import { useCompanyProfile } from '@/hooks/hr/useCompanyProfile';
 import { exportToCSV } from '@/lib/exportUtils';
 import { generateHRReportPDF } from '@/lib/hrReportPdfGenerator';
+import { groupByCompany, calculateOverallStats } from '@/lib/companyReportUtils';
 import { formatCurrency, formatHours } from '@/lib/otCalculations';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -32,11 +34,6 @@ export default function OTReports() {
   const { data: companyProfile } = useCompanyProfile();
 
   const aggregatedData = data?.aggregated || [];
-  const stats = data?.stats || {
-    pendingReview: 0,
-    totalHours: 0,
-    totalCost: 0
-  };
 
   const filteredData = aggregatedData.filter(item => {
     if (!searchQuery) return true;
@@ -45,9 +42,14 @@ export default function OTReports() {
       item.employee_no.toLowerCase().includes(query) ||
       item.employee_name.toLowerCase().includes(query) ||
       item.department.toLowerCase().includes(query) ||
-      item.position.toLowerCase().includes(query)
+      item.position.toLowerCase().includes(query) ||
+      item.company_name.toLowerCase().includes(query) ||
+      item.company_code.toLowerCase().includes(query)
     );
   });
+
+  const companyGroups = useMemo(() => groupByCompany(filteredData), [filteredData]);
+  const overallStats = useMemo(() => calculateOverallStats(companyGroups), [companyGroups]);
 
   const handleExportCSV = () => {
     if (filteredData.length === 0) {
@@ -60,6 +62,8 @@ export default function OTReports() {
     }
 
     const headers = [
+      { key: 'company_name', label: 'Company' },
+      { key: 'company_code', label: 'Company Code' },
       { key: 'employee_no', label: 'Employee No.' },
       { key: 'employee_name', label: 'Name' },
       { key: 'department', label: 'Department' },
@@ -114,8 +118,6 @@ export default function OTReports() {
     }
 
     try {
-      const uniqueCompanies = new Set(filteredData.map(emp => emp.company_id));
-      
       await generateHRReportPDF({
         companyInfo: {
           name: companyProfile.name,
@@ -127,13 +129,12 @@ export default function OTReports() {
         period: format(filterDate, 'MMMM yyyy'),
         generatedDate: format(new Date(), 'dd/MM/yyyy HH:mm'),
         summary: {
-          pendingReview: stats.pendingReview,
-          totalHours: stats.totalHours,
-          totalCost: stats.totalCost,
-          totalEmployees: filteredData.length,
-          totalCompanies: uniqueCompanies.size,
+          totalHours: overallStats.totalHours,
+          totalCost: overallStats.totalCost,
+          totalEmployees: overallStats.totalEmployees,
+          totalCompanies: overallStats.totalCompanies,
         },
-        employees: filteredData,
+        companyGroups: companyGroups,
       });
       
       toast({
@@ -160,22 +161,29 @@ export default function OTReports() {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <EnhancedDashboardCard
-            title="Pending Review"
-            value={stats.pendingReview}
-            icon={FileCheck}
+            title="Total Companies"
+            value={overallStats.totalCompanies}
+            icon={Building2}
             variant="primary"
-            subtitle="Awaiting HR review"
+            subtitle="Companies in system"
+          />
+          <EnhancedDashboardCard
+            title="Total Employees"
+            value={overallStats.totalEmployees}
+            icon={Users}
+            variant="info"
+            subtitle="Employees with OT this month"
           />
           <EnhancedDashboardCard
             title="Total OT Hours"
-            value={formatHours(stats.totalHours)}
+            value={formatHours(overallStats.totalHours)}
             icon={Clock}
             variant="info"
             subtitle="Total approved hours this month"
           />
           <EnhancedDashboardCard
             title="Total OT Cost"
-            value={formatCurrency(stats.totalCost)}
+            value={formatCurrency(overallStats.totalCost)}
             icon={DollarSign}
             variant="success"
             subtitle="Total RM paid for overtime this month"
@@ -267,11 +275,29 @@ export default function OTReports() {
               </div>
             </div>
 
-            <HRReportTable 
-              data={filteredData}
-              isLoading={isLoading}
-              selectedMonth={filterDate}
-            />
+            <div className="space-y-4">
+              {companyGroups.map((company, index) => (
+                <CompanyReportCard
+                  key={company.companyId}
+                  companyName={company.companyName}
+                  companyCode={company.companyCode}
+                  stats={company.stats}
+                  defaultExpanded={index === 0}
+                >
+                  <HRReportTable 
+                    data={company.employees}
+                    isLoading={false}
+                    selectedMonth={filterDate}
+                  />
+                </CompanyReportCard>
+              ))}
+              
+              {companyGroups.length === 0 && !isLoading && (
+                <div className="text-center py-12 text-muted-foreground">
+                  No overtime data found for the selected period.
+                </div>
+              )}
+            </div>
           </div>
         </Card>
       </div>

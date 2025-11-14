@@ -12,22 +12,28 @@ interface HRReportData {
   period: string;
   generatedDate: string;
   summary: {
-    pendingReview: number;
     totalHours: number;
     totalCost: number;
     totalEmployees: number;
     totalCompanies: number;
   };
-  employees: Array<{
-    employee_no: string;
-    employee_name: string;
-    department: string;
-    position: string;
-    company_id: string;
-    company_name: string;
-    company_code: string;
-    total_ot_hours: number;
-    amount: number;
+  companyGroups: Array<{
+    companyId: string;
+    companyName: string;
+    companyCode: string;
+    employees: Array<{
+      employee_no: string;
+      employee_name: string;
+      department: string;
+      position: string;
+      total_ot_hours: number;
+      amount: number;
+    }>;
+    stats: {
+      totalEmployees: number;
+      totalHours: number;
+      totalCost: number;
+    };
   }>;
 }
 
@@ -151,7 +157,7 @@ export async function generateHRReportPDF(data: HRReportData): Promise<void> {
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...textLight);
-  doc.text(`Total Employees: ${data.summary.totalEmployees} | Companies: ${data.summary.totalCompanies} | Pending Review: ${data.summary.pendingReview}`, 
+  doc.text(`Total Employees: ${data.summary.totalEmployees} | Companies: ${data.summary.totalCompanies}`, 
     pageWidth / 2, yPos + 5, { align: 'center' });
 
   yPos += 15;
@@ -160,29 +166,12 @@ export async function generateHRReportPDF(data: HRReportData): Promise<void> {
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...textDark);
-  doc.text('Employee Overtime Details', margin, yPos);
+  doc.text('Employee Overtime Details by Company', margin, yPos);
 
   yPos += 8;
 
-  // Group employees by company
-  const employeesByCompany = new Map<string, typeof data.employees>();
-  data.employees.forEach(emp => {
-    const companyKey = emp.company_id;
-    if (!employeesByCompany.has(companyKey)) {
-      employeesByCompany.set(companyKey, []);
-    }
-    employeesByCompany.get(companyKey)!.push(emp);
-  });
-
-  // Sort companies by name
-  const sortedCompanies = Array.from(employeesByCompany.entries())
-    .sort((a, b) => a[1][0].company_name.localeCompare(b[1][0].company_name));
-
   // For each company, create a section
-  sortedCompanies.forEach(([companyId, companyEmployees], index) => {
-    const companyName = companyEmployees[0].company_name;
-    const companyCode = companyEmployees[0].company_code;
-    
+  data.companyGroups.forEach((company, index) => {
     // Company header with subtle background
     doc.setFillColor(240, 247, 255); // Light blue background
     doc.roundedRect(margin, yPos - 2, pageWidth - 2 * margin, 10, 2, 2, 'F');
@@ -190,7 +179,7 @@ export async function generateHRReportPDF(data: HRReportData): Promise<void> {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
-    doc.text(`${companyName} (${companyCode})`, margin + 5, yPos + 5);
+    doc.text(`${company.companyName} (${company.companyCode})`, margin + 5, yPos + 5);
     
     yPos += 13;
     
@@ -198,7 +187,7 @@ export async function generateHRReportPDF(data: HRReportData): Promise<void> {
     autoTable(doc, {
       startY: yPos,
       head: [['Employee No', 'Name', 'Department', 'Position', 'OT Hours', 'Amount (RM)']],
-      body: companyEmployees.map(emp => [
+      body: company.employees.map(emp => [
         emp.employee_no,
         emp.employee_name,
         emp.department,
@@ -232,10 +221,6 @@ export async function generateHRReportPDF(data: HRReportData): Promise<void> {
       margin: { left: margin, right: margin },
     });
     
-    // Calculate company subtotals
-    const companyTotalHours = companyEmployees.reduce((sum, e) => sum + e.total_ot_hours, 0);
-    const companyTotalCost = companyEmployees.reduce((sum, e) => sum + e.amount, 0);
-    
     // Display subtotal row
     yPos = (doc as any).lastAutoTable.finalY + 3;
     
@@ -246,7 +231,7 @@ export async function generateHRReportPDF(data: HRReportData): Promise<void> {
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...textDark);
     doc.text(
-      `${companyName} Subtotal: ${companyTotalHours.toFixed(2)} hours | RM ${companyTotalCost.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      `${company.companyName} Subtotal: ${company.stats.totalHours.toFixed(2)} hours | RM ${company.stats.totalCost.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       pageWidth - margin - 5,
       yPos + 5,
       { align: 'right' }
