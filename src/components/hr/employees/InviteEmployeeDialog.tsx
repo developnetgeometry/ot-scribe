@@ -23,9 +23,6 @@ const inviteSchema = z.object({
   position_id: z.string().uuid('Position is required'),
   department_id: z.string().uuid('Department is required'),
   basic_salary: z.number().min(1, 'Basic salary must be greater than 0'),
-  epf_no: z.string().trim().max(50).optional(),
-  socso_no: z.string().trim().max(50).optional(),
-  income_tax_no: z.string().trim().max(50).optional(),
   employment_type: z.string().min(1, 'Employment type is required'),
   joining_date: z.string().min(1, 'Joining date is required'),
   work_location: z.string().trim().min(1, 'Work location is required').max(100),
@@ -83,9 +80,6 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
       company_id: data.company_id,
       department_id: data.department_id,
       basic_salary: data.basic_salary,
-      epf_no: data.epf_no || null,
-      socso_no: data.socso_no || null,
-      income_tax_no: data.income_tax_no || null,
       employment_type: data.employment_type,
       joining_date: data.joining_date,
       work_location: data.work_location,
@@ -300,53 +294,8 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
               />
             </div>
 
-            {/* Row 6: EPF & SOCSO */}
+            {/* Row 6: Employment Type & Joining Date */}
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="epf_no"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>EPF No</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter EPF No" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="socso_no"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>SOCSO No</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter SOCSO No" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Row 7: Income Tax & Employment Type */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="income_tax_no"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Income Tax No</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter Income Tax No" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="employment_type"
@@ -369,10 +318,7 @@ export function InviteEmployeeDialog({ open, onOpenChange }: InviteEmployeeDialo
                   </FormItem>
                 )}
               />
-            </div>
 
-            {/* Row 8: Joining Date & Work Location */}
-            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="joining_date"
