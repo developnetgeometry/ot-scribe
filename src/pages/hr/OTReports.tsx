@@ -25,6 +25,7 @@ export default function OTReports() {
   const [selectedYear, setSelectedYear] = useState<string>(currentDate.getFullYear().toString());
   const [appliedMonth, setAppliedMonth] = useState<string>((currentDate.getMonth() + 1).toString());
   const [appliedYear, setAppliedYear] = useState<string>(currentDate.getFullYear().toString());
+  const [selectedCompany, setSelectedCompany] = useState<string>('all');
   
   const filterDate = useMemo(() => {
     return new Date(parseInt(appliedYear), parseInt(appliedMonth) - 1, 1);
@@ -35,10 +36,32 @@ export default function OTReports() {
 
   const aggregatedData = data?.aggregated || [];
 
+  const uniqueCompanies = useMemo(() => {
+    const companies = new Map<string, { name: string; code: string }>();
+    aggregatedData.forEach(item => {
+      if (!companies.has(item.company_id)) {
+        companies.set(item.company_id, {
+          name: item.company_name,
+          code: item.company_code
+        });
+      }
+    });
+    return Array.from(companies.entries()).map(([id, info]) => ({
+      id,
+      name: info.name,
+      code: info.code
+    }));
+  }, [aggregatedData]);
+
   const filteredData = aggregatedData.filter(item => {
-    if (!searchQuery) return true;
+    // Company filter
+    const matchesCompany = selectedCompany === 'all' || item.company_id === selectedCompany;
+    
+    // Search filter
+    if (!searchQuery) return matchesCompany;
+    
     const query = searchQuery.toLowerCase();
-    return (
+    const matchesSearch = (
       item.employee_no.toLowerCase().includes(query) ||
       item.employee_name.toLowerCase().includes(query) ||
       item.department.toLowerCase().includes(query) ||
@@ -46,10 +69,25 @@ export default function OTReports() {
       item.company_name.toLowerCase().includes(query) ||
       item.company_code.toLowerCase().includes(query)
     );
+    
+    return matchesCompany && matchesSearch;
   });
 
+  const filteredStats = useMemo(() => {
+    const uniqueCompanies = new Set(filteredData.map(item => item.company_id)).size;
+    const totalEmployees = filteredData.length;
+    const totalHours = filteredData.reduce((sum, item) => sum + item.total_ot_hours, 0);
+    const totalCost = filteredData.reduce((sum, item) => sum + item.amount, 0);
+    
+    return {
+      totalCompanies: uniqueCompanies,
+      totalEmployees,
+      totalHours,
+      totalCost
+    };
+  }, [filteredData]);
+
   const companyGroups = useMemo(() => groupByCompany(filteredData), [filteredData]);
-  const overallStats = useMemo(() => calculateOverallStats(companyGroups), [companyGroups]);
 
   const handleExportCSV = () => {
     if (filteredData.length === 0) {
@@ -129,10 +167,10 @@ export default function OTReports() {
         period: format(filterDate, 'MMMM yyyy'),
         generatedDate: format(new Date(), 'dd/MM/yyyy HH:mm'),
         summary: {
-          totalHours: overallStats.totalHours,
-          totalCost: overallStats.totalCost,
-          totalEmployees: overallStats.totalEmployees,
-          totalCompanies: overallStats.totalCompanies,
+          totalHours: filteredStats.totalHours,
+          totalCost: filteredStats.totalCost,
+          totalEmployees: filteredStats.totalEmployees,
+          totalCompanies: filteredStats.totalCompanies,
         },
         companyGroups: companyGroups,
       });
@@ -162,28 +200,28 @@ export default function OTReports() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <EnhancedDashboardCard
             title="Total Companies"
-            value={overallStats.totalCompanies}
+            value={filteredStats.totalCompanies}
             icon={Building2}
             variant="primary"
             subtitle="Companies in system"
           />
           <EnhancedDashboardCard
             title="Total Employees"
-            value={overallStats.totalEmployees}
+            value={filteredStats.totalEmployees}
             icon={Users}
             variant="info"
             subtitle="Employees with OT this month"
           />
           <EnhancedDashboardCard
             title="Total OT Hours"
-            value={formatHours(overallStats.totalHours)}
+            value={formatHours(filteredStats.totalHours)}
             icon={Clock}
             variant="info"
             subtitle="Total approved hours this month"
           />
           <EnhancedDashboardCard
             title="Total OT Cost"
-            value={formatCurrency(overallStats.totalCost)}
+            value={formatCurrency(filteredStats.totalCost)}
             icon={DollarSign}
             variant="success"
             subtitle="Total RM paid for overtime this month"
