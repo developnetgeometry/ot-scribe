@@ -23,7 +23,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   // If user needs to reset password (from admin reset), redirect to reset password page
-  if (user && profile?.password_change_required && location.pathname !== '/reset-password') {
+  if (user && (profile as any)?.password_change_required && location.pathname !== '/reset-password') {
     return <Navigate to="/reset-password" replace />;
   }
 

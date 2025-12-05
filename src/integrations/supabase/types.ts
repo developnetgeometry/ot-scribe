@@ -932,6 +932,88 @@ export type Database = {
           },
         ]
       }
+      password_reset_audit: {
+        Row: {
+          action: string
+          employee_id: string
+          id: string
+          ip_address: string | null
+          notes: string | null
+          reset_by_hr_id: string
+          timestamp: string | null
+        }
+        Insert: {
+          action: string
+          employee_id: string
+          id?: string
+          ip_address?: string | null
+          notes?: string | null
+          reset_by_hr_id: string
+          timestamp?: string | null
+        }
+        Update: {
+          action?: string
+          employee_id?: string
+          id?: string
+          ip_address?: string | null
+          notes?: string | null
+          reset_by_hr_id?: string
+          timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "password_reset_audit_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      password_reset_tokens: {
+        Row: {
+          created_at: string | null
+          created_by_role: string | null
+          employee_id: string
+          expires_at: string
+          id: string
+          reset_by_hr_id: string
+          status: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by_role?: string | null
+          employee_id: string
+          expires_at: string
+          id?: string
+          reset_by_hr_id: string
+          status?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by_role?: string | null
+          employee_id?: string
+          expires_at?: string
+          id?: string
+          reset_by_hr_id?: string
+          status?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "password_reset_tokens_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       positions: {
         Row: {
           created_at: string | null
@@ -978,6 +1060,7 @@ export type Database = {
           basic_salary: number
           company_id: string | null
           created_at: string | null
+          deleted_at: string | null
           department_id: string | null
           designation: string | null
           email: string
@@ -991,6 +1074,7 @@ export type Database = {
           is_ot_eligible: boolean
           joining_date: string | null
           notification_preferences: Json | null
+          password_change_required: boolean | null
           phone_no: string | null
           position: string | null
           position_id: string | null
@@ -1006,6 +1090,7 @@ export type Database = {
           basic_salary: number
           company_id?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           department_id?: string | null
           designation?: string | null
           email: string
@@ -1019,6 +1104,7 @@ export type Database = {
           is_ot_eligible?: boolean
           joining_date?: string | null
           notification_preferences?: Json | null
+          password_change_required?: boolean | null
           phone_no?: string | null
           position?: string | null
           position_id?: string | null
@@ -1034,6 +1120,7 @@ export type Database = {
           basic_salary?: number
           company_id?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           department_id?: string | null
           designation?: string | null
           email?: string
@@ -1047,6 +1134,7 @@ export type Database = {
           is_ot_eligible?: boolean
           joining_date?: string | null
           notification_preferences?: Json | null
+          password_change_required?: boolean | null
           phone_no?: string | null
           position?: string | null
           position_id?: string | null
@@ -1112,32 +1200,32 @@ export type Database = {
       }
       push_subscriptions: {
         Row: {
-          auth_key: string
           created_at: string | null
-          endpoint: string
+          device_name: string | null
+          device_type: string | null
+          fcm_token: string
           id: string
           is_active: boolean
-          p256dh_key: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          auth_key: string
           created_at?: string | null
-          endpoint: string
+          device_name?: string | null
+          device_type?: string | null
+          fcm_token: string
           id?: string
           is_active?: boolean
-          p256dh_key: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
-          auth_key?: string
           created_at?: string | null
-          endpoint?: string
+          device_name?: string | null
+          device_type?: string | null
+          fcm_token?: string
           id?: string
           is_active?: boolean
-          p256dh_key?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -1373,6 +1461,10 @@ export type Database = {
           rule_name: string
         }[]
       }
+      check_profile_auth_email_consistency: {
+        Args: never
+        Returns: Record<string, unknown>[]
+      }
       check_threshold_violations: {
         Args: {
           _employee_id: string
@@ -1380,6 +1472,10 @@ export type Database = {
           _requested_hours: number
         }
         Returns: Json
+      }
+      compute_day_type: {
+        Args: { p_date: string }
+        Returns: Database["public"]["Enums"]["day_type"]
       }
       count_pending_confirmations: {
         Args: { supervisor_user_id: string }
