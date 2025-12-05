@@ -23,18 +23,6 @@ interface ResponsiveFormWrapperProps {
 
 /**
  * ResponsiveFormWrapper handles form layouts with step-by-step mode for mobile
- *
- * Usage:
- * <ResponsiveFormWrapper
- *   steps={[
- *     { id: 'personal', title: 'Personal Info', children: <PersonalFields /> },
- *     { id: 'details', title: 'OT Details', children: <OTDetailsFields /> },
- *   ]}
- *   onSubmit={() => submitForm()}
- * >
- *   {/* On desktop, this fallback content is shown */}
- *   <FormContent />
- * </ResponsiveFormWrapper>
  */
 export function ResponsiveFormWrapper({
   children,
