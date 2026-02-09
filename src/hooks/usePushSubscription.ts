@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { VAPIDAPIResponse } from '@/types/vapid';
+import { getFirebaseMessaging, isFirebaseConfigured } from '@/config/firebase';
+import { getToken, deleteToken } from 'firebase/messaging';
+
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
 
 interface UsePushSubscriptionReturn {
-  subscription: PushSubscription | null;
+  subscription: string | null;
   isSubscribed: boolean;
   isLoading: boolean;
   error: string | null;
@@ -12,131 +15,54 @@ interface UsePushSubscriptionReturn {
 }
 
 /**
- * Helper function to convert base64 VAPID key to Uint8Array
- * Required for service worker push subscription API
+ * Custom hook for managing Firebase Cloud Messaging subscriptions
  */
-function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
-
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
-
 export const usePushSubscription = (): UsePushSubscriptionReturn => {
-  const [subscription, setSubscription] = useState<PushSubscription | null>(null);
+  const [subscription, setSubscription] = useState<string | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Check for existing subscription on mount
+   * Initialize subscription state from localStorage
+   * We don't auto-generate tokens on page load since Firebase will
+   * create a new one every time if notification permission exists.
+   * Instead, we track subscription state in localStorage.
    */
   useEffect(() => {
-    const checkExistingSubscription = async () => {
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        return;
-      }
+    if (!isFirebaseConfigured()) {
+      return;
+    }
 
+    const restoreSubscriptionState = async () => {
       try {
-        const registration = await navigator.serviceWorker.ready;
-        const existingSubscription = await registration.pushManager.getSubscription();
-
-        if (existingSubscription) {
-          setSubscription(existingSubscription);
+        // Check if user previously subscribed using localStorage
+        const savedToken = localStorage.getItem('fcm_subscription_token');
+        if (savedToken) {
+          setSubscription(savedToken);
           setIsSubscribed(true);
+        } else {
+          setSubscription(null);
+          setIsSubscribed(false);
         }
       } catch (err) {
-        console.error('Error checking existing subscription:', err);
+        // Silently fail on restoration error
       }
     };
 
-    checkExistingSubscription();
+    restoreSubscriptionState();
   }, []);
 
   /**
-   * Fetch VAPID public key from backend
+   * Register or update FCM token with backend
    */
-  const fetchVAPIDPublicKey = async (): Promise<string | null> => {
+  const registerTokenWithBackend = async (token: string): Promise<boolean> => {
     try {
-      // Get authentication token
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session) {
-        throw new Error('Authentication required to fetch VAPID public key');
+        throw new Error('Authentication required');
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vapid-public-key`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch VAPID public key');
-      }
-
-      const data: VAPIDAPIResponse = await response.json();
-
-      if (!data.success) {
-        throw new Error('error' in data ? data.error : 'Failed to fetch VAPID public key');
-      }
-
-      return data.publicKey;
-    } catch (err) {
-      console.error('Error fetching VAPID public key:', err);
-      setError('Failed to fetch VAPID configuration');
-      return null;
-    }
-  };
-
-  /**
-   * Subscribe to push notifications
-   */
-  const subscribe = useCallback(async (): Promise<boolean> => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Check service worker and push manager support
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        throw new Error('Push notifications are not supported in this browser');
-      }
-
-      // Get service worker registration
-      const registration = await navigator.serviceWorker.ready;
-
-      // Fetch VAPID public key
-      const vapidPublicKey = await fetchVAPIDPublicKey();
-      if (!vapidPublicKey) {
-        throw new Error('Failed to get VAPID public key');
-      }
-
-      // Convert VAPID key to Uint8Array
-      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
-
-      // Subscribe via service worker
-      const newSubscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey
-      });
-
-      // Get authentication token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        throw new Error('Authentication required to subscribe to push notifications');
-      }
-
-      // Send subscription to backend API
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-push-subscription`,
         {
@@ -147,35 +73,134 @@ export const usePushSubscription = (): UsePushSubscriptionReturn => {
           },
           body: JSON.stringify({
             action: 'subscribe',
-            subscription: {
-              endpoint: newSubscription.endpoint,
-              keys: {
-                p256dh: arrayBufferToBase64(newSubscription.getKey('p256dh')),
-                auth: arrayBufferToBase64(newSubscription.getKey('auth'))
-              }
-            }
+            fcm_token: token,
+            device_name: getDeviceName(),
+            device_type: 'web'
           })
         }
       );
 
       if (!response.ok) {
-        throw new Error('Failed to save subscription to backend');
+        throw new Error('Failed to register FCM token with backend');
       }
 
       const result = await response.json();
       if (!result.success) {
-        throw new Error(result.message || 'Failed to save subscription');
+        throw new Error(result.message || 'Failed to register token');
       }
-
-      // Update state
-      setSubscription(newSubscription);
-      setIsSubscribed(true);
-      setIsLoading(false);
 
       return true;
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to register token';
+      throw new Error(errorMessage);
+    }
+  };
+
+  /**
+   * Wait for service worker to be registered
+   * Firebase Cloud Messaging requires a registered and active service worker before getToken() can be called
+   */
+  const ensureServiceWorkerReady = async (maxWaitTime = 10000): Promise<ServiceWorkerRegistration> => {
+    // First check if a service worker is already registered
+    if (navigator.serviceWorker.controller) {
+      console.log('[usePushSubscription] Service worker is already active and controlling the page');
+      const reg = await navigator.serviceWorker.ready;
+      return reg;
+    }
+
+    console.log('[usePushSubscription] Waiting for service worker registration...');
+
+    // Use navigator.serviceWorker.ready which waits for the service worker to be registered and active
+    // This is the proper way to wait for a service worker, as per Web Standards
+    try {
+      const registration = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error(`Service Worker did not become active within ${maxWaitTime}ms. Make sure manifest.json is accessible.`)),
+            maxWaitTime
+          )
+        )
+      ]);
+
+      console.log('[usePushSubscription] Service worker registration successful:', registration);
+      return registration;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[usePushSubscription] Service worker registration failed:', errorMsg);
+      throw new Error(`Service Worker registration failed: ${errorMsg}`);
+    }
+  };
+
+  /**
+   * Subscribe to push notifications
+   */
+  const subscribe = useCallback(async (): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+
+    // Log diagnostics at the start
+    logPushDiagnostics();
+
+    try {
+      if (!isFirebaseConfigured()) {
+        throw new Error('Firebase is not configured');
+      }
+
+      const messaging = getFirebaseMessaging();
+      if (!messaging) {
+        throw new Error('Firebase messaging is not available');
+      }
+
+      // Check for service worker support
+      if (!('serviceWorker' in navigator)) {
+        throw new Error('Service workers are not supported in this browser');
+      }
+
+      // Ensure service worker is registered and active
+      // The Vite PWA plugin registers the service worker automatically via registerSW()
+      // But we need to wait for it to be ready before calling Firebase's getToken()
+      console.log('[usePushSubscription] Ensuring service worker is registered and active...');
+      await ensureServiceWorkerReady(10000);
+      console.log('[usePushSubscription] Service worker is ready, proceeding with FCM token request');
+
+      // Request notification permission
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        throw new Error('Notification permission denied');
+      }
+
+      // Get FCM token (now that service worker is active)
+      console.log('[usePushSubscription] Requesting FCM token...');
+      const token = await getToken(messaging, {
+        vapidKey: VAPID_PUBLIC_KEY
+      });
+
+      if (!token) {
+        throw new Error('Failed to get FCM token - service worker may not be properly initialized');
+      }
+
+      console.log('[usePushSubscription] FCM token obtained successfully');
+
+      // Register token with backend
+      await registerTokenWithBackend(token);
+
+      // Update state and persist to localStorage
+      setSubscription(token);
+      setIsSubscribed(true);
+      localStorage.setItem('fcm_subscription_token', token);
+      setIsLoading(false);
+
+      console.log('[usePushSubscription] Push subscription successful');
+      return true;
+    } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to subscribe to push notifications';
-      console.error('Push subscription error:', err);
+      console.error('[usePushSubscription] Subscription error:', errorMessage);
+
+      // Log diagnostics on error to help debug
+      console.log('[usePushSubscription] Diagnostics at time of error:');
+      logPushDiagnostics();
+
       setError(errorMessage);
       setIsLoading(false);
       return false;
@@ -197,11 +222,18 @@ export const usePushSubscription = (): UsePushSubscriptionReturn => {
       // Get authentication token
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session) {
-        throw new Error('Authentication required to unsubscribe from push notifications');
+        throw new Error('Authentication required to unsubscribe');
       }
 
-      // Unsubscribe from service worker
-      await subscription.unsubscribe();
+      // Delete token from Firebase
+      const messaging = getFirebaseMessaging();
+      if (messaging) {
+        try {
+          await deleteToken(messaging);
+        } catch (firebaseErr) {
+          // Continue with backend deletion even if Firebase deletion fails
+        }
+      }
 
       // Remove subscription from backend
       const response = await fetch(
@@ -214,7 +246,7 @@ export const usePushSubscription = (): UsePushSubscriptionReturn => {
           },
           body: JSON.stringify({
             action: 'unsubscribe',
-            endpoint: subscription.endpoint
+            fcm_token: subscription
           })
         }
       );
@@ -225,18 +257,18 @@ export const usePushSubscription = (): UsePushSubscriptionReturn => {
 
       const result = await response.json();
       if (!result.success) {
-        throw new Error(result.message || 'Failed to remove subscription');
+        throw new Error(result.message || 'Failed to unsubscribe');
       }
 
-      // Update state
+      // Update state and clear from localStorage
       setSubscription(null);
       setIsSubscribed(false);
+      localStorage.removeItem('fcm_subscription_token');
       setIsLoading(false);
 
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to unsubscribe from push notifications';
-      console.error('Push unsubscribe error:', err);
       setError(errorMessage);
       setIsLoading(false);
       return false;
@@ -254,15 +286,61 @@ export const usePushSubscription = (): UsePushSubscriptionReturn => {
 };
 
 /**
- * Helper function to convert ArrayBuffer to base64 string
+ * Diagnostic function to help debug service worker and Firebase issues
  */
-function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
-  if (!buffer) return '';
+function logPushDiagnostics(): void {
+  console.log('[usePushSubscription] === DIAGNOSTICS START ===');
 
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  // Check browser support
+  console.log('[usePushSubscription] Browser Support:');
+  console.log('  - Service Workers:', 'serviceWorker' in navigator);
+  console.log('  - Notifications:', 'Notification' in window);
+  console.log('  - IndexedDB:', !!window.indexedDB);
+
+  // Check service worker status
+  console.log('[usePushSubscription] Service Worker Status:');
+  if ('serviceWorker' in navigator) {
+    console.log('  - Controller:', !!navigator.serviceWorker.controller);
+    if (navigator.serviceWorker.controller) {
+      console.log('  - Controller URL:', navigator.serviceWorker.controller.scriptURL);
+    }
+    console.log('  - Ready state:', navigator.serviceWorker.ready ? 'ready' : 'not ready');
   }
-  return window.btoa(binary);
+
+  // Check notification permission
+  console.log('[usePushSubscription] Notification Permission:', Notification.permission);
+
+  // Check Firebase config
+  console.log('[usePushSubscription] Firebase Config:');
+  console.log('  - Configured:', isFirebaseConfigured());
+  console.log('  - VAPID Key:', VAPID_PUBLIC_KEY ? 'present' : 'missing');
+
+  // Check localStorage
+  console.log('[usePushSubscription] Stored Subscription:');
+  const stored = localStorage.getItem('fcm_subscription_token');
+  console.log('  - Exists:', !!stored);
+  console.log('  - Token length:', stored?.length || 0);
+
+  console.log('[usePushSubscription] === DIAGNOSTICS END ===');
+}
+
+/**
+ * Helper function to generate a device name based on browser info
+ */
+function getDeviceName(): string {
+  const ua = navigator.userAgent;
+  const date = new Date().toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
+  // Try to detect browser name
+  let browser = 'Browser';
+  if (ua.indexOf('Firefox') > -1) browser = 'Firefox';
+  else if (ua.indexOf('Chrome') > -1 && ua.indexOf('Chromium') === -1) browser = 'Chrome';
+  else if (ua.indexOf('Safari') > -1 && ua.indexOf('Chrome') === -1) browser = 'Safari';
+  else if (ua.indexOf('Edge') > -1) browser = 'Edge';
+
+  return `${browser} - ${date}`;
 }

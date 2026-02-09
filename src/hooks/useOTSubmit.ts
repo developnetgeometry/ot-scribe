@@ -2,10 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { canSubmitOTForDate } from '@/utils/otValidation';
+import { canSubmitOTForDate, validateOTTimeForWorkDay } from '@/utils/otValidation';
 
 interface OTSubmitData {
   ot_date: string;
+  ot_location_state: string;
   start_time: string;
   end_time: string;
   total_hours: number;
@@ -17,28 +18,31 @@ interface OTSubmitData {
 
 /**
  * Send supervisor notification via Edge Function (initial supervisor alert)
+ * Routes to respective supervisor if selected, otherwise to direct supervisor
  * Wrapped in try-catch to ensure notification failures don't break OT submission
  */
-async function sendSupervisorNotification(requestId: string, employeeId: string): Promise<void> {
+async function sendSupervisorNotification(
+  requestId: string,
+  employeeId: string,
+  respectiveSupervisorId?: string | null
+): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
-    console.warn('No active session for sending supervisor notification');
     return;
   }
 
   const response = await supabase.functions.invoke('send-supervisor-ot-notification', {
     body: {
       requestId,
-      employeeId
+      employeeId,
+      respectiveSupervisorId
     }
   });
 
   if (response.error) {
     throw new Error(`Notification error: ${response.error.message}`);
   }
-
-  console.log('Supervisor notification sent:', response.data);
 }
 
 export function useOTSubmit() {
@@ -67,21 +71,28 @@ export function useOTSubmit() {
       // Get submission cutoff day from settings
       const { data: settings, error: settingsError } = await supabase
         .from('ot_settings')
-        .select('ot_submission_cutoff_day')
+        .select('ot_submission_cutoff_day, grace_period_enabled')
+        .limit(1)
         .single();
 
       if (settingsError) {
-        console.error('Error fetching OT settings:', settingsError);
         // Continue with default cutoff day
       }
 
       const cutoffDay = settings?.ot_submission_cutoff_day || 10;
+      const gracePeriodEnabled = settings?.grace_period_enabled ?? false;
 
       // Validate OT date against submission deadline rules
       const otDateObj = new Date(data.ot_date);
-      const validation = canSubmitOTForDate(otDateObj, new Date(), cutoffDay);
+      const validation = canSubmitOTForDate(otDateObj, new Date(), cutoffDay, gracePeriodEnabled);
       if (!validation.isAllowed) {
         throw new Error(validation.message || 'This date is not allowed for OT submission');
+      }
+
+      // Validate business hours for work days (weekdays only)
+      const timeValidation = validateOTTimeForWorkDay(data.start_time, data.end_time, data.day_type);
+      if (!timeValidation.isAllowed) {
+        throw new Error(timeValidation.message || 'OT cannot be submitted during work hours on work days');
       }
 
       // Check for duplicate or overlapping OT requests
@@ -112,8 +123,12 @@ export function useOTSubmit() {
         }
       }
 
-      // All submissions begin in pending_verification so direct supervisor can review first
-      const initialStatus = 'pending_verification';
+      // Determine initial status based on workflow route
+      // Route A (no respective SV): direct supervisor verifies first
+      // Route B (with respective SV): respective supervisor confirms first
+      const initialStatus = data.respective_supervisor_id
+        ? 'pending_respective_supervisor_confirmation'
+        : 'pending_verification';
 
       // Generate ticket number: OT-YYYYMMDD-RANDOM
       const dateStr = format(new Date(data.ot_date), 'yyyyMMdd');
@@ -127,6 +142,7 @@ export function useOTSubmit() {
           employee_id: user.id,
           supervisor_id: profile.supervisor_id || null,
           ot_date: data.ot_date,
+          ot_location_state: data.ot_location_state,
           start_time: data.start_time,
           end_time: data.end_time,
           total_hours: data.total_hours,
@@ -141,9 +157,10 @@ export function useOTSubmit() {
 
       if (error) throw error;
 
-      // Always notify direct supervisor first; respective supervisor is notified later when explicitly requested
-      sendSupervisorNotification(otRequest.id, user.id).catch((notifError) => {
-        console.error('Failed to send supervisor notification:', notifError);
+      // Notify appropriate supervisor based on workflow route
+      // Route B: Notify respective supervisor if selected
+      // Route A: Notify direct supervisor if no respective supervisor
+      sendSupervisorNotification(otRequest.id, user.id, data.respective_supervisor_id).catch((notifError) => {
         // Don't throw - notification failure should not prevent OT submission
       });
 

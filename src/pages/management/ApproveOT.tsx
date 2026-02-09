@@ -25,7 +25,10 @@ import { format } from 'date-fns';
 export default function ApproveOT() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('hr_certified');
+  const [activeTab, setActiveTab] = useState(() => {
+    const tabParam = searchParams.get('tab');
+    return tabParam || 'pending'; // Consolidated to "pending"
+  });
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
@@ -39,11 +42,47 @@ export default function ApproveOT() {
     rejectRequest: rejectRequestMutation,
     isApproving,
     isRejecting
-  } = useOTApproval({ role: 'management', status: activeTab });
+  } = useOTApproval({ role: 'management' });
 
   const { bulkApprove, isApproving: isBulkApproving } = useManagementBulkApproval();
 
-  const filteredRequests = requests?.filter(request => {
+  // Helper function to determine which "logical" tab a request belongs to
+  // For hr_certified requests, checks management_remarks to determine if rejected
+  const getTabForStatus = (status: string, hasManagementRemarks?: boolean): string => {
+    const approvedStatuses = ['management_approved'];
+
+    if (status === 'hr_certified') {
+      // hr_certified with management_remarks = rejected (sent back to HR)
+      // hr_certified without management_remarks = pending approval
+      return hasManagementRemarks ? 'rejected' : 'pending';
+    }
+    if (approvedStatuses.includes(status)) return 'approved';
+    if (status === 'rejected') return 'rejected';
+    return 'all';
+  };
+
+  // Filter requests by consolidated status tab
+  const filterRequestsByTab = (requests: typeof requests, tab: string) => {
+    if (tab === 'all') return requests;
+
+    const approvedStatuses = ['management_approved'];
+
+    switch (tab) {
+      case 'pending':
+        // Show hr_certified requests that do NOT have management_remarks (not yet rejected)
+        return requests.filter(r => r.status === 'hr_certified' && !r.management_remarks);
+      case 'approved':
+        return requests.filter(r => approvedStatuses.includes(r.status));
+      case 'rejected':
+        // Show fully rejected requests AND hr_certified requests with management_remarks (sent back to HR)
+        return requests.filter(r => r.status === 'rejected' || (r.status === 'hr_certified' && r.management_remarks));
+      default:
+        return requests;
+    }
+  };
+
+  const requestsByTab = filterRequestsByTab(requests || [], activeTab);
+  const filteredRequests = requestsByTab?.filter(request => {
     if (!searchQuery) return true;
     const profile = (request as any).profiles;
     const employeeName = profile?.full_name?.toLowerCase() || '';
@@ -60,19 +99,12 @@ export default function ApproveOT() {
       const fetchRequestStatus = async () => {
         const { data } = await supabase
           .from('ot_requests')
-          .select('status')
+          .select('status, management_remarks')
           .eq('id', requestId)
           .maybeSingle();
 
         if (data) {
-          const statusToTab: Record<string, string> = {
-            'hr_certified': 'hr_certified',
-            'management_approved': 'management_approved',
-            'rejected': 'rejected',
-          };
-
-          const tab = statusToTab[data.status] || 'all';
-          setActiveTab(tab);
+          setActiveTab(getTabForStatus(data.status, !!data.management_remarks));
         }
       };
 
@@ -120,12 +152,20 @@ export default function ApproveOT() {
         description="Review and approve overtime requests. Monthly approval cycle available."
       >
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="hr_certified">
-          <TabsList>
-            <TabsTrigger value="hr_certified">Pending Management Review</TabsTrigger>
-            <TabsTrigger value="management_approved">Approved</TabsTrigger>
-            <TabsTrigger value="rejected">Rejected</TabsTrigger>
-            <TabsTrigger value="all">All</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="pending">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="pending">
+              <span>⏳ Awaiting Approval</span>
+            </TabsTrigger>
+            <TabsTrigger value="approved">
+              <span>✓ Approved</span>
+            </TabsTrigger>
+            <TabsTrigger value="rejected">
+              <span>⚠ Rejected</span>
+            </TabsTrigger>
+            <TabsTrigger value="all">
+              <span>📋 All</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-6">
@@ -176,7 +216,7 @@ export default function ApproveOT() {
                 </div>
 
                 {/* Select All + Bulk Approve */}
-                {activeTab === 'hr_certified' && filteredRequests.length > 0 && (
+                {activeTab === 'pending' && filteredRequests.length > 0 && (
                   <div className="flex items-center gap-4 pb-4 bg-blue-50 dark:bg-slate-900 p-4 rounded-lg border border-blue-200 dark:border-slate-700">
                     <div className="flex items-center gap-2">
                       <input
@@ -209,7 +249,7 @@ export default function ApproveOT() {
                   rejectRequest={handleReject}
                   isApproving={isApproving}
                   isRejecting={isRejecting}
-                  showActions={activeTab === 'hr_certified'}
+                  showActions={activeTab === 'pending'}
                   initialSelectedRequestId={selectedRequestId}
                 />
               </div>

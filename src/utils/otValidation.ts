@@ -1,26 +1,25 @@
 /**
  * OT Submission Validation Utilities
- * Handles validation for overtime submission deadlines based on month-based cutoff rules
+ * Handles validation for overtime submission deadlines with a 7-day window restriction
  */
 
 /**
- * Checks if a given date is allowed for OT submission based on the submission cutoff day
+ * Checks if a given date is allowed for OT submission
  *
  * Rules:
  * - Cannot submit for future dates
- * - Cannot submit for dates older than current year (or with special rules for older dates)
- * - After the cutoff day of current month: can only submit for current month (within 7-day lookback)
- * - Before/on the cutoff day of current month: can submit for current and all previous months
+ * - Can only submit for dates within the last 8 days (from 8 days ago to today inclusive)
  *
  * @param otDate - The date the OT was worked
  * @param currentDate - The current date (defaults to today)
- * @param cutoffDay - The day of month after which previous month submissions are blocked (default: 10)
+ * @param cutoffDay - Deprecated parameter (kept for backward compatibility, not used)
  * @returns Object with { isAllowed: boolean, message?: string }
  */
 export function canSubmitOTForDate(
   otDate: Date,
   currentDate: Date = new Date(),
-  cutoffDay: number = 10
+  cutoffDay: number = 10,
+  gracePeriodEnabled: boolean = false
 ): { isAllowed: boolean; message?: string } {
   // Normalize dates to start of day for consistent comparison
   const ot = new Date(otDate);
@@ -43,51 +42,23 @@ export function canSubmitOTForDate(
     };
   }
 
-  // Validate cutoff day range
-  if (cutoffDay < 1 || cutoffDay > 31) {
+  // Grace Period Mode: allow any past date
+  if (gracePeriodEnabled) {
+    return { isAllowed: true };
+  }
+
+  // Check if OT date is within the last 8 days
+  const eightDaysAgo = new Date(today);
+  eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
+
+  if (ot < eightDaysAgo) {
     return {
       isAllowed: false,
-      message: "Invalid cutoff day configuration",
+      message: "OT can only be submitted for work done within the last 8 days",
     };
   }
 
-  // Check if OT date is in the current month
-  if (otYear === currentYear && otMonth === currentMonth) {
-    // For current month: check 7-day lookback
-    const daysDiff = Math.floor((today.getTime() - ot.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysDiff <= 7) {
-      return { isAllowed: true };
-    } else {
-      return {
-        isAllowed: false,
-        message: "Current month OT can only be submitted within 7 days of the date worked",
-      };
-    }
-  }
-
-  // For previous months: check if current day is before/on cutoff day
-  if (currentDayOfMonth <= cutoffDay) {
-    // We're within the submission window for previous months
-    // Allow submission for dates in previous months
-    const otMonthDate = new Date(otYear, otMonth, 1);
-    const currentMonthDate = new Date(currentYear, currentMonth, 1);
-
-    if (otMonthDate < currentMonthDate) {
-      return { isAllowed: true };
-    } else {
-      // This shouldn't happen if logic is correct, but handle gracefully
-      return {
-        isAllowed: false,
-        message: "Invalid date for submission",
-      };
-    }
-  } else {
-    // We're past the cutoff day, no previous month submissions allowed
-    return {
-      isAllowed: false,
-      message: `OT for previous months can only be submitted until the ${cutoffDay}th of the current month`,
-    };
-  }
+  return { isAllowed: true };
 }
 
 /**
@@ -160,7 +131,7 @@ export function getAllowedSubmissionMonths(
 
     let isAllowed = false;
 
-    // Current month is always allowed (though with 7-day lookback)
+    // Current month is always allowed (though with 8-day lookback)
     if (
       i === 0 &&
       year === today.getFullYear() &&
@@ -192,7 +163,68 @@ export function getAllowedSubmissionMonths(
  */
 export function getSubmissionRuleMessage(cutoffDay: number = 10): string {
   return `OT submissions follow these rules:\n` +
-    `• Current month: Can be submitted within 7 days of the date worked\n` +
+    `• Current month: Can be submitted within 8 days of the date worked\n` +
     `• Previous months: Can be submitted until the ${cutoffDay}th of the current month\n` +
     `• Older months: Cannot be submitted`;
+}
+
+/**
+ * Business hours constants for work day restrictions
+ */
+export const BUSINESS_HOURS = {
+  START: '09:00',
+  END: '18:00',
+  START_MINUTES: 9 * 60,   // 540 minutes from midnight
+  END_MINUTES: 18 * 60,    // 1080 minutes from midnight
+};
+
+/**
+ * Checks if OT time overlaps with business hours (9am-6pm)
+ * @returns Object with { overlaps: boolean, message?: string }
+ */
+export function overlapsWithBusinessHours(
+  startTime: string,
+  endTime: string
+): { overlaps: boolean; message?: string } {
+  const [startHour, startMinute] = startTime.split(':').map(Number);
+  const [endHour, endMinute] = endTime.split(':').map(Number);
+
+  const startMinutes = startHour * 60 + startMinute;
+  const endMinutes = endHour * 60 + endMinute;
+
+  // Overlap: OT starts before 6pm AND ends after 9am
+  const overlaps = startMinutes < BUSINESS_HOURS.END_MINUTES &&
+                   endMinutes > BUSINESS_HOURS.START_MINUTES;
+
+  if (overlaps) {
+    return {
+      overlaps: true,
+      message: 'OT cannot be submitted during work hours (9:00 AM - 6:00 PM) on work days. Please submit OT only for hours before 9:00 AM or after 6:00 PM.',
+    };
+  }
+
+  return { overlaps: false };
+}
+
+/**
+ * Validates OT time for work days (weekdays that are not holidays)
+ * Only blocks business hours on weekdays - weekends/holidays are unrestricted
+ */
+export function validateOTTimeForWorkDay(
+  startTime: string,
+  endTime: string,
+  dayType: string
+): { isAllowed: boolean; message?: string } {
+  // Only restrict business hours on weekdays
+  if (dayType !== 'weekday') {
+    return { isAllowed: true };
+  }
+
+  const check = overlapsWithBusinessHours(startTime, endTime);
+
+  if (check.overlaps) {
+    return { isAllowed: false, message: check.message };
+  }
+
+  return { isAllowed: true };
 }

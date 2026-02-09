@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { StatusBadge } from '@/components/StatusBadge';
 import { GroupedOTRequest } from '@/types/otms';
 import { formatCurrency, formatHours, formatTime12Hour } from '@/lib/otCalculations';
+import { getStatusTooltip } from '@/lib/otStatusTooltip';
 import { useOTDailySessions } from '@/hooks/useOTDailySessions';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -22,6 +23,7 @@ interface OTApprovalDetailsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   role: ApprovalRole;
+  currentUserId?: string;
   onApprove?: (request: GroupedOTRequest, sessionIds: string[]) => void;
   onReject?: (request: GroupedOTRequest, sessionIds: string[]) => void;
   onConfirm?: (requestIds: string[], remarks?: string) => Promise<void>;
@@ -41,6 +43,7 @@ export function OTApprovalDetailsSheet({
   open,
   onOpenChange,
   role,
+  currentUserId,
   onApprove,
   onReject,
   onConfirm,
@@ -88,13 +91,16 @@ export function OTApprovalDetailsSheet({
 
   const canApproveOrReject = (req: GroupedOTRequest) => {
     if (role === 'supervisor') return req.status === 'pending_verification';
-    if (role === 'hr') return req.status === 'supervisor_verified';
+    if (role === 'hr') return req.status === 'supervisor_verified' || req.status === 'supervisor_confirmed' || req.status === 'respective_supervisor_confirmed';
     if (role === 'management') return req.status === 'hr_certified';
     return false;
   };
 
   const canConfirmAsRespectiveSupervisor = (req: GroupedOTRequest) => {
-    return req.status === 'pending_respective_supervisor_confirmation';
+    return req.status === 'pending_respective_supervisor_confirmation' &&
+           req.respective_supervisor_id && // Must have respective supervisor assigned
+           req.respective_supervisor_id === currentUserId && // Must be the actual respective supervisor
+           onConfirmRespectiveSupervisor && onDenyRespectiveSupervisor; // Must have callbacks provided
   };
 
 
@@ -129,7 +135,7 @@ export function OTApprovalDetailsSheet({
           {/* Employee Info */}
           <div className="space-y-2">
             <h3 className="font-semibold text-lg">Employee Information</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className={`grid gap-4 text-sm ${role === 'hr' ? 'grid-cols-2' : 'grid-cols-3'}`}>
               <div>
                 <p className="text-muted-foreground">Name</p>
                 <p className="font-medium">{profile?.full_name || 'Unknown'}</p>
@@ -142,10 +148,12 @@ export function OTApprovalDetailsSheet({
                 <p className="text-muted-foreground">Department</p>
                 <p className="font-medium">{(profile?.departments as any)?.name || '-'}</p>
               </div>
-              <div>
-                <p className="text-muted-foreground">Basic Salary</p>
-                <p className="font-medium">{formatCurrency(profile?.basic_salary || 0)}</p>
-              </div>
+              {role === 'hr' && (
+                <div>
+                  <p className="text-muted-foreground">Basic Salary</p>
+                  <p className="font-medium">{formatCurrency(profile?.basic_salary || 0)}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -220,7 +228,7 @@ export function OTApprovalDetailsSheet({
                               ({formatHours(session.total_hours)} hours)
                             </span>
                           </div>
-                          {session.status && <StatusBadge status={session.status} rejectionStage={request.rejection_stage} />}
+                          {session.status && <StatusBadge status={session.status} rejectionStage={request.rejection_stage} tooltip={getStatusTooltip(request)} />}
                         </div>
                         
                         {session.reason && (
@@ -277,7 +285,7 @@ export function OTApprovalDetailsSheet({
                               ({formatHours(session.total_hours)} hours)
                             </span>
                           </div>
-                          <StatusBadge status={session.status} rejectionStage={request.rejection_stage} />
+                          <StatusBadge status={session.status} rejectionStage={request.rejection_stage} tooltip={getStatusTooltip(request)} />
                         </div>
                       </div>
                     ))}
@@ -291,7 +299,7 @@ export function OTApprovalDetailsSheet({
 
             <div className="flex items-center gap-2 text-sm">
               <span className="font-medium">Status:</span>
-              <StatusBadge status={request.status} rejectionStage={request.rejection_stage} />
+              <StatusBadge status={request.status} rejectionStage={request.rejection_stage} tooltip={getStatusTooltip(request)} />
             </div>
           </div>
 
@@ -314,11 +322,11 @@ export function OTApprovalDetailsSheet({
             </Alert>
           )}
 
-          {/* Calculation Details - Only visible to HR and Management */}
-          {(role === 'hr' || role === 'management') && (
+          {/* Calculation Details - Only visible to HR (contains salary-derived information) */}
+          {role === 'hr' && (
             <div className="space-y-3 bg-muted/50 p-4 rounded-lg">
               <h4 className="font-semibold text-sm">Calculation Details</h4>
-              
+
               {/* Always show daily totals */}
               <div className="grid grid-cols-3 gap-4 text-sm pb-3 border-b border-border/50">
                 <div>
@@ -330,7 +338,7 @@ export function OTApprovalDetailsSheet({
                   <p className="font-semibold text-lg">{formatCurrency(dailyTotalAmount)}</p>
                 </div>
               </div>
-              
+
               <div>
                 <p className="text-muted-foreground text-xs mb-2">
                   Session Calculation
@@ -611,9 +619,9 @@ export function OTApprovalDetailsSheet({
             </>
           )}
 
-          {/* Action Buttons Footer - For Direct Supervisor Final Confirmation (after respective supervisor confirms) */}
+          {/* Action Buttons Footer - For Direct Supervisor Verification (after respective supervisor confirms) */}
           {onConfirm && role === 'supervisor' &&
-           request.status === 'pending_supervisor_confirmation' &&
+           request.status === 'pending_supervisor_verification' &&
            request.respective_supervisor_id &&
            request.respective_supervisor_confirmed_at && (
             <>

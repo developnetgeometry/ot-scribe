@@ -30,12 +30,12 @@ import { useDepartments } from '@/hooks/hr/useDepartments';
 import { useEmployees } from '@/hooks/hr/useEmployees';
 import { usePositions } from '@/hooks/hr/usePositions';
 import { useCompanies } from '@/hooks/hr/useCompanies';
+import { useCompanyLocations } from '@/hooks/hr/useCompanyLocations';
 import { useResetEmployeePassword } from '@/hooks/hr/useResetEmployeePassword';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/otCalculations';
 import { KeyRound, AlertTriangle, Copy, Check } from 'lucide-react';
 import { RoleSelector } from '@/components/RoleSelector';
-import { CalendarAssignmentSelector } from '@/components/hr/CalendarAssignmentSelector';
 import { StateSelector } from '@/components/hr/StateSelector';
 
 interface EmployeeDetailsSheetProps {
@@ -68,8 +68,15 @@ export function EmployeeDetailsSheet({
   const { data: departments } = useDepartments();
   const { data: employees = [] } = useEmployees();
   const { data: positions = [], isLoading: isLoadingPositions } = usePositions(formData.department_id || undefined);
+  const { data: locations = [] } = useCompanyLocations();
 
   const isAdmin = hasRole('admin');
+
+  // Determine if supervisor is required based on selected roles
+  const supervisorRequired = !selectedRoles.some(role => ['admin', 'management'].includes(role));
+
+  // Validation error for supervisor_id
+  const [supervisorValidationError, setSupervisorValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     setMode(initialMode);
@@ -89,6 +96,14 @@ export function EmployeeDetailsSheet({
   if (!employee) return null;
 
   const handleSave = () => {
+    // Validate supervisor_id is required for non-admin/management roles
+    if (supervisorRequired && !formData.supervisor_id) {
+      setSupervisorValidationError('Reporting To is required for this role');
+      return;
+    }
+
+    setSupervisorValidationError(null);
+
     // Get position title from selected position
     const selectedPosition = positions.find(p => p.id === formData.position_id);
     const positionTitle = selectedPosition?.title || formData.position || '';
@@ -343,7 +358,7 @@ export function EmployeeDetailsSheet({
               )}
             </div>
 
-            {/* Row 5: Basic Salary + Employment Type */}
+            {/* Row 5: Basic Salary + OT Base Salary */}
             <div className="grid gap-2">
               <Label htmlFor="basic_salary">Basic Salary (RM)</Label>
               {isEditing ? (
@@ -366,6 +381,37 @@ export function EmployeeDetailsSheet({
               )}
             </div>
 
+            <div className="grid gap-2">
+              <Label htmlFor="ot_base">OT Base Salary (RM)</Label>
+              {isEditing ? (
+                <div className="space-y-1">
+                  <Input
+                    id="ot_base"
+                    type="number"
+                    step="0.01"
+                    value={formData.ot_base || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        ot_base: e.target.value ? parseFloat(e.target.value) : null,
+                      })
+                    }
+                    placeholder="Uses Basic Salary if empty"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Optional override for OT calculations
+                  </p>
+                </div>
+              ) : (
+                <div className="text-sm">
+                  {employee.ot_base ? formatCurrency(employee.ot_base) : (
+                    <span className="text-muted-foreground">Using Basic Salary</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Row 6: Employment Type + Joining Date */}
             <div className="grid gap-2">
               <Label htmlFor="employment_type">Employment Type</Label>
               {isEditing ? (
@@ -391,7 +437,6 @@ export function EmployeeDetailsSheet({
               )}
             </div>
 
-            {/* Row 6: Joining Date + Work Location */}
             <div className="grid gap-2">
               <Label htmlFor="joining_date">Joining Date</Label>
               {isEditing ? (
@@ -408,21 +453,38 @@ export function EmployeeDetailsSheet({
               )}
             </div>
 
-            {/* Row 8: State (Work Location) */}
+            {/* Row 7: Work Location */}
             <div className="grid gap-2">
-              <Label htmlFor="state">Work State/Location</Label>
+              <Label htmlFor="work_location">Work Location</Label>
               {isEditing ? (
-                <StateSelector
-                  value={formData.state || employee.state}
-                  onChange={(value) => setFormData({ ...formData, state: value })}
-                  showStateName
-                />
+                <Select
+                  value={formData.work_location || ''}
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, work_location: value });
+                    // Auto-set state from location's state_code
+                    const location = locations.find(loc => loc.id === value);
+                    if (location) {
+                      setFormData(prev => ({ ...prev, state: location.state_code }));
+                    }
+                  }}
+                >
+                  <SelectTrigger id="work_location">
+                    <SelectValue placeholder="Select Work Location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>
+                        {location.location_name} ({location.state_code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               ) : (
                 <div className="text-sm">
-                  {employee.state || '-'}
-                  {employee.state && (
+                  {locations.find((loc) => loc.id === employee.work_location)?.location_name || '-'}
+                  {employee.work_location && locations.find((loc) => loc.id === employee.work_location) && (
                     <Badge variant="outline" className="ml-2 text-xs">
-                      {employee.state}
+                      {locations.find((loc) => loc.id === employee.work_location)?.state_code}
                     </Badge>
                   )}
                 </div>
@@ -431,27 +493,35 @@ export function EmployeeDetailsSheet({
 
             {/* Row 9: Reporting To (Full Width) */}
             <div className="grid gap-2">
-              <Label htmlFor="supervisor_id">Reporting To</Label>
+              <Label htmlFor="supervisor_id">
+                Reporting To {supervisorRequired ? '*' : ''}
+              </Label>
               {isEditing ? (
-                <Select
-                  value={formData.supervisor_id || undefined}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, supervisor_id: value })
-                  }
-                >
-                  <SelectTrigger id="supervisor_id">
-                    <SelectValue placeholder="Select Supervisor (Optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees
-                      .filter(emp => emp.user_roles?.some(r => ['supervisor', 'hr', 'admin'].includes(r.role)))
-                      .map((emp) => (
-                        <SelectItem key={emp.id} value={emp.id}>
-                          {emp.full_name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                <>
+                  <Select
+                    value={formData.supervisor_id || undefined}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, supervisor_id: value });
+                      setSupervisorValidationError(null);
+                    }}
+                  >
+                    <SelectTrigger id="supervisor_id" className={supervisorValidationError ? 'border-red-500' : ''}>
+                      <SelectValue placeholder={supervisorRequired ? "Select Supervisor (Required)" : "Select Supervisor (Optional)"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employees
+                        .filter(emp => emp.user_roles?.some(r => ['supervisor', 'hr', 'admin'].includes(r.role)))
+                        .map((emp) => (
+                          <SelectItem key={emp.id} value={emp.id}>
+                            {emp.full_name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  {supervisorValidationError && (
+                    <p className="text-sm text-red-500">{supervisorValidationError}</p>
+                  )}
+                </>
               ) : (
                 <div className="text-sm">
                   {employees.find((e) => e.id === employee.supervisor_id)?.full_name || '-'}
@@ -562,23 +632,6 @@ export function EmployeeDetailsSheet({
                 </Badge>
               )}
             </div>
-          </div>
-
-          {/* Calendar Assignment Section */}
-          <div className="border-t pt-6">
-            <Label className="text-base font-semibold mb-3 block">Calendar Assignment</Label>
-            {isEditing ? (
-              <CalendarAssignmentSelector
-                employeeId={employee.id}
-                state={formData.state || employee.state}
-              />
-            ) : (
-              <CalendarAssignmentSelector
-                employeeId={employee.id}
-                state={employee.state}
-                disabled
-              />
-            )}
           </div>
 
           <div className="flex gap-2 justify-end">

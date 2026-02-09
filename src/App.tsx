@@ -12,6 +12,7 @@ import { PWAInstallBanner } from "./components/PWAInstallBanner";
 import { HTTPSWarning } from "./components/pwa/HTTPSWarning";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { createQueryClient } from "./lib/queryClient";
 import { ContentLoadingSkeleton } from "./components/ContentLoadingSkeleton";
 import { HolidayManagement } from "./components/admin/HolidayManagement";
@@ -48,12 +49,10 @@ const VerifyOT = lazy(() => import("./pages/supervisor/VerifyOT"));
 // Lazy load HR routes
 const ApproveOT = lazy(() => import("./pages/hr/ApproveOT"));
 const Employees = lazy(() => import("./pages/hr/Employees"));
+const ArchivedEmployees = lazy(() => import("./pages/hr/ArchivedEmployees"));
 const Departments = lazy(() => import("./pages/hr/Departments"));
 const HRSettings = lazy(() => import("./pages/hr/Settings"));
 const OTReports = lazy(() => import("./pages/hr/OTReports"));
-const HolidayCalendars = lazy(() => import("./pages/hr/HolidayCalendars"));
-const NewHolidayCalendar = lazy(() => import("./pages/hr/NewHolidayCalendar"));
-const EditHolidayCalendar = lazy(() => import("./pages/hr/EditHolidayCalendar"));
 
 const ReviewOT = lazy(() => import("./pages/management/ReviewOT"));
 const ManagementApproveOT = lazy(() => import("./pages/management/ApproveOT"));
@@ -64,13 +63,14 @@ const App = () => (
   <ErrorBoundary>
     <ThemeProvider defaultTheme="system" storageKey="ot-scribe-theme">
       <QueryClientProvider client={queryClient}>
-        <HTTPSWarning />
-        <BrowserRouter>
-          <AuthProvider>
-            <ActiveRoleProvider>
-              <AuthGuard>
-                <PWAInstallBanner />
-                <Suspense fallback={<ContentLoadingSkeleton />}>
+        <TooltipProvider>
+          <HTTPSWarning />
+          <BrowserRouter>
+            <AuthProvider>
+              <ActiveRoleProvider>
+                <AuthGuard>
+                  <PWAInstallBanner />
+                  <Suspense fallback={<ContentLoadingSkeleton />}>
                 <Routes>
                 <Route path="/" element={<RootRedirect />} />
                 <Route path="/auth" element={<Auth />} />
@@ -105,10 +105,8 @@ const App = () => (
                 {/* HR routes */}
                 <Route path="/hr/approve" element={<ProtectedRoute requiredRole={['hr', 'admin']}><ApproveOT /></ProtectedRoute>} />
                 <Route path="/hr/employees" element={<ProtectedRoute requiredRole={['hr', 'admin']}><Employees /></ProtectedRoute>} />
+                <Route path="/hr/employees/archived" element={<ProtectedRoute requiredRole={['hr', 'admin']}><ArchivedEmployees /></ProtectedRoute>} />
                 <Route path="/hr/departments" element={<ProtectedRoute requiredRole={['hr', 'admin']}><Departments /></ProtectedRoute>} />
-                <Route path="/hr/calendar" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HolidayCalendars /></ProtectedRoute>} />
-                <Route path="/hr/calendar/new" element={<ProtectedRoute requiredRole={['hr', 'admin']}><NewHolidayCalendar /></ProtectedRoute>} />
-                <Route path="/hr/calendar/:id/edit" element={<ProtectedRoute requiredRole={['hr', 'admin']}><EditHolidayCalendar /></ProtectedRoute>} />
                 <Route path="/hr/holidays" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HolidayManagement /></ProtectedRoute>} />
                 <Route path="/hr/settings" element={<ProtectedRoute requiredRole={['hr', 'admin']}><HRSettings /></ProtectedRoute>} />
                 <Route path="/hr/ot-reports" element={<ProtectedRoute requiredRole={['hr', 'admin']}><OTReports /></ProtectedRoute>} />
@@ -119,14 +117,15 @@ const App = () => (
                 
                 <Route path="*" element={<NotFound />} />
                 </Routes>
-              </Suspense>
-              <Toaster />
-              <Sonner />
-              </AuthGuard>
-            </ActiveRoleProvider>
-          </AuthProvider>
-        </BrowserRouter>
-    </QueryClientProvider>
+                  </Suspense>
+                  <Toaster />
+                  <Sonner />
+                </AuthGuard>
+              </ActiveRoleProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
     </ThemeProvider>
   </ErrorBoundary>
 );

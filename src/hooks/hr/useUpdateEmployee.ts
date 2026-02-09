@@ -15,6 +15,7 @@ interface UpdateEmployeeData {
   position_id?: string | null;
   position?: string | null;
   basic_salary?: number;
+  ot_base?: number | null;
   employment_type?: string | null;
   designation?: string | null;
   supervisor_id?: string | null;
@@ -40,7 +41,7 @@ export function useUpdateEmployee() {
       const allowedColumns = [
         'full_name', 'employee_id', 'ic_no', 'phone_no', 'email',
         'company_id', 'department_id', 'position_id', 'position', 'basic_salary',
-        'employment_type',
+        'ot_base', 'employment_type',
         'designation', 'supervisor_id', 'joining_date', 'work_location',
         'state', 'status', 'is_ot_eligible', 'require_ot_attachment'
       ];
@@ -49,7 +50,8 @@ export function useUpdateEmployee() {
       const nullableFields = [
         'ic_no', 'phone_no', 'company_id', 'department_id',
         'employment_type', 'position', 'supervisor_id',
-        'joining_date', 'work_location', 'state', 'position_id'
+        'joining_date', 'work_location', 'state', 'position_id',
+        'ot_base'
       ];
 
       // Sanitize the update payload
@@ -87,6 +89,26 @@ export function useUpdateEmployee() {
         .eq('id', id);
 
       if (profileError) throw profileError;
+
+      // If email is being updated, sync it with auth.users table
+      if (updateBody.email) {
+        const { error: emailSyncError } = await supabase.functions.invoke(
+          'fix-account-email',
+          {
+            body: {
+              user_id: id,
+              new_email: updateBody.email,
+            },
+          }
+        );
+
+        if (emailSyncError) {
+          console.error('Failed to sync email with auth.users:', emailSyncError);
+          throw new Error(
+            'Profile updated but failed to sync email with authentication system. User may not be able to login with new email.'
+          );
+        }
+      }
 
       // Update roles if provided
       if (roles && roles.length > 0) {

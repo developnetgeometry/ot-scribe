@@ -4,9 +4,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { StatusBadge } from '@/components/StatusBadge';
 import { OTRequest } from '@/types/otms';
-import { formatCurrency, formatHours, getDayTypeColor, getDayTypeLabel } from '@/lib/otCalculations';
+import { formatCurrency, formatHours, getDayTypeCode, getDayTypeColor, getDayTypeLabel } from '@/lib/otCalculations';
+import { getStatusTooltip } from '@/lib/otStatusTooltip';
 
 interface OTDetailsSheetProps {
   request: OTRequest | null;
@@ -33,7 +35,7 @@ export function OTDetailsSheet({ request, open, onOpenChange, onEdit }: OTDetail
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <p className="text-sm font-medium text-muted-foreground mb-2">Status</p>
-              <StatusBadge status={request.status} rejectionStage={request.rejection_stage} />
+              <StatusBadge status={request.status} rejectionStage={request.rejection_stage} tooltip={getStatusTooltip(request as any)} />
             </div>
             
             {/* Edit button - only for pending_verification status */}
@@ -79,9 +81,16 @@ export function OTDetailsSheet({ request, open, onOpenChange, onEdit }: OTDetail
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Day Type</p>
-              <Badge className={getDayTypeColor(request.day_type)}>
-                {getDayTypeLabel(request.day_type)}
-              </Badge>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge tabIndex={0} className={getDayTypeColor(request.day_type)}>
+                    {getDayTypeCode(request.day_type)}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {getDayTypeLabel(request.day_type)}
+                </TooltipContent>
+              </Tooltip>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Start Time</p>

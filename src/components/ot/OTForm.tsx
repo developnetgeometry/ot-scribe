@@ -9,6 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,22 +17,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileUpload } from './FileUpload';
 import { TimePickerInput } from './TimePickerInput';
-import { calculateTotalHours, getDayTypeColor, getDayTypeLabel } from '@/lib/otCalculations';
+import { calculateTotalHours, getDayTypeCode, getDayTypeColor, getDayTypeLabel } from '@/lib/otCalculations';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupervisors } from '@/hooks/useSupervisors';
-import { canSubmitOTForDate } from '@/utils/otValidation';
+import { canSubmitOTForDate, validateOTTimeForWorkDay } from '@/utils/otValidation';
+import { StateSelector } from '@/components/hr/StateSelector';
+import { useAuth } from '@/hooks/useAuth';
+
+type OTSettingsRow = {
+  ot_submission_cutoff_day: number | null;
+  grace_period_enabled: boolean | null;
+};
+
+type MalaysianHolidayRow = {
+  state: string | null;
+};
 
 // Fixed schema with optional attachments for all employees
 const OTFormSchema = z.object({
   ot_date: z.date({
     required_error: 'OT date is required',
   }),
+  ot_location_state: z.string().min(1, 'OT location is required'),
   start_time: z.string().min(1, 'Start time is required'),
   end_time: z.string().min(1, 'End time is required'),
   reason: z.string()
-    .min(10, 'Reason must be at least 10 characters')
-    .max(500, 'Reason cannot exceed 500 characters'),
+    .max(500, 'Reason cannot exceed 500 characters')
+    .optional(),
   attachment_urls: z.array(z.string().url('Invalid file URL'))
     .max(5, 'Maximum 5 attachments allowed')
     .optional()
@@ -46,18 +59,28 @@ const OTFormSchema = z.object({
   ], {
     required_error: 'Please select a reason for overtime',
   }),
-  reason_other: z.string()
-    .max(100, 'Reason cannot exceed 100 characters')
-    .optional(),
   respective_supervisor_id: z.string().uuid().optional().or(z.literal('none')),
 }).refine((data) => {
   if (data.reason_dropdown === 'Other') {
-    return data.reason_other && data.reason_other.trim().length >= 20;
+    return data.reason && data.reason.trim().length >= 10;
   }
   return true;
 }, {
-  message: 'Please provide a detailed reason (minimum 20 characters)',
-  path: ['reason_other'],
+  message: 'Please provide a detailed reason (minimum 10 characters)',
+  path: ['reason'],
+}).refine((data) => {
+  // Validate that end_time is after start_time
+  if (data.start_time && data.end_time) {
+    const [startHour, startMinute] = data.start_time.split(':').map(Number);
+    const [endHour, endMinute] = data.end_time.split(':').map(Number);
+    const startTimeInMinutes = startHour * 60 + startMinute;
+    const endTimeInMinutes = endHour * 60 + endMinute;
+    return endTimeInMinutes > startTimeInMinutes;
+  }
+  return true;
+}, {
+  message: 'End time must be after start time',
+  path: ['end_time'],
 });
 
 type OTFormValues = z.infer<typeof OTFormSchema>;
@@ -74,8 +97,12 @@ interface OTFormProps {
 export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel, defaultValues }: OTFormProps) {
   const [totalHours, setTotalHours] = useState<number>(0);
   const [dayType, setDayType] = useState<string>('weekday');
+  const [holidayLabel, setHolidayLabel] = useState<string | null>(null);
   const [cutoffDay, setCutoffDay] = useState<number>(10);
+  const [gracePeriodEnabled, setGracePeriodEnabled] = useState<boolean>(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [businessHoursError, setBusinessHoursError] = useState<string | null>(null);
+  const { profile: authProfile } = useAuth();
 
   // Use the custom hook to fetch supervisors, excluding the employee's direct supervisor
   const { data: supervisors = [] } = useSupervisors({ employeeId });
@@ -86,18 +113,24 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
       try {
         const { data, error } = await supabase
           .from('ot_settings')
-          .select('ot_submission_cutoff_day')
+          .select('ot_submission_cutoff_day, grace_period_enabled')
+          .limit(1)
           .single();
 
+        const settings = data as unknown as OTSettingsRow | null;
+
         if (error) {
-          console.error('Error fetching cutoff day:', error);
           setCutoffDay(10); // Fallback to default
-        } else if (data?.ot_submission_cutoff_day) {
-          setCutoffDay(data.ot_submission_cutoff_day);
+          setGracePeriodEnabled(false);
+        } else if (settings?.ot_submission_cutoff_day) {
+          setCutoffDay(settings.ot_submission_cutoff_day);
+          setGracePeriodEnabled(settings?.grace_period_enabled ?? false);
+        } else {
+          setGracePeriodEnabled(settings?.grace_period_enabled ?? false);
         }
       } catch (err) {
-        console.error('Error fetching OT settings:', err);
         setCutoffDay(10); // Fallback to default
+        setGracePeriodEnabled(false);
       }
     };
 
@@ -106,17 +139,26 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
 
   const form = useForm<OTFormValues>({
     resolver: zodResolver(OTFormSchema),
-    defaultValues: defaultValues || {
+    defaultValues: {
       reason: '',
-      reason_other: '',
       respective_supervisor_id: 'none',
       attachment_urls: [],
+      ot_location_state: 'SGR',
+      ...defaultValues,
     },
   });
 
   const startTime = form.watch('start_time');
   const endTime = form.watch('end_time');
   const otDate = form.watch('ot_date');
+  const otLocationState = form.watch('ot_location_state');
+
+  useEffect(() => {
+    const current = form.getValues('ot_location_state');
+    if (!current || current.trim() === '') {
+      form.setValue('ot_location_state', 'SGR', { shouldValidate: true });
+    }
+  }, [form]);
 
   useEffect(() => {
     if (startTime && endTime) {
@@ -126,40 +168,83 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
   }, [startTime, endTime]);
 
   useEffect(() => {
-    if (otDate) {
-      determineDayType(otDate);
+    if (otDate && otLocationState) {
+      determineDayType(otDate, otLocationState);
     }
-  }, [otDate]);
+  }, [otDate, otLocationState]);
 
-  const determineDayType = async (date: Date) => {
+  // Validate business hours restriction for work days
+  useEffect(() => {
+    if (startTime && endTime && dayType) {
+      const validation = validateOTTimeForWorkDay(startTime, endTime, dayType);
+      if (!validation.isAllowed) {
+        setBusinessHoursError(validation.message || 'Invalid time for work day');
+      } else {
+        setBusinessHoursError(null);
+      }
+    } else {
+      setBusinessHoursError(null);
+    }
+  }, [startTime, endTime, dayType]);
+
+  const determineDayType = async (date: Date, locationState: string) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const dayOfWeek = date.getDay();
 
-    // Check if public holiday
-    const { data: holiday } = await supabase
-      .from('public_holidays')
+    // Check holiday_overrides first (manual company overrides)
+    const { data: override } = await supabase
+      .from('holiday_overrides')
       .select('*')
-      .eq('holiday_date', dateStr)
+      .eq('date', dateStr)
       .single();
 
-    if (holiday) {
+    if (override) {
       setDayType('public_holiday');
+      setHolidayLabel('Public Holiday');
+      return;
+    }
+
+    // Check malaysian_holidays (includes federal and state-specific holidays)
+    const { data: holidays } = await supabase
+      .from('malaysian_holidays')
+      .select('state')
+      .eq('date', dateStr);
+
+    const holidayRows = (holidays as unknown as MalaysianHolidayRow[] | null) ?? [];
+
+    const isFederalHoliday = holidayRows.some((h) => h.state === 'ALL');
+    const isStateHoliday = holidayRows.some((h) => h.state === locationState);
+
+    if (isFederalHoliday || isStateHoliday) {
+      setDayType('public_holiday');
+      setHolidayLabel(isFederalHoliday ? 'Public Holiday' : 'State Holiday');
     } else if (dayOfWeek === 0) {
       setDayType('sunday');
+      setHolidayLabel(null);
     } else if (dayOfWeek === 6) {
       setDayType('saturday');
+      setHolidayLabel(null);
     } else {
       setDayType('weekday');
+      setHolidayLabel(null);
     }
   };
 
   const handleSubmit = (values: OTFormValues) => {
+    // Validate business hours for work days
+    const timeValidation = validateOTTimeForWorkDay(values.start_time, values.end_time, dayType);
+    if (!timeValidation.isAllowed) {
+      setBusinessHoursError(timeValidation.message || 'Invalid time for work day');
+      return; // Block submission
+    }
+
     const finalReason = values.reason_dropdown === 'Other'
-      ? values.reason_other || ''
+      ? values.reason?.trim() || 'Other'
       : values.reason_dropdown;
 
     onSubmit({
       ot_date: format(values.ot_date, 'yyyy-MM-dd'),
+      ot_location_state: values.ot_location_state,
       start_time: values.start_time,
       end_time: values.end_time,
       total_hours: totalHours,
@@ -169,6 +254,9 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
       attachment_urls: values.attachment_urls,
     });
   };
+
+  const displayDayType = holidayLabel === 'State Holiday' ? 'state_holiday' : dayType;
+  const dayTypeTooltip = getDayTypeLabel(displayDayType);
 
   return (
     <Form {...form}>
@@ -201,13 +289,20 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
           </div>
         </Card>
 
-        <div className="grid grid-cols-1 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           <FormField
             control={form.control}
             name="ot_date"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>OT Date *</FormLabel>
+                <FormLabel className="flex items-center justify-between gap-2">
+                  <span>OT Date *</span>
+                  {gracePeriodEnabled && (
+                    <Badge variant="warning" className="whitespace-nowrap">
+                      Grace Period Active
+                    </Badge>
+                  )}
+                </FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -229,7 +324,7 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
                       selected={field.value}
                       onSelect={(date) => {
                         if (date) {
-                          const validation = canSubmitOTForDate(date, new Date(), cutoffDay);
+                          const validation = canSubmitOTForDate(date, new Date(), cutoffDay, gracePeriodEnabled);
                           if (validation.isAllowed) {
                             field.onChange(date);
                             setSubmissionError(null);
@@ -239,7 +334,7 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
                         }
                       }}
                       disabled={(date) => {
-                        const validation = canSubmitOTForDate(date, new Date(), cutoffDay);
+                        const validation = canSubmitOTForDate(date, new Date(), cutoffDay, gracePeriodEnabled);
                         return !validation.isAllowed;
                       }}
                       initialFocus
@@ -254,6 +349,28 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
                     <AlertDescription>{submissionError}</AlertDescription>
                   </Alert>
                 )}
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="ot_location_state"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>OT Location (State) *</FormLabel>
+                <FormControl>
+                  <StateSelector
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                    showStateName={false}
+                  />
+                </FormControl>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Defaults to Selangor (SGR). Change this if the OT is performed in a different state.
+                </p>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -287,6 +404,7 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
                   <TimePickerInput
                     value={field.value}
                     onChange={field.onChange}
+                    minTime={startTime}
                   />
                 </FormControl>
                 <FormMessage />
@@ -294,6 +412,13 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
             )}
           />
         </div>
+
+        {businessHoursError && dayType === 'weekday' && (
+          <Alert variant="destructive" className="col-span-1 md:col-span-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{businessHoursError}</AlertDescription>
+          </Alert>
+        )}
 
         <Card className="p-3 sm:p-4 bg-muted/50">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -303,9 +428,16 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
             </div>
             <div className="flex flex-col items-start sm:items-end">
               <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">Day Type</p>
-              <Badge className={getDayTypeColor(dayType)}>
-                {getDayTypeLabel(dayType)}
-              </Badge>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge tabIndex={0} className={getDayTypeColor(displayDayType)}>
+                    {getDayTypeCode(displayDayType)}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {dayTypeTooltip}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </Card>
@@ -336,42 +468,23 @@ export function OTForm({ onSubmit, isSubmitting, employeeId, fullName, onCancel,
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="reason"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Reason for OT *</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Please provide a detailed reason for overtime (minimum 10 characters)"
-                  className="min-h-[100px] sm:min-h-[120px] resize-none text-base sm:text-sm"
-                  {...field}
-                />
-              </FormControl>
-              <div className="text-xs text-muted-foreground text-right">
-                {field.value?.length || 0} / 500 characters
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         {form.watch('reason_dropdown') === 'Other' && (
           <FormField
             control={form.control}
-            name="reason_other"
+            name="reason"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Other Reason (if applicable)</FormLabel>
+                <FormLabel>Reason for OT</FormLabel>
                 <FormControl>
-                  <Input
-                    type="text"
-                    placeholder="Enter your own reason"
-                    className="h-10 sm:h-9 text-base sm:text-sm"
+                  <Textarea
+                    placeholder="Please provide a detailed reason for overtime (minimum 10 characters)"
+                    className="min-h-[100px] sm:min-h-[120px] resize-none text-base sm:text-sm"
                     {...field}
                   />
                 </FormControl>
+                <div className="text-xs text-muted-foreground text-right">
+                  {field.value?.length || 0} / 500 characters
+                </div>
                 <FormMessage />
               </FormItem>
             )}
